@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.sebastijanzindl.authserver.model.Client;
 import me.sebastijanzindl.authserver.model.Host;
+import me.sebastijanzindl.authserver.model.User;
 
 import java.util.Date;
 import java.util.List;
@@ -20,4 +21,14 @@ public class UserResponse {
     private Date updatedAt;
     private List<Client> clients;
     private List<Host> hosts;
+
+    public UserResponse(User user) {
+        this.id = user.getId();
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.createdAt = user.getCreatedAt();
+        this.updatedAt = user.getUpdatedAt();
+        this.clients = user.getClients();
+        this.hosts = user.getHosts();
+    }
 }

@@ -22,17 +22,7 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(
             @AuthenticationPrincipal User currentUser
     ) {
-        UserResponse userResponse = new UserResponse(
-                currentUser.getId(),
-                currentUser.getEmail(),
-                currentUser.getName(),
-                currentUser.getCreatedAt(),
-                currentUser.getUpdatedAt(),
-                currentUser.getClients(),
-                currentUser.getHosts()
-        );
-
-        return ResponseEntity.ok(userResponse);
+        return ResponseEntity.ok(new UserResponse(currentUser));
     }
 
 }

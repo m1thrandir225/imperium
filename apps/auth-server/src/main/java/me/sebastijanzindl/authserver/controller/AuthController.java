@@ -4,6 +4,7 @@ import me.sebastijanzindl.authserver.dto.LoginUserDTO;
 import me.sebastijanzindl.authserver.dto.RegisterUserDTO;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.responses.LoginResponse;
+import me.sebastijanzindl.authserver.responses.UserResponse;
 import me.sebastijanzindl.authserver.service.AuthenticationService;
 import me.sebastijanzindl.authserver.service.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +26,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(
+    public ResponseEntity<UserResponse> register(
             @RequestBody RegisterUserDTO registerUserDTO
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
-        return ResponseEntity.ok(registeredUser);
+        return ResponseEntity.ok(new UserResponse(registeredUser));
     }
 
     @PostMapping("/login")
