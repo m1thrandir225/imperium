@@ -3,6 +3,7 @@ package me.sebastijanzindl.authserver.model;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,11 +19,14 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode
+@NoArgsConstructor
 @Table(name = "users")
 public class User  implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
+
     @Column(nullable = false, unique = true)
     private String email;
 

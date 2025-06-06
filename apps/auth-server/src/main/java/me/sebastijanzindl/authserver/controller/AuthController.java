@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RestController
-public class AuthenticationController {
+public class AuthController {
     private final JwtService jwtService;
 
     private final AuthenticationService authenticationService;
 
-    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService) {
+    public AuthController(JwtService jwtService, AuthenticationService authenticationService) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/login")
+    @PostMapping("/register")
     public ResponseEntity<User> register(
             @RequestBody RegisterUserDTO registerUserDTO
     ) {
@@ -33,7 +33,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(
+    public ResponseEntity<LoginResponse> login(
             @RequestBody LoginUserDTO loginUserDTO
     ) {
         User user  = authenticationService.authenticate(loginUserDTO);

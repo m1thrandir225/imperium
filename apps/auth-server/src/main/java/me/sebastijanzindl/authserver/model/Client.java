@@ -1,20 +1,19 @@
 package me.sebastijanzindl.authserver.model;
 
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
-@Entity
 @Getter
 @Setter
 @EqualsAndHashCode
+@Entity
 @Table(name = "clients")
 public class Client {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
     @Column(unique = true, nullable = false)
     private String name;
