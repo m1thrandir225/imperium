@@ -2,26 +2,24 @@ package me.sebastijanzindl.authserver.service;
 
 import me.sebastijanzindl.authserver.model.RefreshToken;
 import me.sebastijanzindl.authserver.model.User;
+import me.sebastijanzindl.authserver.model.enums.TOKEN_TYPE;
 import me.sebastijanzindl.authserver.repository.RefreshTokenRepository;
 import me.sebastijanzindl.authserver.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
+import me.sebastijanzindl.authserver.security.JwtUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
 
-    @Value("${security.jwt.refresh-token-expiration-key}")
-    private Long refreshTokenDuration;
-
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserRepository userRepository) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtUtils jwtUtils, UserRepository userRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
+        this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;
     }
 
@@ -30,9 +28,10 @@ public class RefreshTokenService {
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiresAt(Instant.now().plusMillis(refreshTokenDuration))
+                .token(jwtUtils.generateToken(user, TOKEN_TYPE.REFRESH))
+                .expiresAt(Instant.now().plusMillis(jwtUtils.getTokenExpiration(TOKEN_TYPE.REFRESH)))
                 .build();
+
         return refreshTokenRepository.save(refreshToken);
     }
 

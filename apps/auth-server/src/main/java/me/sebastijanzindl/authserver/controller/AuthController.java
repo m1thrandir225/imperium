@@ -4,12 +4,13 @@ import me.sebastijanzindl.authserver.dto.LoginUserDTO;
 import me.sebastijanzindl.authserver.dto.RegisterUserDTO;
 import me.sebastijanzindl.authserver.model.RefreshToken;
 import me.sebastijanzindl.authserver.model.User;
+import me.sebastijanzindl.authserver.model.enums.TOKEN_TYPE;
 import me.sebastijanzindl.authserver.responses.LoginResponse;
 import me.sebastijanzindl.authserver.dto.RefreshTokenDTO;
 import me.sebastijanzindl.authserver.responses.RefreshTokenResponse;
 import me.sebastijanzindl.authserver.responses.UserResponse;
 import me.sebastijanzindl.authserver.service.AuthenticationService;
-import me.sebastijanzindl.authserver.service.JwtService;
+import me.sebastijanzindl.authserver.security.JwtUtils;
 import me.sebastijanzindl.authserver.service.RefreshTokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,12 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @RestController
 public class AuthController {
-    private final JwtService jwtService;
+    private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationService authenticationService;
 
-    public AuthController(JwtService jwtService, RefreshTokenService refreshTokenService, AuthenticationService authenticationService) {
-        this.jwtService = jwtService;
+    public AuthController(
+            JwtUtils jwtUtils,
+            RefreshTokenService refreshTokenService,
+            AuthenticationService authenticationService
+    ) {
+        this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
         this.authenticationService = authenticationService;
     }
@@ -44,14 +49,14 @@ public class AuthController {
     ) {
         User user  = authenticationService.authenticate(loginUserDTO);
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
+        String refreshToken = jwtUtils.generateToken(user, TOKEN_TYPE.REFRESH);
 
-        RefreshToken refreshToken = refreshTokenService.create(user.getEmail());
 
         LoginResponse response = new LoginResponse();
         response.setToken(jwtToken);
-        response.setExpiresIn(jwtService.getExpiration());
-        response.setRefreshToken(refreshToken.getToken());
+        response.setRefreshToken(refreshToken);
+        response.setExpiresIn(jwtUtils.getTokenExpiration(TOKEN_TYPE.ACCESS));
 
         return ResponseEntity.ok(response);
     }
@@ -64,7 +69,7 @@ public class AuthController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    String jwtToken = jwtService.generateToken(user);
+                    String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
                     RefreshTokenResponse response = new RefreshTokenResponse(jwtToken);
                     return ResponseEntity.ok(response);
                 }).orElseThrow(() -> new RuntimeException("Refresh token not found"));
