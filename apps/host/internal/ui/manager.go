@@ -5,14 +5,14 @@ import (
 	"fyne.io/fyne/v2/app"
 )
 
-type UIManager struct {
+type Manager struct {
 	app fyne.App
 }
 
-func NewUIManager() *UIManager {
-	app := app.New()
+func NewUIManager() *Manager {
+	fyneApp := app.New()
 
-	return &UIManager{
-		app: app,
+	return &Manager{
+		app: fyneApp,
 	}
 }

@@ -5,14 +5,14 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func (manager *UIManager) CreateWindow() fyne.Window {
+func (manager *Manager) CreateWindow() fyne.Window {
 	w := manager.app.NewWindow("Imperium")
 	w.Resize(fyne.NewSize(800, 600))
 	w.SetFixedSize(true)
 	return w
 }
 
-func (manager *UIManager) RunUI() {
+func (manager *Manager) RunUI() {
 	mainWindow := manager.CreateWindow()
 
 	mainWindow.SetContent(widget.NewLabel("Hello Native UI"))
