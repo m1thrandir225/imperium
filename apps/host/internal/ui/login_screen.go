@@ -3,13 +3,15 @@ package ui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"log"
 )
 
 type LoginScreen struct {
-	manager *Manager
+}
+
+func NewLoginScreen() *LoginScreen {
+	return &LoginScreen{}
 }
 
 func (s *LoginScreen) Name() string {
@@ -29,13 +31,13 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 		},
 		OnSubmit: func() {
 			log.Printf("Login attempt with Email: %s, Password: %s", emailEntry.Text, passwordEntry.Text)
-			dialog.NewInformation("Login", "Login logic would run here.", s.manager.window).Show()
 		},
 	}
 
 	return container.NewBorder(
 		nil,
-		widget.NewButton("Back to Main Menu", func() { s.manager.SetScreen(MAIN_MENU_SCREEN) }),
+		widget.NewButton("Back to Main Menu", func() {
+		}),
 		nil, nil,
 		container.NewCenter(container.NewVBox(form)),
 	)

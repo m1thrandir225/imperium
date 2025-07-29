@@ -7,7 +7,10 @@ import (
 )
 
 type SettingsScreen struct {
-	manager *Manager
+}
+
+func NewSettingsScreen() *SettingsScreen {
+	return &SettingsScreen{}
 }
 
 func (s *SettingsScreen) Name() string {
@@ -16,7 +19,7 @@ func (s *SettingsScreen) Name() string {
 
 func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	backButton := widget.NewButton("Back to Main Menu", func() {
-		s.manager.SetScreen(MAIN_MENU_SCREEN)
+
 	})
 
 	return container.NewCenter(container.NewVBox(

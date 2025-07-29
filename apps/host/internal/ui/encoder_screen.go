@@ -7,7 +7,10 @@ import (
 )
 
 type EncoderScreen struct {
-	manager *Manager
+}
+
+func NewEncoderScreen() *EncoderScreen {
+	return &EncoderScreen{}
 }
 
 func (s *EncoderScreen) Name() string {

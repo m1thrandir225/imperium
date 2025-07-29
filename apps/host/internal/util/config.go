@@ -1,4 +1,4 @@
-package config
+package util
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	videoConfig video.Config `mapstructure:"video"`
+	VideoConfig   video.Config `mapstructure:"video"`
+	ServerAddress string       `mapstructure:"server_address"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -34,14 +35,16 @@ func LoadConfig() (*Config, error) {
 	// if a config file doesn't exist, create it with default values
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		config := &Config{
-			videoConfig: video.Config{
+			VideoConfig: video.Config{
 				Encoder:    "libx264",
 				FPS:        30,
 				FFMPEGPath: "",
 			},
+			ServerAddress: "",
 		}
 
-		viper.Set("video", config.videoConfig)
+		viper.Set("video", config.VideoConfig)
+		viper.Set("server_address", config.ServerAddress)
 
 		if err := viper.SafeWriteConfigAs(configPath); err != nil {
 			return nil, fmt.Errorf("failed to write default config: %w", err)
@@ -62,7 +65,8 @@ func LoadConfig() (*Config, error) {
 }
 
 func SaveConfig(config *Config) error {
-	viper.Set("video", config.videoConfig)
+	viper.Set("video", config.VideoConfig)
+	viper.Set("server_address", config.ServerAddress)
 
 	if err := viper.WriteConfig(); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
