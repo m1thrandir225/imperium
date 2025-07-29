@@ -1,9 +1,18 @@
 package main
 
-import "github.com/m1thrandir225/imperium/apps/host/internal/ui"
+import (
+	"github.com/m1thrandir225/imperium/apps/host/config"
+	"github.com/m1thrandir225/imperium/apps/host/internal/ui"
+	"log"
+)
 
 func main() {
-	uiManager := ui.NewUIManager()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	uiManager := ui.NewUIManager(cfg)
 
 	uiManager.RunUI()
 }

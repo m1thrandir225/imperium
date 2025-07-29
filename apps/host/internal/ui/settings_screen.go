@@ -11,12 +11,12 @@ type SettingsScreen struct {
 }
 
 func (s *SettingsScreen) Name() string {
-	return "Settings"
+	return SETTINGS_SCREEN
 }
 
 func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
-	backButton := widget.NewButton("Back to Encoders", func() {
-		s.manager.SetScreen("Encoders")
+	backButton := widget.NewButton("Back to Main Menu", func() {
+		s.manager.SetScreen(MAIN_MENU_SCREEN)
 	})
 
 	return container.NewCenter(container.NewVBox(

@@ -11,7 +11,7 @@ type EncoderScreen struct {
 }
 
 func (s *EncoderScreen) Name() string {
-	return "Encoders"
+	return ENCODER_SCREEN
 }
 
 func (s *EncoderScreen) Render(w fyne.Window) fyne.CanvasObject {

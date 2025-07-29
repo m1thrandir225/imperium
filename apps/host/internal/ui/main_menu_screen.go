@@ -11,7 +11,7 @@ type MainMenuScreen struct {
 }
 
 func (s *MainMenuScreen) Name() string {
-	return "Main Menu"
+	return MAIN_MENU_SCREEN
 }
 
 func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
