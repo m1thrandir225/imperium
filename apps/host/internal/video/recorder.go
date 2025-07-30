@@ -16,7 +16,7 @@ type Recorder struct {
 func NewRecorder(config *Config) *Recorder {
 	return &Recorder{
 		config: config,
-		ffmpeg: NewFFMPEGWrapper(config.FFMPEGPath),
+		ffmpeg: NewFFMPEGWrapper("ffmpeg"),
 	}
 }
 
@@ -32,7 +32,7 @@ func (r *Recorder) buildOutputArgs(outputPath string) []string {
 	return []string{
 		"-c:v", r.config.Encoder,
 		"-preset", "ultrafast",
-		"-pix-fmt", "yuv420p",
+		"-pix_fmt", "yuv420p",
 		"-y", // OVERWRITE IF EXISTS
 		outputPath,
 	}
@@ -66,7 +66,10 @@ func (r *Recorder) RecordWindow(windowTitle string, outputPath string) error {
 }
 
 func (r *Recorder) StopRecording() error {
-	return r.ffmpeg.Execute("-quit")
+	if r.ffmpeg != nil {
+		return r.ffmpeg.Stop()
+	}
+	return nil
 }
 
 func (r *Recorder) GetTempOutputPath() string {
