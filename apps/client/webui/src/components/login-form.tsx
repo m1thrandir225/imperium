@@ -1,4 +1,3 @@
-import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
 import {
   Card,
@@ -8,18 +7,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Form, Link} from "react-router-dom";
-import {useForm} from "react-hook-form";
-import * as z from "zod";
+import {cn} from "@/lib/utils";
 import {zodResolver} from "@hookform/resolvers/zod";
+import {useForm} from "react-hook-form";
+import {Link} from "react-router-dom";
+import * as z from "zod";
 import {
   FormControl,
+  Form,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "./ui/form";
+import {useMutation} from "@tanstack/react-query";
+import type {LoginRequest} from "@/types/responses/auth";
+import authService from "@/services/auth.service";
+import {Loader2} from "lucide-react";
 
 const formSchema = z.object({
   email: z.email(),
@@ -31,8 +35,22 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     resolver: zodResolver(formSchema),
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  const {mutateAsync, status} = useMutation({
+    mutationKey: ["login"],
+    mutationFn: (values: LoginRequest) => authService.login(values),
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await mutateAsync({
+      email: values.email,
+      password: values.password,
+    });
   }
 
   return (
@@ -43,53 +61,78 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
           <CardDescription>Login with your email and password</CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="grid gap-6">
-              <Form {...form}>
-                <form
-                  className="grid gap-6"
-                  onSubmit={form.handleSubmit(onSubmit)}
+          <div className="grid gap-6">
+            <Form {...form}>
+              <form
+                className="grid gap-6"
+                onSubmit={form.handleSubmit(onSubmit)}
+              >
+                <div className="grid gap-3">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({field}) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormMessage />
+                </div>
+                <div className="grid gap-3">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({field}) => (
+                      <FormItem>
+                        <div className="flex items-center">
+                          <FormLabel>Password</FormLabel>
+                          <Link
+                            to={"/forgot-password"}
+                            className="ml-auto text-sm underline-offset-4 hover:underline"
+                          >
+                            Forgot your password?
+                          </Link>
+                        </div>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="**********"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button
+                  disabled={status === "pending"}
+                  type="submit"
+                  className="w-full"
                 >
-                  <div className="grid gap-3">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({field}) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormMessage />
-                  </div>
-                  <div className="grid gap-3">
-                    <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
-                      <a
-                        href="#"
-                        className="ml-auto text-sm underline-offset-4 hover:underline"
-                      >
-                        Forgot your password?
-                      </a>
-                    </div>
-                    <Input id="password" type="password" required />
-                  </div>
-                  <Button type="submit" className="w-full">
-                    Login
-                  </Button>
-                </form>
-              </Form>
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link to="/register" className="underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
+                  {status === "pending" ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+              </form>
+            </Form>
+            <div className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <Link to="/register" className="underline underline-offset-4">
+                Sign up
+              </Link>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
