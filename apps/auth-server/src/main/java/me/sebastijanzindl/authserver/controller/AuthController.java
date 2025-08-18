@@ -12,6 +12,7 @@ import me.sebastijanzindl.authserver.responses.UserResponse;
 import me.sebastijanzindl.authserver.service.AuthenticationService;
 import me.sebastijanzindl.authserver.security.JwtUtils;
 import me.sebastijanzindl.authserver.service.RefreshTokenService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,7 +41,8 @@ public class AuthController {
             @RequestBody RegisterUserDTO registerUserDTO
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
-        return ResponseEntity.ok(new UserResponse(registeredUser));
+        UserResponse response = new UserResponse(registeredUser);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -50,15 +52,14 @@ public class AuthController {
         User user  = authenticationService.authenticate(loginUserDTO);
 
         String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
-        String refreshToken = jwtUtils.generateToken(user, TOKEN_TYPE.REFRESH);
-
+        RefreshToken refreshToken = refreshTokenService.create(user);
 
         LoginResponse response = new LoginResponse();
         response.setToken(jwtToken);
-        response.setRefreshToken(refreshToken);
+        response.setRefreshToken(refreshToken.getToken());
         response.setExpiresIn(jwtUtils.getTokenExpiration(TOKEN_TYPE.ACCESS));
 
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/refresh")

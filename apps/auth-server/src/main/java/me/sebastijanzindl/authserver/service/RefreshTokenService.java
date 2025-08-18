@@ -23,9 +23,7 @@ public class RefreshTokenService {
         this.userRepository = userRepository;
     }
 
-    public RefreshToken create(String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
-
+    public RefreshToken create(User user) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .token(jwtUtils.generateToken(user, TOKEN_TYPE.REFRESH))

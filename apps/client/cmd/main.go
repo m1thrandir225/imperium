@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/m1thrandir225/imperium/apps/client/internal/server"
+	"github.com/m1thrandir225/imperium/apps/client/config"
+	"github.com/m1thrandir225/imperium/apps/client/internal"
 )
 
 func main() {
-	router := server.SetupRouter()
+	config := config.Load()
 
-	router.Run(":8080")
+	router := internal.SetupRouter(config)
+
+	router.Run(":8081")
 	fmt.Println("This is the client app.")
 }

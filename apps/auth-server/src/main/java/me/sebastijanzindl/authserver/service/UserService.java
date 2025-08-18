@@ -3,6 +3,7 @@ package me.sebastijanzindl.authserver.service;
 import me.sebastijanzindl.authserver.dto.UpdateUserDTO;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -10,9 +11,11 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User update(UUID id, UpdateUserDTO input) {
@@ -24,11 +27,24 @@ public class UserService {
         return this.userRepository.save(me);
     }
 
-    public User updatePassword(UUID id, String oldPassword, String newPassword) {
+    public User updatePassword(UUID id, String oldPassword, String newPassword) throws Exception {
         User user = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id " + id + " not found"));
 
-        user.setPassword(newPassword);
+        if(!user.getPassword().equals(newPassword)) {
+            throw new RuntimeException("Old password does not match");
+        }
+
+        String hashedPassword = passwordEncoder.encode(newPassword);;;
+
+        user.setPassword(hashedPassword);
+
+        return this.userRepository.save(user);
     }
 
-    public User delete(UUID id) {}
+    public User delete(UUID id) {
+        User user = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id " + id + " not found"));
+
+        this.userRepository.delete(user);
+        return user;
+    }
 }

@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import me.sebastijanzindl.authserver.model.enums.TOKEN_TYPE;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,6 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/api/v1/auth/");
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -49,14 +56,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         try {
             final String jwt = authorizationHeader.substring(7);
-            final String userEmail = jwtUtils.extractUsername(jwt);
+            final String userEmail = jwtUtils.extractUsername(jwt, TOKEN_TYPE.ACCESS);
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (userEmail != null && authentication == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-                if(jwtUtils.isTokenValid(jwt, userDetails)) {
+                if(jwtUtils.isTokenValid(jwt, userDetails, TOKEN_TYPE.ACCESS)) {
                     UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
