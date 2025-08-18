@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
+
 @RequestMapping("/api/v1/auth")
 @RestController
 public class AuthController {
@@ -42,6 +44,7 @@ public class AuthController {
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
         UserResponse response = new UserResponse(registeredUser);
+
         return ResponseEntity.ok(response);
     }
 
@@ -52,12 +55,14 @@ public class AuthController {
         User user  = authenticationService.authenticate(loginUserDTO);
 
         String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
+        Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
         LoginResponse response = new LoginResponse();
-        response.setToken(jwtToken);
+        response.setAccessToken(jwtToken);
+        response.setAccessTokenExpiration(accessTokenExpiration);
         response.setRefreshToken(refreshToken.getToken());
-        response.setExpiresIn(jwtUtils.getTokenExpiration(TOKEN_TYPE.ACCESS));
+        response.setRefreshTokenExpiration(Date.from(refreshToken.getExpiresAt()));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -71,7 +76,11 @@ public class AuthController {
                 .map(RefreshToken::getUser)
                 .map(user -> {
                     String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
-                    RefreshTokenResponse response = new RefreshTokenResponse(jwtToken);
+                    Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
+                    RefreshTokenResponse response = new RefreshTokenResponse();
+                    response.setAccessToken(jwtToken);
+                    response.setExpiresAt(accessTokenExpiration);
+
                     return ResponseEntity.ok(response);
                 }).orElseThrow(() -> new RuntimeException("Refresh token not found"));
     }

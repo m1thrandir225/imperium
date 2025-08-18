@@ -1,8 +1,10 @@
 package me.sebastijanzindl.authserver.responses;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import me.sebastijanzindl.authserver.dto.UserDTO;
 import me.sebastijanzindl.authserver.model.Client;
 import me.sebastijanzindl.authserver.model.Host;
 import me.sebastijanzindl.authserver.model.User;
@@ -12,23 +14,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-@AllArgsConstructor
+@Setter
 public class UserResponse {
-    private UUID id;
-    private String email;
-    private String name;
-    private Date createdAt;
-    private Date updatedAt;
-    private List<Client> clients;
-    private List<Host> hosts;
+    @JsonProperty("user")
+    public UserDTO user;
 
     public UserResponse(User user) {
-        this.id = user.getId();
-        this.email = user.getEmail();
-        this.name = user.getName();
-        this.createdAt = user.getCreatedAt();
-        this.updatedAt = user.getUpdatedAt();
-        this.clients = user.getClients();
-        this.hosts = user.getHosts();
+        this.user = new UserDTO(user);
     }
 }

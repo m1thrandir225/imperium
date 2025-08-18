@@ -70,7 +70,7 @@ public class JwtUtils {
         return extractExpiration(token, type).before(new Date());
     }
 
-    private Date extractExpiration(String token,  TOKEN_TYPE type) {
+    public Date extractExpiration(String token,  TOKEN_TYPE type) {
         return extractClaim(token, Claims::getExpiration, type);
     }
 
