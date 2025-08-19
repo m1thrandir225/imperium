@@ -1,3 +1,4 @@
+// Package video provides a wrapper for the ffmpeg command line tool, and takes care of the encoding process.
 package video
 
 type Config struct {

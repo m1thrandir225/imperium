@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
-	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
-	"time"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
+	"github.com/m1thrandir225/imperium/apps/host/internal/video"
+	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
 )
 
 func main() {
@@ -17,45 +16,37 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	recorder := video.NewRecorder(&cfg.VideoConfig)
+	streamer, err := webrtc.NewStreamer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	signalingAddr := "127.0.0.1:8088"
+	go func() {
+		if err := webrtc.StartHTTPServer(streamer, signalingAddr); err != nil {
+			log.Printf("Error starting signaling server: %v", err)
+		}
+	}()
+
+	go func() {
+		h264Stream, err := recorder.RecordScreen(nil)
+		if err != nil {
+			log.Printf("Error recording screen: %v", err)
+		}
+		streamer.StartStream(h264Stream, cfg.VideoConfig.FPS)
+	}()
+
 	//
 	//uiManager := ui.NewUIManager(cfg)
 	//
 	//uiManager.RunUI()
 
-	outputPath := "output.mp4"
-
-	recorder := video.NewRecorder(&cfg.VideoConfig)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
 
-	done := make(chan bool)
-	go func() {
-		err := recorder.RecordScreen(outputPath)
-		if err != nil {
-			log.Printf("Error starting recording: %v", err)
-			done <- true
-			return
-		}
-	}()
-	select {
-	case <-sigChan:
-		fmt.Println("\nReceived interrupt signal. Stopping recording...")
-	case <-time.After(10 * time.Second):
-		fmt.Println("Recording duration reached. Stopping...")
-	case <-done:
-		fmt.Println("Recording stopped unexpectedly")
-		return
-	}
-	err = recorder.StopRecording()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	absPath, err := filepath.Abs(outputPath)
-	if err != nil {
-		log.Printf("Warning: Could not resolve absolute path: %v", err)
-		absPath = outputPath
-	}
-	fmt.Printf("Recording saved to: %s\n", absPath)
-
+	_ = recorder.StopRecording()
+	_ = streamer.Close()
 }

@@ -67,3 +67,31 @@ func (w *FFMPEGWrapper) Stop() error {
 	return fmt.Errorf("no running FFmpeg process to stop")
 
 }
+
+func (w *FFMPEGWrapper) ExecuteWithStdout(args ...string) (io.ReadCloser, error) {
+	w.cmd = exec.Command(w.path, args...)
+
+	var err error
+	w.stdin, err = w.cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdin pipe: %v", err)
+	}
+
+	stdout, err := w.cmd.StdoutPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdout pipe: %v", err)
+	}
+
+	w.cmd.Stderr = os.Stderr
+
+	w.running = true
+	log.Printf("Executing command with stdout: %s", w.cmd.String())
+
+	if err := w.cmd.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start command: %v", err)
+	}
+
+	return stdout, nil
+}
+
+// ... existing code ...

@@ -1,2 +1,7 @@
 *.mp4
 *.webm
+*.exe
+*.log
+vendor/
+bin/
+.bin/
