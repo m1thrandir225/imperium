@@ -1,17 +1,26 @@
 package ui
 
 import (
+	"context"
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"log"
+	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 )
 
 type LoginScreen struct {
+	manager     *Manager
+	authService *auth.AuthService
 }
 
-func NewLoginScreen() *LoginScreen {
-	return &LoginScreen{}
+func NewLoginScreen(manager *Manager, authService *auth.AuthService) *LoginScreen {
+	return &LoginScreen{
+		manager:     manager,
+		authService: authService,
+	}
 }
 
 func (s *LoginScreen) Name() string {
@@ -24,21 +33,38 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 	passwordEntry := widget.NewPasswordEntry()
 	passwordEntry.SetPlaceHolder("Password")
 
-	form := &widget.Form{
-		Items: []*widget.FormItem{
-			{Text: "Email", Widget: emailEntry},
-			{Text: "Password", Widget: passwordEntry},
-		},
-		OnSubmit: func() {
-			log.Printf("Login attempt with Email: %s, Password: %s", emailEntry.Text, passwordEntry.Text)
-		},
-	}
+	loginBtn := widget.NewButton("Login", func() {
+		req := auth.LoginRequest{
+			Email:    emailEntry.Text,
+			Password: passwordEntry.Text,
+		}
 
-	return container.NewBorder(
-		nil,
-		widget.NewButton("Back to Main Menu", func() {
-		}),
-		nil, nil,
-		container.NewCenter(container.NewVBox(form)),
+		resp, err := s.authService.Login(context.Background(), req)
+		if err != nil {
+			dialog.ShowError(err, w)
+			return
+		}
+
+		log.Printf("Login successful for user: %s", resp.User.Email)
+		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+	})
+
+	registerBtn := widget.NewButton("Register", func() {
+		s.manager.ShowScreen(REGISTER_SCREEN)
+	})
+
+	backBtn := widget.NewButton("Back to Main Menu", func() {
+		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+	})
+
+	form := container.NewVBox(
+		widget.NewLabel("Login"),
+		emailEntry,
+		passwordEntry,
+		loginBtn,
+		registerBtn,
+		backBtn,
 	)
+
+	return container.NewCenter(form)
 }

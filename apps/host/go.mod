@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	fyne.io/fyne/v2 v2.6.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/pion/rtp v1.8.21
 	github.com/pion/webrtc/v3 v3.3.6
 	github.com/spf13/viper v1.20.1

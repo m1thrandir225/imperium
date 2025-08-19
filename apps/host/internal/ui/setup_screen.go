@@ -2,18 +2,17 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
+	"net/url"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
-	"image/color"
-	"net/url"
-	"strings"
 )
-
-const SETUP_SCREEN = "Setup"
 
 type SetupScreen struct {
 	cfg        *util.Config

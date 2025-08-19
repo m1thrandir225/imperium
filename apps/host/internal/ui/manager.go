@@ -1,17 +1,27 @@
 package ui
 
 import (
+	"log"
+	"os"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
+	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
-	"os"
+	"github.com/m1thrandir225/imperium/apps/host/internal/video"
+	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
 )
 
 type Manager struct {
-	app     fyne.App
-	window  fyne.Window
-	screens map[string]Screen
-	config  *util.Config
+	app            fyne.App
+	window         fyne.Window
+	screens        map[string]Screen
+	config         *util.Config
+	authService    *auth.AuthService
+	programService *programs.ProgramService
+	sessionService *session.SessionService
 }
 
 func NewUIManager(config *util.Config) *Manager {
@@ -22,16 +32,41 @@ func NewUIManager(config *util.Config) *Manager {
 	}
 	manager.window = manager.app.NewWindow("Imperium")
 
+	// Initialize services
+	manager.authService = auth.NewAuthService(config.ServerAddress)
+	manager.programService = programs.NewProgramService(config.ServerAddress, manager.authService.GetToken())
+
+	videoRecorder := video.NewRecorder(&video.Config{
+		FFMPEGPath: config.VideoConfig.FFMPEGPath,
+		FPS:        config.VideoConfig.FPS,
+		Encoder:    config.VideoConfig.Encoder,
+	})
+	webrtcStreamer, err := webrtc.NewStreamer()
+	if err != nil {
+		log.Fatalf("Failed to create webrtc streamer: %v", err)
+	}
+
+	manager.sessionService = session.NewSessionService(
+		config.ServerAddress,
+		manager.authService.GetToken(),
+		manager.programService,
+		videoRecorder,
+		webrtcStreamer,
+	)
+
 	if shouldShowSetup(config) {
 		manager.screens[SETUP_SCREEN] = NewSetupScreen(config, util.SaveConfig, func() {
 			manager.ShowScreen(SETTINGS_SCREEN)
 		})
 	}
+
 	manager.screens[ENCODER_SCREEN] = NewEncoderScreen()
 	manager.screens[SETTINGS_SCREEN] = NewSettingsScreen()
-	manager.screens[LOGIN_SCREEN] = NewLoginScreen()
-	manager.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen()
-	manager.screens[STATUS_SCREEN] = NewStatusScreen()
+	manager.screens[LOGIN_SCREEN] = NewLoginScreen(manager, manager.authService)
+	manager.screens[REGISTER_SCREEN] = NewRegisterScreen(manager, manager.authService)
+	manager.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen(manager)
+	manager.screens[STATUS_SCREEN] = NewStatusScreen(manager, manager.sessionService)
+	manager.screens[PROGRAMS_SCREEN] = NewProgramsScreen(manager, manager.programService)
 
 	return manager
 }

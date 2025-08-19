@@ -4,13 +4,19 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 )
 
 type StatusScreen struct {
+	manager        *Manager
+	sessionService *session.SessionService
 }
 
-func NewStatusScreen() *StatusScreen {
-	return &StatusScreen{}
+func NewStatusScreen(manager *Manager, sessionService *session.SessionService) *StatusScreen {
+	return &StatusScreen{
+		manager:        manager,
+		sessionService: sessionService,
+	}
 }
 
 func (s *StatusScreen) Name() string {

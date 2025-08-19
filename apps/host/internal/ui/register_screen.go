@@ -1,15 +1,25 @@
 package ui
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"log"
+	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 )
 
 type RegisterScreen struct {
-	manager *Manager
+	manager     *Manager
+	authService *auth.AuthService
+}
+
+func NewRegisterScreen(manager *Manager, authService *auth.AuthService) *RegisterScreen {
+	return &RegisterScreen{
+		manager:     manager,
+		authService: authService,
+	}
 }
 
 func (s *RegisterScreen) Name() string {
