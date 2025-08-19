@@ -18,8 +18,13 @@ public class Host {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
+
+    @Column(nullable = false, unique = false)
+    private String name;
+
     @Column(unique = true, nullable = false)
     private String ipAddress;
+
     @Column(unique = true, nullable = false)
     private Integer port;
 

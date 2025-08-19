@@ -1,0 +1,2 @@
+ALTER TABLE public.hosts
+ADD COLUMN name TEXT NOT NULL;
