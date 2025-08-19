@@ -2,9 +2,21 @@
 package video
 
 type Config struct {
-	Encoder    string `json:"encoder"`
-	FPS        int    `json:"fps"`
-	FFMPEGPath string `json:"ffmpeg_path"`
+	Encoder    string `json:"encoder" mapstructure:"encoder"`
+	FPS        int    `json:"fps" mapstructure:"fps"`
+	FFMPEGPath string `json:"ffmpeg_path" mapstructure:"ffmpeg_path"`
+}
+
+func (c *Config) SetEncoder(encoder string) {
+	c.Encoder = encoder
+}
+
+func (c *Config) SetFPS(fps int) {
+	c.FPS = fps
+}
+
+func (c *Config) SetFFMPEGPath(ffmpegPath string) {
+	c.FFMPEGPath = ffmpegPath
 }
 
 func LoadConfig(encoder string, fps int, ffmpegPath string) *Config {

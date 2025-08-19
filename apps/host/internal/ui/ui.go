@@ -6,7 +6,6 @@ const (
 	REGISTER_SCREEN  = "Register"
 	STATUS_SCREEN    = "Status"
 	SETTINGS_SCREEN  = "Settings"
-	ENCODER_SCREEN   = "Encoder"
 	SESSION_SCREEN   = "Session"
 	PROGRAMS_SCREEN  = "Programs"
 	MAIN_MENU_SCREEN = "Main Menu"

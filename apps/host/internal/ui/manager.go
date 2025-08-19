@@ -25,16 +25,21 @@ type Manager struct {
 }
 
 func NewUIManager(config *util.Config) *Manager {
+
 	manager := &Manager{
-		app:     app.New(),
+		app:     app.NewWithID("imperium"),
 		screens: make(map[string]Screen),
 		config:  config,
 	}
 	manager.window = manager.app.NewWindow("Imperium")
 
 	// Initialize services
-	manager.authService = auth.NewAuthService(config.ServerAddress)
-	manager.programService = programs.NewProgramService(config.ServerAddress, manager.authService.GetToken())
+	manager.authService = auth.NewAuthService(
+		config.ServerAddress,
+		config.GetAuthConfig(),
+		config.SetAuthConfig,
+	)
+	manager.programService = programs.NewProgramService(config.ServerAddress, manager.authService.GetConfig().GetAccessToken())
 
 	videoRecorder := video.NewRecorder(&video.Config{
 		FFMPEGPath: config.VideoConfig.FFMPEGPath,
@@ -48,27 +53,35 @@ func NewUIManager(config *util.Config) *Manager {
 
 	manager.sessionService = session.NewSessionService(
 		config.ServerAddress,
-		manager.authService.GetToken(),
+		manager.authService.GetConfig().GetAccessToken(),
 		manager.programService,
 		videoRecorder,
 		webrtcStreamer,
 	)
+	log.Println("shouldShowSetup", shouldShowSetup(config))
+	log.Println("shouldShowLogin", shouldShowLogin(config))
 
-	if shouldShowSetup(config) {
-		manager.screens[SETUP_SCREEN] = NewSetupScreen(config, util.SaveConfig, func() {
-			manager.ShowScreen(SETTINGS_SCREEN)
-		})
-	}
-
-	manager.screens[ENCODER_SCREEN] = NewEncoderScreen()
-	manager.screens[SETTINGS_SCREEN] = NewSettingsScreen()
-	manager.screens[LOGIN_SCREEN] = NewLoginScreen(manager, manager.authService)
-	manager.screens[REGISTER_SCREEN] = NewRegisterScreen(manager, manager.authService)
-	manager.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen(manager)
-	manager.screens[STATUS_SCREEN] = NewStatusScreen(manager, manager.sessionService)
-	manager.screens[PROGRAMS_SCREEN] = NewProgramsScreen(manager, manager.programService)
+	manager.initializeScreens()
 
 	return manager
+}
+
+func (m *Manager) initializeScreens() {
+	m.screens[SETTINGS_SCREEN] = NewSettingsScreen(m, m.config)
+	m.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen(m, m.authService)
+	m.screens[STATUS_SCREEN] = NewStatusScreen(m, m.sessionService)
+	m.screens[PROGRAMS_SCREEN] = NewProgramsScreen(m, m.programService)
+
+	if shouldShowLogin(m.config) {
+		m.screens[LOGIN_SCREEN] = NewLoginScreen(m, m.authService)
+		m.screens[REGISTER_SCREEN] = NewRegisterScreen(m, m.authService)
+	}
+
+	if shouldShowSetup(m.config) {
+		m.screens[SETUP_SCREEN] = NewSetupScreen(m.config, util.SaveConfigSections, func() {
+			m.OnSetupSuccess()
+		})
+	}
 }
 
 func (m *Manager) AddScreen(screen Screen) {
@@ -82,8 +95,13 @@ func (m *Manager) ShowScreen(name string) {
 }
 
 func (m *Manager) RunUI() {
-	if _, exists := m.screens[SETUP_SCREEN]; exists {
+	log.Println("Starting UI with auth check:", shouldShowLogin(m.config))
+	log.Println("Starting UI with setup check:", shouldShowSetup(m.config))
+
+	if shouldShowSetup(m.config) {
 		m.ShowScreen(SETUP_SCREEN)
+	} else if shouldShowLogin(m.config) {
+		m.ShowScreen(LOGIN_SCREEN)
 	} else {
 		m.ShowScreen(MAIN_MENU_SCREEN)
 	}
@@ -94,11 +112,60 @@ func (m *Manager) RunUI() {
 	m.window.ShowAndRun()
 }
 
-func shouldShowSetup(cfg *util.Config) bool {
-	if cfg.VideoConfig.FFMPEGPath == "" {
-		if _, err := os.Stat(cfg.VideoConfig.FFMPEGPath); err == nil {
-			return false
-		}
+func shouldShowLogin(cfg *util.Config) bool {
+	authConfig := cfg.GetAuthConfig()
+
+	if authConfig == nil {
+		return true
 	}
-	return true
+
+	user := authConfig.GetCurrentUser()
+	if user.ID == "" || user.Email == "" {
+		return true
+	}
+
+	// If the refresh token is expired, we need to login again
+	if authConfig.IsRefreshTokenExpired() {
+		return true
+	}
+
+	return false
+}
+
+func (m *Manager) OnSetupSuccess() {
+	delete(m.screens, SETUP_SCREEN)
+
+	if shouldShowLogin(m.config) {
+		if _, exists := m.screens[LOGIN_SCREEN]; !exists {
+			m.screens[LOGIN_SCREEN] = NewLoginScreen(m, m.authService)
+			m.screens[REGISTER_SCREEN] = NewRegisterScreen(m, m.authService)
+		}
+		m.ShowScreen(LOGIN_SCREEN)
+	} else {
+		m.ShowScreen(MAIN_MENU_SCREEN)
+	}
+}
+
+func (m *Manager) OnLoginSuccess() {
+	delete(m.screens, LOGIN_SCREEN)
+	delete(m.screens, REGISTER_SCREEN)
+	m.ShowScreen(MAIN_MENU_SCREEN)
+}
+
+func shouldShowSetup(cfg *util.Config) bool {
+
+	if cfg.VideoConfig == nil || cfg.VideoConfig.FFMPEGPath == "" {
+		return true
+	}
+
+	if _, err := os.Stat(cfg.VideoConfig.FFMPEGPath); err != nil {
+		return true
+	}
+
+	// Check if server address is configured
+	if cfg.ServerAddress == "" {
+		return true
+	}
+
+	return false
 }

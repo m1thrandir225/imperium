@@ -26,7 +26,9 @@ func (s *StatusScreen) Name() string {
 func (s *StatusScreen) Render(w fyne.Window) fyne.CanvasObject {
 	return container.NewBorder(
 		nil,
-		widget.NewButton("Back to Main Menu", func() {}),
+		widget.NewButton("Back to Main Menu", func() {
+			s.manager.ShowScreen(MAIN_MENU_SCREEN)
+		}),
 		nil, nil,
 		container.NewCenter(widget.NewLabel("Status: No one connected")),
 	)

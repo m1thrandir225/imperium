@@ -6,18 +6,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
 
 type AuthService struct {
+	config             *Config
 	authServiceBaseURL string
 	httpClient         *http.Client
-	token              string
+	saveConfig         func(config *Config)
 }
 
-func (s *AuthService) GetToken() string {
-	return s.token
+func (s *AuthService) GetConfig() *Config {
+	return s.config
 }
 
 func (s *AuthService) GetAuthURL() string {
@@ -28,16 +30,14 @@ func (s *AuthService) GetHTTPClient() *http.Client {
 	return s.httpClient
 }
 
-func (s *AuthService) setToken(newToken string) {
-	s.token = newToken
-}
-
-func NewAuthService(authServiceBaseURL string) *AuthService {
+func NewAuthService(authServiceBaseURL string, config *Config, saveConfig func(config *Config)) *AuthService {
 	return &AuthService{
 		authServiceBaseURL: authServiceBaseURL,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		config:     config,
+		saveConfig: saveConfig,
 	}
 }
 
@@ -69,8 +69,18 @@ func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginRespon
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
+	config := s.config
+	config.SetAccessToken(result.AccessToken)
+	config.SetAccessTokenExpiresAt(result.AccessTokenExpiresAt)
+	config.SetRefreshToken(result.RefreshToken)
+	config.SetRefreshTokenExpiresAt(result.RefreshTokenExpiresAt)
+	config.SetCurrentUser(result.User)
 
-	s.token = result.AccessToken
+	log.Println("result", result)
+	log.Println("config", config)
+
+	s.saveConfig(config)
+
 	return &result, nil
 }
 
@@ -102,8 +112,6 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*Regis
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
-
-	s.token = result.AccessToken
 	return &result, nil
 }
 
@@ -120,7 +128,7 @@ func (s *AuthService) CreateHost(ctx context.Context, req CreateHostRequest) (*H
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+s.token)
+	httpReq.Header.Set("Authorization", "Bearer "+s.config.GetAccessToken())
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
@@ -138,4 +146,14 @@ func (s *AuthService) CreateHost(ctx context.Context, req CreateHostRequest) (*H
 	}
 
 	return &result, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context) error {
+	s.config.SetAccessToken("")
+	s.config.SetRefreshToken("")
+	s.config.SetAccessTokenExpiresAt(time.Time{})
+	s.config.SetRefreshTokenExpiresAt(time.Time{})
+	s.config.SetCurrentUser(User{})
+	s.saveConfig(s.config)
+	return nil
 }

@@ -11,6 +11,9 @@ import (
 )
 
 func main() {
+	os.Setenv("LC_ALL", "C")
+	os.Setenv("FYNE_LANGUAGE", "en")
+
 	cfg, err := util.LoadConfig()
 	if err != nil {
 		log.Fatal(err)

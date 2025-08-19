@@ -1,18 +1,24 @@
 package ui
 
 import (
+	"context"
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 )
 
 type MainMenuScreen struct {
-	manager *Manager
+	manager     *Manager
+	authService *auth.AuthService
 }
 
-func NewMainMenuScreen(manager *Manager) *MainMenuScreen {
+func NewMainMenuScreen(manager *Manager, authService *auth.AuthService) *MainMenuScreen {
 	return &MainMenuScreen{
-		manager: manager,
+		manager:     manager,
+		authService: authService,
 	}
 }
 
@@ -30,13 +36,13 @@ func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
 			widget.NewButton("Programs", func() {
 				s.manager.ShowScreen(PROGRAMS_SCREEN)
 			}),
-			widget.NewButton("Encoder List", func() {
-				s.manager.ShowScreen(ENCODER_SCREEN)
-			}),
 			widget.NewButton("Settings", func() {
 				s.manager.ShowScreen(SETTINGS_SCREEN)
 			}),
-			widget.NewButton("Login", func() {
+			widget.NewButton("Logout", func() {
+				if err := s.authService.Logout(context.Background()); err != nil {
+					log.Println("Failed to logout:", err)
+				}
 				s.manager.ShowScreen(LOGIN_SCREEN)
 			}),
 		),

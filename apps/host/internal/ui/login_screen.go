@@ -46,7 +46,7 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 		}
 
 		log.Printf("Login successful for user: %s", resp.User.Email)
-		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+		s.manager.OnLoginSuccess()
 	})
 
 	registerBtn := widget.NewButton("Register", func() {

@@ -1,15 +1,17 @@
 package auth
 
+import "time"
+
 type LoginResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	User         User   `json:"user"`
+	AccessToken           string    `json:"access_token"`
+	RefreshToken          string    `json:"refresh_token"`
+	User                  User      `json:"user"`
+	AccessTokenExpiresAt  time.Time `json:"access_token_expires_in"`
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_in"`
 }
 
 type RegisterResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	User         User   `json:"user"`
+	User User `json:"user"`
 }
 
 type Host struct {
@@ -17,10 +19,4 @@ type Host struct {
 	IPAddress string `json:"ipAddress"`
 	Port      int    `json:"port"`
 	Status    string `json:"status"`
-	Owner     User   `json:"owner"`
-}
-
-type User struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
 }

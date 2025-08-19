@@ -16,11 +16,11 @@ import (
 
 type SetupScreen struct {
 	cfg        *util.Config
-	saveConfig func(config *util.Config) error
+	saveConfig func(config *util.Config, sections ...string) error
 	onComplete func()
 }
 
-func NewSetupScreen(cfg *util.Config, saveConfig func(config *util.Config) error, onComplete func()) *SetupScreen {
+func NewSetupScreen(cfg *util.Config, saveConfig func(config *util.Config, sections ...string) error, onComplete func()) *SetupScreen {
 	return &SetupScreen{
 		cfg:        cfg,
 		saveConfig: saveConfig,
@@ -96,7 +96,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 		s.cfg.ServerAddress = serverAddressEntry.Text
 
-		if err := s.saveConfig(s.cfg); err != nil {
+		if err := s.saveConfig(s.cfg, "video", "server_address"); err != nil {
 			dialog.ShowError(err, w)
 			return
 		}
