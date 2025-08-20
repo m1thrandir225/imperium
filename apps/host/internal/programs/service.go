@@ -2,7 +2,6 @@
 package programs
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,18 +11,23 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 )
 
 type ProgramService struct {
 	authServerBaseURL string
-	httpClient        *http.Client
+	httpClient        *httpclient.Client
 	token             string
 }
 
-func NewProgramService(authServerBaseURL string, token string) *ProgramService {
+func NewProgramService(authServerBaseURL string,
+	token string,
+	authService interface{ GetAuthenticatedClient() *httpclient.Client },
+) *ProgramService {
 	return &ProgramService{
 		authServerBaseURL: authServerBaseURL,
-		httpClient:        &http.Client{},
+		httpClient:        authService.GetAuthenticatedClient(),
 		token:             token,
 	}
 }
@@ -104,32 +108,19 @@ func (s *ProgramService) GetWindowTitle(processName string) (string, error) {
 }
 
 func (s *ProgramService) RegisterProgram(ctx context.Context, req CreateProgramRequest, hostID string) (*Program, error) {
-	body, err := json.Marshal(req)
+	url := fmt.Sprintf("/api/v1/hosts/%s/programs", hostID)
+
+	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), true, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-
-	url := fmt.Sprintf("%s/api/v1/hosts/%s/programs", s.authServerBaseURL, hostID)
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+s.token)
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("register program failed: %s", resp.Status)
+		return nil, fmt.Errorf("register program failed: %d", resp.StatusCode)
 	}
 
 	var result Program
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return nil, err
 	}
 
@@ -137,26 +128,19 @@ func (s *ProgramService) RegisterProgram(ctx context.Context, req CreateProgramR
 }
 
 func (s *ProgramService) GetProgramByID(ctx context.Context, programID string) (*Program, error) {
-	url := fmt.Sprintf("%s/api/v1/programs/%s", s.authServerBaseURL, programID)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	url := fmt.Sprintf("/api/v1/programs/%s", programID)
+
+	resp, err := s.httpClient.Get(ctx, url, make(map[string]string), make(map[string]string), true)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Set("Authorization", "Bearer "+s.token)
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("get program failed: %s", resp.Status)
+		return nil, fmt.Errorf("get program failed: %d", resp.StatusCode)
 	}
 
 	var program Program
-	if err := json.NewDecoder(resp.Body).Decode(&program); err != nil {
+	if err := json.Unmarshal(resp.Body, &program); err != nil {
 		return nil, err
 	}
 

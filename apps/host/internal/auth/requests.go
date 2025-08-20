@@ -14,3 +14,7 @@ type CreateHostRequest struct {
 	IPAddress string `json:"ipAddress"`
 	Port      int    `json:"port"`
 }
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"token"`
+}

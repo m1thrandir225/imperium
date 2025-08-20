@@ -1,9 +1,6 @@
 package ui
 
 import (
-	"context"
-	"log"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -40,10 +37,7 @@ func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
 				s.manager.ShowScreen(SETTINGS_SCREEN)
 			}),
 			widget.NewButton("Logout", func() {
-				if err := s.authService.Logout(context.Background()); err != nil {
-					log.Println("Failed to logout:", err)
-				}
-				s.manager.ShowScreen(LOGIN_SCREEN)
+				s.manager.OnLogout()
 			}),
 		),
 	)

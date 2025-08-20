@@ -20,3 +20,8 @@ type Host struct {
 	Port      int    `json:"port"`
 	Status    string `json:"status"`
 }
+
+type RefreshTokenResponse struct {
+	AccessToken string    `json:"access_token"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}

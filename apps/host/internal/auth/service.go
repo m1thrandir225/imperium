@@ -2,19 +2,20 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 )
 
 type AuthService struct {
 	config             *Config
 	authServiceBaseURL string
-	httpClient         *http.Client
+	httpClient         *httpclient.Client
 	saveConfig         func(config *Config)
 }
 
@@ -26,47 +27,40 @@ func (s *AuthService) GetAuthURL() string {
 	return s.authServiceBaseURL
 }
 
-func (s *AuthService) GetHTTPClient() *http.Client {
+func (s *AuthService) GetAuthenticatedClient() *httpclient.Client {
 	return s.httpClient
 }
 
 func NewAuthService(authServiceBaseURL string, config *Config, saveConfig func(config *Config)) *AuthService {
-	return &AuthService{
+	authService := &AuthService{
 		authServiceBaseURL: authServiceBaseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
-		config:     config,
-		saveConfig: saveConfig,
+		config:             config,
+		saveConfig:         saveConfig,
 	}
+
+	authService.httpClient = httpclient.NewClient(
+		authServiceBaseURL,
+		config,
+		authService,
+	)
+
+	return authService
 }
 
 func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
-	body, err := json.Marshal(req)
+	url := "/api/v1/auth/login"
+
+	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), false, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-
-	url := fmt.Sprintf("%s/api/v1/auth/login", s.GetAuthURL())
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("login failed: %s", resp.Status)
+		return nil, fmt.Errorf("login failed: %d", resp.StatusCode)
 	}
 
 	var result LoginResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return nil, err
 	}
 	config := s.config
@@ -85,67 +79,71 @@ func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginRespon
 }
 
 func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*RegisterResponse, error) {
-	body, err := json.Marshal(req)
+	url := "/api/v1/auth/register"
+
+	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), false, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-
-	url := fmt.Sprintf("%s/api/v1/auth/register", s.GetAuthURL())
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("register failed: %s", resp.Status)
+		return nil, fmt.Errorf("register failed: %d", resp.StatusCode)
 	}
 
 	var result RegisterResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 func (s *AuthService) CreateHost(ctx context.Context, req CreateHostRequest) (*Host, error) {
-	body, err := json.Marshal(req)
+	url := "/api/v1/hosts"
+
+	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), true, make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
-
-	url := fmt.Sprintf("%s/api/v1/hosts", s.GetAuthURL())
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+s.config.GetAccessToken())
-
-	resp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("create host failed: %s", resp.Status)
+		return nil, fmt.Errorf("create host failed: %d", resp.StatusCode)
 	}
 
 	var result Host
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return nil, err
 	}
 
 	return &result, nil
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context) error {
+	if s.config.GetRefreshToken() == "" {
+		return fmt.Errorf("refresh token is empty")
+	}
+
+	requestBody := RefreshTokenRequest{
+		RefreshToken: s.config.GetRefreshToken(),
+	}
+
+	url := "/api/v1/auth/refresh"
+
+	// Refresh token endpoint doesn't need Authorization header (uses refresh token in body)
+	resp, err := s.httpClient.Post(ctx, url, requestBody, make(map[string]string), false, make(map[string]string))
+	if err != nil {
+		return err
+	}
+
+	var response RefreshTokenResponse
+	if err := json.Unmarshal(resp.Body, &response); err != nil {
+		return err
+	}
+
+	s.config.SetAccessToken(response.AccessToken)
+	s.config.SetAccessTokenExpiresAt(response.ExpiresAt)
+	s.saveConfig(s.config)
+
+	return nil
 }
 
 func (s *AuthService) Logout(ctx context.Context) error {

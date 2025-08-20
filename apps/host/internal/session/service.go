@@ -4,11 +4,11 @@ package session
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
@@ -16,7 +16,7 @@ import (
 
 type SessionService struct {
 	authServerBaseURL string
-	httpClient        *http.Client
+	httpClient        *httpclient.Client
 	token             string
 	programService    *programs.ProgramService
 	videoRecorder     *video.Recorder
@@ -26,13 +26,21 @@ type SessionService struct {
 	mu                sync.Mutex
 }
 
-func NewSessionService(authServerBaseURL string, token string, programService *programs.ProgramService, videoRecorder *video.Recorder, webrtcStreamer *webrtc.Streamer) *SessionService {
+func NewSessionService(
+	authServerBaseURL string,
+	token string,
+	authService interface{ GetAuthenticatedClient() *httpclient.Client },
+	programService *programs.ProgramService,
+	videoRecorder *video.Recorder,
+	webrtcStreamer *webrtc.Streamer,
+) *SessionService {
 	return &SessionService{
 		authServerBaseURL: authServerBaseURL,
 		programService:    programService,
 		videoRecorder:     videoRecorder,
 		webrtcStreamer:    webrtcStreamer,
 		token:             token,
+		httpClient:        authService.GetAuthenticatedClient(),
 	}
 }
 

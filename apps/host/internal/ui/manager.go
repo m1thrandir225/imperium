@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -39,7 +40,11 @@ func NewUIManager(config *util.Config) *Manager {
 		config.GetAuthConfig(),
 		config.SetAuthConfig,
 	)
-	manager.programService = programs.NewProgramService(config.ServerAddress, manager.authService.GetConfig().GetAccessToken())
+	manager.programService = programs.NewProgramService(
+		config.ServerAddress,
+		manager.authService.GetConfig().GetAccessToken(),
+		manager.authService,
+	)
 
 	videoRecorder := video.NewRecorder(&video.Config{
 		FFMPEGPath: config.VideoConfig.FFMPEGPath,
@@ -54,6 +59,7 @@ func NewUIManager(config *util.Config) *Manager {
 	manager.sessionService = session.NewSessionService(
 		config.ServerAddress,
 		manager.authService.GetConfig().GetAccessToken(),
+		manager.authService,
 		manager.programService,
 		videoRecorder,
 		webrtcStreamer,
@@ -150,6 +156,17 @@ func (m *Manager) OnLoginSuccess() {
 	delete(m.screens, LOGIN_SCREEN)
 	delete(m.screens, REGISTER_SCREEN)
 	m.ShowScreen(MAIN_MENU_SCREEN)
+}
+
+func (m *Manager) OnLogout() {
+	m.authService.Logout(context.Background())
+	m.ResetScreens()
+	m.ShowScreen(LOGIN_SCREEN)
+}
+
+func (m *Manager) ResetScreens() {
+	m.screens = make(map[string]Screen)
+	m.initializeScreens()
 }
 
 func shouldShowSetup(cfg *util.Config) bool {
