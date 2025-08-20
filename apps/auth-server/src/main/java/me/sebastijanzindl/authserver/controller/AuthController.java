@@ -2,6 +2,7 @@ package me.sebastijanzindl.authserver.controller;
 
 import me.sebastijanzindl.authserver.dto.LoginUserDTO;
 import me.sebastijanzindl.authserver.dto.RegisterUserDTO;
+import me.sebastijanzindl.authserver.dto.UserDTO;
 import me.sebastijanzindl.authserver.model.RefreshToken;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.model.enums.TOKEN_TYPE;
@@ -59,6 +60,7 @@ public class AuthController {
         RefreshToken refreshToken = refreshTokenService.create(user);
 
         LoginResponse response = new LoginResponse();
+        response.setUser(new UserDTO(user));
         response.setAccessToken(jwtToken);
         response.setAccessTokenExpiration(accessTokenExpiration);
         response.setRefreshToken(refreshToken.getToken());
