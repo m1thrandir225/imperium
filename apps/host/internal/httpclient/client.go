@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -36,6 +37,7 @@ func (c *Client) GetBaseURL() string {
 
 // Do performs a HTTP Request and automatically refreshes the access token if it is expired
 func (c *Client) Do(ctx context.Context, req Request) (*Response, error) {
+	fmt.Printf("=== Starting request to: %s %s ===\n", req.Method, req.URL)
 	if req.Protected {
 		if c.tokenGetter.IsAccessTokenExpired() || time.Until(c.tokenGetter.GetAccessTokenExpiresAt()) < 5*time.Minute {
 			if err := c.tokenRefresher.RefreshToken(ctx); err != nil {
@@ -67,7 +69,7 @@ func (c *Client) Do(ctx context.Context, req Request) (*Response, error) {
 }
 
 // doRequest performs a HTTP Request
-func (c *Client) doRequest(ctx context.Context, req Request, useRefreshToken bool) (*Response, error) {
+func (c *Client) doRequest(ctx context.Context, req Request, protected bool) (*Response, error) {
 	var body io.Reader
 	if req.Body != nil {
 		jsonBody, err := json.Marshal(req.Body)
@@ -97,7 +99,8 @@ func (c *Client) doRequest(ctx context.Context, req Request, useRefreshToken boo
 		httpReq.URL.RawQuery = queryParams.Encode()
 	}
 
-	if req.Protected {
+	if protected {
+		log.Printf("Adding Authorization header with token: %s", c.tokenGetter.GetAccessToken())
 		if c.tokenGetter.GetAccessToken() != "" {
 			httpReq.Header.Set("Authorization", "Bearer "+c.tokenGetter.GetAccessToken())
 		}

@@ -31,6 +31,15 @@ func NewHostManager(config *Config, authService *auth.AuthService, programServic
 }
 
 func (hm *HostManager) Initialize(ctx context.Context) error {
+	// Check if we have valid authentication
+	if hm.authService.GetConfig().GetAccessToken() == "" {
+		return fmt.Errorf("no access token available")
+	}
+
+	if hm.authService.GetConfig().IsAccessTokenExpired() {
+		return fmt.Errorf("access token is expired")
+	}
+
 	// Get hostname and IP
 	hostname, err := os.Hostname()
 	if err != nil {

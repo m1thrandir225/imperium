@@ -25,7 +25,6 @@ func NewProgramDB(dbPath string) (*ProgramDB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-	defer db.Close()
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)

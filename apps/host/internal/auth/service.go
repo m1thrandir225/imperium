@@ -152,6 +152,10 @@ func (s *AuthService) RegisterHost(ctx context.Context, hostname, ipAddress stri
 		IPAddress: ipAddress,
 		Port:      port,
 	}
+	log.Printf("Registering host with request: %+v", req)
+	if jsonData, err := json.Marshal(req); err == nil {
+		log.Printf("Request JSON: %s", string(jsonData))
+	}
 	return s.CreateHost(ctx, req)
 }
 

@@ -11,9 +11,9 @@ type RegisterRequest struct {
 }
 
 type CreateHostRequest struct {
+	Name      string `json:"name"`
 	IPAddress string `json:"ip_address"`
 	Port      int    `json:"port"`
-	Name      string `json:"name"`
 }
 
 type RefreshTokenRequest struct {
