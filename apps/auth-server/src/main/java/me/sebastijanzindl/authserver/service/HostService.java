@@ -20,6 +20,7 @@ public class HostService {
 
     public Host create(CreateHostDTO input, User owner) {
         Host host = new Host();
+        host.setName(input.getName());
         host.setIpAddress(input.getIpAddress());
         host.setPort(input.getPort());
         host.setStatus(HOST_STATUS.AVAILABLE);
