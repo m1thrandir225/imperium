@@ -42,10 +42,10 @@ public class User  implements UserDetails {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     private List<Client> clients = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     private List<Host> hosts = new ArrayList<>();
 
     @Override

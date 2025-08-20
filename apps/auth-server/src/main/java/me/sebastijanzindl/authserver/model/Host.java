@@ -28,9 +28,9 @@ public class Host {
     @Column(unique = true, nullable = false)
     private Integer port;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = false, nullable = false)
     private HOST_STATUS status = HOST_STATUS.AVAILABLE;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     private User owner;
 }

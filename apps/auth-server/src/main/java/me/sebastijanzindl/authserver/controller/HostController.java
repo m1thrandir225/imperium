@@ -31,11 +31,17 @@ public class HostController {
             @AuthenticationPrincipal User currentUser,
             @RequestBody CreateHostDTO createHostDTO
     ) {
+        System.out.println(createHostDTO.getIpAddress());
+        System.out.println(createHostDTO.getPort());
+        System.out.println(createHostDTO.getName());
+        System.out.println(currentUser.getName());
         try {
             Host host = this.hostService.create(createHostDTO, currentUser);
             return ResponseEntity.ok(new HostResponse(host));
         } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
+            exception.printStackTrace();
+            System.out.println(exception.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
