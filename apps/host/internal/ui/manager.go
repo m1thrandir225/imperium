@@ -2,12 +2,14 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
@@ -23,6 +25,7 @@ type Manager struct {
 	authService    *auth.AuthService
 	programService *programs.ProgramService
 	sessionService *session.SessionService
+	hostManager    *host.HostManager
 }
 
 func NewUIManager(config *util.Config) *Manager {
@@ -34,16 +37,20 @@ func NewUIManager(config *util.Config) *Manager {
 	}
 	manager.window = manager.app.NewWindow("Imperium")
 
+	dbPath := fmt.Sprintf("%s/programs.db", util.GetConfigDir())
+
 	// Initialize services
 	manager.authService = auth.NewAuthService(
 		config.ServerAddress,
 		config.GetAuthConfig(),
 		config.SetAuthConfig,
 	)
+
 	manager.programService = programs.NewProgramService(
 		config.ServerAddress,
 		manager.authService.GetConfig().GetAccessToken(),
 		manager.authService,
+		dbPath,
 	)
 
 	videoRecorder := video.NewRecorder(&video.Config{
@@ -51,6 +58,7 @@ func NewUIManager(config *util.Config) *Manager {
 		FPS:        config.VideoConfig.FPS,
 		Encoder:    config.VideoConfig.Encoder,
 	})
+
 	webrtcStreamer, err := webrtc.NewStreamer()
 	if err != nil {
 		log.Fatalf("Failed to create webrtc streamer: %v", err)
@@ -64,6 +72,25 @@ func NewUIManager(config *util.Config) *Manager {
 		videoRecorder,
 		webrtcStreamer,
 	)
+
+	hostConfig := config.GetHostConfig()
+	if hostConfig == nil {
+		hostConfig = &host.Config{
+			HostName:  "",
+			IPAddress: "",
+			Port:      8080,
+			UniqueID:  "",
+			Status:    string(host.StatusAvailable),
+		}
+		config.SetHostConfig(hostConfig)
+	}
+
+	manager.hostManager = host.NewHostManager(
+		hostConfig,
+		manager.authService,
+		manager.programService,
+	)
+
 	log.Println("shouldShowSetup", shouldShowSetup(config))
 	log.Println("shouldShowLogin", shouldShowLogin(config))
 
@@ -155,11 +182,22 @@ func (m *Manager) OnSetupSuccess() {
 func (m *Manager) OnLoginSuccess() {
 	delete(m.screens, LOGIN_SCREEN)
 	delete(m.screens, REGISTER_SCREEN)
+
+	ctx := context.Background()
+	if err := m.hostManager.Initialize(ctx); err != nil {
+		log.Printf("Failed to initialize host manager: %v", err)
+	}
+
 	m.ShowScreen(MAIN_MENU_SCREEN)
 }
 
 func (m *Manager) OnLogout() {
 	m.authService.Logout(context.Background())
+
+	if m.hostManager != nil {
+		m.hostManager.Shutdown()
+	}
+
 	m.ResetScreens()
 	m.ShowScreen(LOGIN_SCREEN)
 }

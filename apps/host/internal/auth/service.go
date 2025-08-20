@@ -146,6 +146,15 @@ func (s *AuthService) RefreshToken(ctx context.Context) error {
 	return nil
 }
 
+func (s *AuthService) RegisterHost(ctx context.Context, hostname, ipAddress string, port int) (*Host, error) {
+	req := CreateHostRequest{
+		Name:      hostname,
+		IPAddress: ipAddress,
+		Port:      port,
+	}
+	return s.CreateHost(ctx, req)
+}
+
 func (s *AuthService) Logout(ctx context.Context) error {
 	s.config.SetAccessToken("")
 	s.config.SetRefreshToken("")

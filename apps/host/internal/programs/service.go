@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,17 +20,63 @@ type ProgramService struct {
 	authServerBaseURL string
 	httpClient        *httpclient.Client
 	token             string
+	db                *ProgramDB
 }
 
 func NewProgramService(authServerBaseURL string,
 	token string,
 	authService interface{ GetAuthenticatedClient() *httpclient.Client },
+	dbPath string,
 ) *ProgramService {
+	db, err := NewProgramDB(dbPath)
+	if err != nil {
+		//TODO: maybe we should panic
+		log.Printf("Failed to initialize program database: %v", err)
+	}
 	return &ProgramService{
 		authServerBaseURL: authServerBaseURL,
 		httpClient:        authService.GetAuthenticatedClient(),
 		token:             token,
+		db:                db,
 	}
+}
+
+func (s *ProgramService) DiscoverAndSavePrograms() error {
+	programs, err := s.DiscoverPrograms()
+	if err != nil {
+		return err
+	}
+
+	for _, program := range programs {
+		if s.db != nil {
+			if err := s.db.SaveProgram(&program); err != nil {
+				log.Printf("Failed to save program %s: %v", program.Name, err)
+			}
+		}
+	}
+
+	if s.db != nil {
+		if err := s.db.CleanupNonExistentPrograms(); err != nil {
+			log.Printf("Failed to cleanup non-existent programs: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *ProgramService) GetLocalPrograms() ([]*Program, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("program database not initialized")
+	}
+
+	return s.db.GetPrograms()
+}
+
+func (s *ProgramService) GetLocalProgramByPath(path string) (*Program, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("program database not initialized")
+	}
+	return s.db.GetProgramByPath(path)
 }
 
 func (s *ProgramService) DiscoverPrograms() ([]Program, error) {
