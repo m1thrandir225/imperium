@@ -12,23 +12,31 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode
-@Table(name = "hosts")
+@Table(
+        name = "hosts",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_host_name_ip_port_status",
+                        columnNames = {"name", "ip_address", "port", "status"}
+                )
+        }
+)
 public class Host {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String ipAddress;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private Integer port;
 
-    @Column(unique = false, nullable = false)
+    @Column(nullable = false)
     private HOST_STATUS status = HOST_STATUS.AVAILABLE;
 
     @ManyToOne(fetch = FetchType.LAZY)

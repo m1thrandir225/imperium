@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.controller;
 
+import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.CreateClientDTO;
 import me.sebastijanzindl.authserver.model.Client;
 import me.sebastijanzindl.authserver.model.User;
@@ -21,7 +22,7 @@ public class ClientController {
         this.clientService = clientService;
     }
 
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<List<Client>> getUserClients(
             @AuthenticationPrincipal User currentUser
     ) {
@@ -42,39 +43,28 @@ public class ClientController {
     @PostMapping
     public ResponseEntity<Client> createClient(
             @AuthenticationPrincipal User currentUser,
-            @RequestBody CreateClientDTO input
+            @Valid @RequestBody CreateClientDTO input
     ) {
-        try {
-            Client client = this.clientService.create(input, currentUser);
-            return ResponseEntity.ok(client);
-        }  catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+        Client client = this.clientService.create(input, currentUser);
+        return ResponseEntity.ok(client);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(
             @AuthenticationPrincipal User currentUser,
-            @RequestBody CreateClientDTO input,
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            @Valid @RequestBody CreateClientDTO input
+
     ) {
-        try {
-            Client client = this.clientService.update(id, input, currentUser);
-            return ResponseEntity.ok(client);
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+        Client client = this.clientService.update(id, input, currentUser);
+        return ResponseEntity.ok(client);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<Client> deleteClient(
             @PathVariable UUID id
     ) {
-        try {
-            Client client = this.clientService.delete(id);
-            return ResponseEntity.ok(client);
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+        Client client = this.clientService.delete(id);
+        return ResponseEntity.badRequest().build();
     }
 }

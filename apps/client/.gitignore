@@ -1,0 +1,28 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Test Binaries & Coverage Output
+*.test
+*.out
+coverage.*
+profile.cov
+*.coverprofile
+
+# Vendor 
+vendor/
+
+# Environment File
+.env
+
+#Editors/IDEs
+.idea/
+.vscode/
+

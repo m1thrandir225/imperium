@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import me.sebastijanzindl.authserver.dto.UpdateUserDTO;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.repository.UserRepository;
@@ -19,22 +20,22 @@ public class UserService {
     }
 
     public User update(UUID id, UpdateUserDTO input) {
-        User me = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id " + id + " not found"));
+        User me = this.findById(id);
 
-        me.setName(input.getName());
+        me.setName(input.getFirstName() + " " + input.getLastName());
         me.setEmail(input.getEmail());
 
         return this.userRepository.save(me);
     }
 
-    public User updatePassword(UUID id, String oldPassword, String newPassword) throws Exception {
-        User user = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id " + id + " not found"));
+    public User updatePassword(UUID id, String oldPassword, String newPassword){
+        User user = this.findById(id);
 
         if(!user.getPassword().equals(newPassword)) {
             throw new RuntimeException("Old password does not match");
         }
 
-        String hashedPassword = passwordEncoder.encode(newPassword);;;
+        String hashedPassword = passwordEncoder.encode(newPassword);
 
         user.setPassword(hashedPassword);
 
@@ -42,9 +43,13 @@ public class UserService {
     }
 
     public User delete(UUID id) {
-        User user = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id " + id + " not found"));
+        User user = this.findById(id);
 
         this.userRepository.delete(user);
         return user;
+    }
+
+    private User findById(UUID id) {
+        return this.userRepository.findById(id).orElseThrow(() ->  new EntityNotFoundException("User with id " + id + " not found"));
     }
 }

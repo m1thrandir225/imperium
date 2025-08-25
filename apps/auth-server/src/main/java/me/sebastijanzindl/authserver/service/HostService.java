@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import me.sebastijanzindl.authserver.dto.CreateHostDTO;
 import me.sebastijanzindl.authserver.dto.UpdateHostDTO;
 import me.sebastijanzindl.authserver.model.Host;
@@ -29,12 +30,12 @@ public class HostService {
         return hostRepository.save(host);
     }
 
-    public Host getHost(UUID id) throws Exception {
-        return hostRepository.findById(id).orElseThrow();
+    public Host getHost(UUID id){
+        return this.findById(id);
     }
 
     public Host update(UUID id, UpdateHostDTO input) {
-        Host host = hostRepository.findById(id).orElseThrow();
+        Host host = this.findById(id);
 
         host.setIpAddress(input.getIpAddress());
         host.setPort(input.getPort());
@@ -44,14 +45,19 @@ public class HostService {
     }
 
     public Host updateStatus(UUID id, HOST_STATUS status) {
-        Host host = hostRepository.findById(id).orElseThrow();
+        Host host = this.findById(id);
         host.setStatus(status);
         return hostRepository.save(host);
     }
 
     public Host delete(UUID id) {
-        Host host = hostRepository.findById(id).orElseThrow();
+        Host host = this.findById(id);
+
         hostRepository.delete(host);
         return host;
+    }
+
+    private Host findById(UUID id) {
+        return hostRepository.findById(id).orElseThrow(() ->  new EntityNotFoundException("Host with id " + id + " not found"));
     }
 }

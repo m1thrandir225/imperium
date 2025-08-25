@@ -1,5 +1,7 @@
 package me.sebastijanzindl.authserver.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import lombok.SneakyThrows;
 import me.sebastijanzindl.authserver.dto.CreateClientDTO;
 import me.sebastijanzindl.authserver.model.Client;
 import me.sebastijanzindl.authserver.model.User;
@@ -24,12 +26,13 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
-    public Client getClient(UUID id) throws Exception {
-        return clientRepository.findById(id).orElseThrow();
+    public Client getClient(UUID id){
+        return this.findById(id);
     }
 
-    public Client update(UUID id, CreateClientDTO input, User owner) throws Exception {
-        Client client = clientRepository.findById(id).orElseThrow();
+    @SneakyThrows
+    public Client update(UUID id, CreateClientDTO input, User owner) {
+        Client client = this.findById(id);
 
         if(!client.getOwner().equals(owner)) {
             throw new Exception("Not the same owner");
@@ -40,9 +43,14 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
-    public Client delete(UUID id) throws Exception {
-        Client client = clientRepository.findById(id).orElseThrow();
+    public Client delete(UUID id) {
+        Client client = this.findById(id);
+
         clientRepository.delete(client);
         return client;
+    }
+
+    private Client findById(UUID id) {
+        return this.clientRepository.findById(id).orElseThrow(() ->  new EntityNotFoundException("Client with id " + id + " not found"));
     }
 }

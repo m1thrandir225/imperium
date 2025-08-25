@@ -9,17 +9,27 @@ import java.util.UUID;
 @Setter
 @EqualsAndHashCode
 @Entity
-@Table(name = "clients")
+@Table(
+        name = "clients",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_client_name_ip_address",
+                        columnNames = {"name", "ip_address"}
+                )
+        }
+)
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
-    @Column(unique = true, nullable = false)
+
+    @Column(nullable = false)
     private String name;
-    @Column(unique = true, nullable = false)
+
+    @Column(nullable = false)
     private String ipAddress;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     private User owner;
 }

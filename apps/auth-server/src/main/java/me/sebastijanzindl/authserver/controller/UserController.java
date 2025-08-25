@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.controller;
 
+import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.UpdateUserDTO;
 import me.sebastijanzindl.authserver.dto.UpdateUserPasswordDTO;
 import me.sebastijanzindl.authserver.model.User;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/users")
 @RestController
 public class UserController {
-    private UserService userService;
+    private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -28,7 +29,7 @@ public class UserController {
     @PutMapping("/update")
     public ResponseEntity<UserResponse> updateUser(
             @AuthenticationPrincipal User user,
-            @RequestBody UpdateUserDTO updateUserDTO
+            @Valid @RequestBody UpdateUserDTO updateUserDTO
     ) {
 
         User updatedUser = this.userService.update(user.getId(), updateUserDTO);
@@ -39,14 +40,18 @@ public class UserController {
     @PutMapping("/update-password")
     public ResponseEntity<UserResponse> updatePassword(
             @AuthenticationPrincipal User user,
-            @RequestBody UpdateUserPasswordDTO dto
+            @Valid @RequestBody UpdateUserPasswordDTO dto
     ) {
-        try {
-            User updated = this.userService.updatePassword(user.getId(), dto.getPassword(), dto.getNewPassword());
-            return ResponseEntity.ok(new UserResponse(updated));
+        User updated = this.userService.updatePassword(user.getId(), dto.getPassword(), dto.getNewPassword());
+        return ResponseEntity.ok(new UserResponse(updated));
 
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<User> deleteUser(
+            @AuthenticationPrincipal User user
+    ) {
+        User deletedUser = this.userService.delete(user.getId());
+        return ResponseEntity.ok(deletedUser);
     }
 }

@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.controller;
 
+import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.CreateHostDTO;
 import me.sebastijanzindl.authserver.dto.UpdateHostDTO;
 import me.sebastijanzindl.authserver.model.Host;
@@ -29,33 +30,19 @@ public class HostController {
     @PostMapping
     public ResponseEntity<HostResponse> createHost(
             @AuthenticationPrincipal User currentUser,
-            @RequestBody CreateHostDTO createHostDTO
+            @Valid @RequestBody CreateHostDTO createHostDTO
     ) {
-        System.out.println(createHostDTO.getIpAddress());
-        System.out.println(createHostDTO.getPort());
-        System.out.println(createHostDTO.getName());
-        System.out.println(currentUser.getName());
-        try {
-            Host host = this.hostService.create(createHostDTO, currentUser);
-            return ResponseEntity.ok(new HostResponse(host));
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            System.out.println(exception.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
+        Host host = this.hostService.create(createHostDTO, currentUser);
+        return ResponseEntity.ok(new HostResponse(host));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<HostResponse> getHost(
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id
-            ) {
-        try {
-            Host host = this.hostService.getHost(id);
-            return ResponseEntity.ok(new HostResponse(host));
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+    ){
+        Host host = this.hostService.getHost(id);
+        return ResponseEntity.ok(new HostResponse(host));
     }
 
     @GetMapping
@@ -73,14 +60,10 @@ public class HostController {
     public ResponseEntity<HostResponse> updateHost(
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id,
-            @RequestBody UpdateHostDTO updateHostDTO
-            ) {
-        try {
-            Host updatedHost = this.hostService.update(id, updateHostDTO);
-            return ResponseEntity.ok(new HostResponse(updatedHost));
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+            @Valid @RequestBody UpdateHostDTO updateHostDTO
+    ) {
+        Host updatedHost = this.hostService.update(id, updateHostDTO);
+        return ResponseEntity.ok(new HostResponse(updatedHost));
     }
 
     @PatchMapping("/{id}")
@@ -89,13 +72,8 @@ public class HostController {
             @PathVariable UUID id,
             @RequestBody HOST_STATUS hostStatus
     ) {
-        try {
-            Host updatedHost = this.hostService.updateStatus(id, hostStatus);
-            return ResponseEntity.ok(new HostResponse(updatedHost));
-
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+        Host updatedHost = this.hostService.updateStatus(id, hostStatus);
+        return ResponseEntity.ok(new HostResponse(updatedHost));
     }
 
     @DeleteMapping("/{id}")
@@ -103,12 +81,8 @@ public class HostController {
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id
     ) {
-        try {
-            Host deletedHost = this.hostService.delete(id);
+        Host deletedHost = this.hostService.delete(id);
 
-            return ResponseEntity.ok(new HostResponse(deletedHost));
-        } catch (Exception exception) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(new HostResponse(deletedHost));
     }
 }

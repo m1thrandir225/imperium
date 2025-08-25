@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.controller;
 
+import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.LoginUserDTO;
 import me.sebastijanzindl.authserver.dto.RegisterUserDTO;
 import me.sebastijanzindl.authserver.dto.UserDTO;
@@ -41,7 +42,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(
-            @RequestBody RegisterUserDTO registerUserDTO
+           @Valid @RequestBody RegisterUserDTO registerUserDTO
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
         UserResponse response = new UserResponse(registeredUser);
@@ -51,7 +52,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginUserDTO loginUserDTO
+            @Valid @RequestBody LoginUserDTO loginUserDTO
     ) {
         User user  = authenticationService.authenticate(loginUserDTO);
 
@@ -71,7 +72,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshTokenResponse> refreshToken(
-            @RequestBody RefreshTokenDTO refreshTokenDTO
+            @Valid @RequestBody RefreshTokenDTO refreshTokenDTO
     ) {
         return refreshTokenService.findByToken(refreshTokenDTO.getToken())
                 .map(refreshTokenService::verifyExpiration)
