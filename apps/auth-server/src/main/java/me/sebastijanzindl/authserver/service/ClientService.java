@@ -34,7 +34,7 @@ public class ClientService {
     public Client update(UUID id, CreateClientDTO input, User owner) {
         Client client = this.findById(id);
 
-        if(!client.getOwner().equals(owner)) {
+        if(!client.getOwner().getId().equals(owner.getId())) {
             throw new Exception("Not the same owner");
         }
         client.setName(input.getClientName());

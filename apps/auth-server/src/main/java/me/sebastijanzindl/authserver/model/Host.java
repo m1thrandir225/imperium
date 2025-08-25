@@ -37,6 +37,7 @@ public class Host {
     private Integer port;
 
     @Column(nullable = false)
+//    @Enumerated(EnumType.STRING)
     private HOST_STATUS status = HOST_STATUS.AVAILABLE;
 
     @ManyToOne(fetch = FetchType.LAZY)

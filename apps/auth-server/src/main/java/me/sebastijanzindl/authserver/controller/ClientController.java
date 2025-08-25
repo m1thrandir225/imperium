@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.CreateClientDTO;
 import me.sebastijanzindl.authserver.model.Client;
 import me.sebastijanzindl.authserver.model.User;
+import me.sebastijanzindl.authserver.responses.ClientResponse;
 import me.sebastijanzindl.authserver.service.ClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,48 +24,46 @@ public class ClientController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<Client>> getUserClients(
+    public ResponseEntity<List<ClientResponse>> getUserClients(
             @AuthenticationPrincipal User currentUser
     ) {
         List<Client> clients = currentUser.getClients();
-        return ResponseEntity.ok(clients);
+
+        List<ClientResponse> clientResponses = clients.stream().map(ClientResponse::new).toList();
+        return ResponseEntity.ok(clientResponses);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Client> getClient(@PathVariable UUID id) {
-        try {
-            Client client = this.clientService.getClient(id);
-            return ResponseEntity.ok(client);
-        } catch (Exception exception) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ClientResponse> getClient(@PathVariable UUID id) {
+        Client client = this.clientService.getClient(id);
+        return ResponseEntity.ok(new ClientResponse(client));
     }
 
     @PostMapping
-    public ResponseEntity<Client> createClient(
+    public ResponseEntity<ClientResponse> createClient(
             @AuthenticationPrincipal User currentUser,
             @Valid @RequestBody CreateClientDTO input
     ) {
         Client client = this.clientService.create(input, currentUser);
-        return ResponseEntity.ok(client);
+        return ResponseEntity.ok(new ClientResponse(client));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(
+    public ResponseEntity<ClientResponse> updateClient(
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id,
             @Valid @RequestBody CreateClientDTO input
 
     ) {
         Client client = this.clientService.update(id, input, currentUser);
-        return ResponseEntity.ok(client);
+        return ResponseEntity.ok(new ClientResponse(client));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Client> deleteClient(
+    public ResponseEntity<Void> deleteClient(
             @PathVariable UUID id
     ) {
         Client client = this.clientService.delete(id);
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.status(204).build();
     }
 }

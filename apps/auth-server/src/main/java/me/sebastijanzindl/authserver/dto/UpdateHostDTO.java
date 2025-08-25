@@ -1,6 +1,8 @@
 package me.sebastijanzindl.authserver.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,11 +20,11 @@ public class UpdateHostDTO {
 
     @JsonProperty("port")
     @NotNull(message = "Port cannot be null")
-    @NotBlank(message = "Port cannot be blank")
+    @Min(1)
+    @Max(65535)
     private Integer port;
 
     @JsonProperty("status")
     @NotNull(message = "Status cannot be null")
-    @NotBlank(message = "Status cannot be blank")
     private HOST_STATUS status;
 }

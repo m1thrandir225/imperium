@@ -66,7 +66,7 @@ public class HostController {
         return ResponseEntity.ok(new HostResponse(updatedHost));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<HostResponse> updateHostStatus(
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id,
@@ -77,12 +77,12 @@ public class HostController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HostResponse> deleteHost(
+    public ResponseEntity<Void> deleteHost(
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id
     ) {
         Host deletedHost = this.hostService.delete(id);
 
-        return ResponseEntity.ok(new HostResponse(deletedHost));
+        return ResponseEntity.status(204).build();
     }
 }
