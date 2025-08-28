@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,12 +11,14 @@ import (
 type HTTPHandler struct {
 	config      *config.Config
 	authService *AuthService
+	hostService *HostService
 }
 
-func NewHTTPHandler(config *config.Config, authService *AuthService) *HTTPHandler {
+func NewHTTPHandler(config *config.Config, authService *AuthService, hostService *HostService) *HTTPHandler {
 	return &HTTPHandler{
 		config:      config,
 		authService: authService,
+		hostService: hostService,
 	}
 }
 
@@ -28,7 +31,7 @@ func (h *HTTPHandler) GetStatus(ctx *gin.Context) {
 func (h *HTTPHandler) Login(ctx *gin.Context) {
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -71,4 +74,24 @@ func (h *HTTPHandler) RefreshToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, refreshTokenResponse)
+}
+
+func (h *HTTPHandler) GetUserHosts(ctx *gin.Context) {
+	authToken := GetAuthToken(ctx)
+	if authToken == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	hosts, err := h.hostService.GetUserHosts(ctx, authToken)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, hosts)
 }

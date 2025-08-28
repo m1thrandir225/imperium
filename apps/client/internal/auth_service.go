@@ -32,15 +32,15 @@ func (s *AuthService) GetHTTPClient() *http.Client {
 }
 
 func (s *AuthService) GetLoginURL() string {
-	return fmt.Sprintf("%s/login", s.authServerBaseURL)
+	return fmt.Sprintf("%s/auth/login", s.authServerBaseURL)
 }
 
 func (s *AuthService) GetRegisterURL() string {
-	return fmt.Sprintf("%s/register", s.authServerBaseURL)
+	return fmt.Sprintf("%s/auth/register", s.authServerBaseURL)
 }
 
 func (s *AuthService) GetRefreshTokenURL() string {
-	return fmt.Sprintf("%s/refresh-token", s.authServerBaseURL)
+	return fmt.Sprintf("%s/auth/refresh", s.authServerBaseURL)
 }
 
 func (s *AuthService) Login(ctx context.Context, cmd LoginRequest) (*LoginResponse, error) {

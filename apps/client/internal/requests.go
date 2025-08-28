@@ -9,8 +9,8 @@ import (
 type RegisterUserRequest struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type RegisterClientRequest struct {
@@ -20,11 +20,12 @@ type RegisterClientRequest struct {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refreshToken"`
+	Token string `json:"token"`
 }
 
 type RefreshTokenResponse struct {
-	Token string `json:"newToken"`
+	AccessToken string    `json:"access_token"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 
 type ConnectRequest struct {
@@ -41,20 +42,15 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token        string `json:"token"`
-	RefreshToken string `json:"refreshToken"`
-	ExpiresIn    int    `json:"expiresIn"`
+	User                  UserDTO   `json:"user"`
+	AccessToken           string    `json:"access_token"`
+	RefreshToken          string    `json:"refresh_token"`
+	AccessTokenExpiresIn  time.Time `json:"access_token_expires_in"`
+	RefreshTokenExpiresIn time.Time `json:"refresh_token_expires_in"`
 }
 
 type RegisterUserResponse struct {
-	ID        string      `json:"id"`
-	Email     string      `json:"email"`
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Client    []ClientDTO `json:"client"`
-	Hosts     []HostDTO   `json:"hosts"`
+	User UserDTO `json:"user"`
 }
 
 type RegisterClientResponse struct {

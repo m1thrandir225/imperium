@@ -1,4 +1,4 @@
-import {Link} from "react-router-dom";
+import Logo from "./logo";
 import {NavUser} from "./nav-user";
 
 type AppHeaderProps = React.ComponentProps<"div">;
@@ -8,18 +8,10 @@ const AppHeader: React.FC<AppHeaderProps> = () => {
     <>
       <div className="border-sidebar-border/80 border-b">
         <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
-          <Link to={"/"} className="flex items-center space-x-2">
-            Imperium
-          </Link>
+          <Logo variant="default" />
 
           <div className="ml-auto flex items-center space-x-2">
-            <NavUser
-              user={{
-                name: "John Doe",
-                email: "john.doe@example.com",
-                avatar: "https://github.com/shadcn.png",
-              }}
-            />
+            <NavUser />
           </div>
         </div>
       </div>

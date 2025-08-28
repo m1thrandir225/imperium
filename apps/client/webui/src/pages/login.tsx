@@ -1,12 +1,11 @@
 import {LoginForm} from "@/components/login-form";
-import AuthLayout from "@/layouts/auth-layout";
-import type React from "react";
+import React from "react";
 
 const LoginPage: React.FC = () => {
   return (
-    <AuthLayout>
+    <React.Fragment>
       <LoginForm />
-    </AuthLayout>
+    </React.Fragment>
   );
 };
 

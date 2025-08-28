@@ -10,7 +10,7 @@ import {Input} from "@/components/ui/input";
 import {cn} from "@/lib/utils";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useForm} from "react-hook-form";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import * as z from "zod";
 import {
   FormControl,
@@ -24,6 +24,7 @@ import {useMutation} from "@tanstack/react-query";
 import type {LoginRequest} from "@/types/responses/auth";
 import authService from "@/services/auth.service";
 import {Loader2} from "lucide-react";
+import useAuthStore from "@/stores/auth.store";
 
 const formSchema = z.object({
   email: z.email(),
@@ -35,14 +36,18 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     resolver: zodResolver(formSchema),
   });
 
+  const authStore = useAuthStore();
+  const navigate = useNavigate();
+
   const {mutateAsync, status} = useMutation({
     mutationKey: ["login"],
     mutationFn: (values: LoginRequest) => authService.login(values),
-    onSuccess: (data) => {
-      console.log(data);
+    onSuccess: async (data) => {
+      await authStore.login(data);
+      navigate("/hosts");
     },
     onError: (error) => {
-      console.error(error);
+      console.error(error.message);
     },
   });
 

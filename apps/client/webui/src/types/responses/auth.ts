@@ -1,14 +1,27 @@
+import type {User} from "../models/user";
+
+/*
+  This is the request to login.
+*/
 export type LoginRequest = {
   email: string;
   password: string;
 };
 
+/*
+  This is the response to login.
+*/
 export type LoginResponse = {
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
+  user: User;
+  access_token: string;
+  refresh_token: string;
+  access_token_expires_in: string;
+  refresh_token_expires_in: string;
 };
 
+/*
+  This is the request to register.
+*/
 export type RegisterRequest = {
   email: string;
   password: string;
@@ -16,21 +29,24 @@ export type RegisterRequest = {
   lastName: string;
 };
 
+/*
+  This is the response to register.
+*/
 export type RegisterResponse = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  createdAt: string;
-  updatedAt: string;
-  clients: unknown[];
-  hosts: unknown[];
+  user: User;
 };
 
+/*
+  This is the request to refresh the access token.
+*/
 export type RefreshTokenRequest = {
-  refresh_token: string;
+  token: string;
 };
 
+/*
+  This is the response to refresh the access token.
+*/
 export type RefreshTokenResponse = {
-  newToken: string;
+  access_token: string;
+  expires_at: string;
 };

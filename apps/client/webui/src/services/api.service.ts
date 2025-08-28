@@ -43,7 +43,7 @@ const createApiInstance = (): AxiosInstance => {
    * Used for adding JWT token if the request is protected
    */
   api.interceptors.request.use((config) => {
-    const accessToken = useAuthStore().accessToken;
+    const accessToken = useAuthStore.getState().accessToken;
 
     const isProtected = config.headers?.protected !== false;
 
@@ -90,7 +90,7 @@ const createApiInstance = (): AxiosInstance => {
         isRefreshing = true;
 
         try {
-          const authStore = useAuthStore();
+          const authStore = useAuthStore.getState();
           const canRefresh = authStore.checkAuth();
 
           if (!canRefresh) {
@@ -104,19 +104,19 @@ const createApiInstance = (): AxiosInstance => {
           }
 
           const newTokens = await authService.refreshToken({
-            refresh_token: refreshToken,
+            token: refreshToken,
           });
-          if (!newTokens.newToken) {
+          if (!newTokens.access_token) {
             throw new Error("Refresh endpoint did not return an access token");
           }
 
-          authStore.setTokens(newTokens.newToken, refreshToken);
+          authStore.refreshAccessToken(newTokens);
 
           originalRequest.headers[
             "Authorization"
-          ] = `Bearer ${newTokens.newToken}`;
+          ] = `Bearer ${newTokens.access_token}`;
 
-          processQueue(null, newTokens.newToken);
+          processQueue(null, newTokens.access_token);
 
           return api(originalRequest);
         } catch (refreshError) {
@@ -159,9 +159,12 @@ export const apiRequest = async <T>(config: ApiRequestOptions) => {
     return response.data;
   } catch (e: unknown) {
     if (e instanceof AxiosError) {
-      throw new Error(e.response?.data.detail);
+      if (e.response?.data.message) {
+        e.message = e.response?.data.message;
+      }
+      throw e;
     } else {
-      throw new Error("Unknown error happened.");
+      throw new Error(e as string);
     }
   }
 };
@@ -197,9 +200,12 @@ export const multipartApiRequest = async <
     return response.data;
   } catch (e: unknown) {
     if (e instanceof AxiosError) {
-      throw new Error(e.response?.data.detail);
+      if (e.response?.data.message) {
+        e.message = e.response?.data.message;
+      }
+      throw e;
     } else {
-      throw new Error("Unknown error happened.");
+      throw new Error(e as string);
     }
   }
 };

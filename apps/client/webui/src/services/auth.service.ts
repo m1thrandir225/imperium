@@ -8,7 +8,8 @@ import type {
 } from "@/types/responses/auth";
 import {apiRequest} from "./api.service";
 import config from "@/lib/config";
-const authURL = config.apiUrl;
+
+const authURL = `${config.apiUrl}/auth`;
 
 const authService = {
   login: (input: LoginRequest) =>

@@ -8,10 +8,6 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (failureCount > MAX_RETRIES) {
-          return false;
-        }
-
         if (
           isAxiosError(error) &&
           HTTP_STATUS_TO_NOT_RETRY.includes(error.response?.status ?? 0)
@@ -21,6 +17,10 @@ const queryClient = new QueryClient({
           );
           return false;
         }
+        if (failureCount > MAX_RETRIES) {
+          return false;
+        }
+
         return true;
       },
     },

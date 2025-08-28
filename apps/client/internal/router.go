@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,7 +13,10 @@ func SetupRouter(config *config.Config) *gin.Engine {
 	router := gin.Default()
 
 	authService := NewAuthService(config.AuthServerBaseURL)
-	httpHandler := NewHTTPHandler(config, authService)
+	hostService := NewHostService(fmt.Sprintf("%s/hosts", config.AuthServerBaseURL))
+	httpHandler := NewHTTPHandler(config, authService, hostService)
+
+	router.Use(CORSMiddleware())
 
 	SetupRoutes(router, httpHandler)
 
