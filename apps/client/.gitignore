@@ -27,5 +27,5 @@ vendor/
 .vscode/
 
 # Build
-bin
-tmp
+bin/
+tmp/
