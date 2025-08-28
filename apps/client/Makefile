@@ -6,13 +6,16 @@ SHELL := /bin/zsh
 WEBUI_DIR := ./webui
 BIN_DIR := ./bin
 TMP_DIR := ./tmp
+WEBUI_BUILD_DIR := ./internal/webui
 
 # Binaries
 AIR := $(HOME)/go/bin/air
 GO := go
 PNPM := pnpm
 
-.PHONY: deps dev dev-go dev-web build build-go build-web clean
+.DEFAULT_GOAL := help
+
+.PHONY: help deps dev dev-go dev-web build build-go build-web clean run-prod
 
 deps:
 	@if ! command -v $(PNPM) >/dev/null 2>&1; then \
@@ -37,14 +40,47 @@ dev-go: ## Run Go app with Air
 dev-web: ## Run React WebUI (Vite)
 	@cd $(WEBUI_DIR) && $(PNPM) dev
 
-build: build-go build-web ## Build both
+build: build-web build-go ## Build webui first, then Go (webui is embedded in Go)
 
-build-go:
+build-go: build-web ## Build Go binary (depends on webui build)
+	@echo "Building Go application..."
 	@mkdir -p $(BIN_DIR)
 	@$(GO) build -o $(BIN_DIR)/client ./cmd
 
-build-web:
+build-web: ## Build React WebUI
+	@echo "Building WebUI..."
+	@cd $(WEBUI_DIR) && $(PNPM) install --frozen-lockfile
 	@cd $(WEBUI_DIR) && $(PNPM) build
+	@echo "WebUI built to $(WEBUI_BUILD_DIR)"
+
+# Production build with optimizations
+build-prod: build-web build-go-prod ## Production build with optimizations
+
+build-go-prod: build-web ## Build Go binary with production optimizations
+	@echo "Building Go application for production..."
+	@mkdir -p $(BIN_DIR)
+	@CGO_ENABLED=0 $(GO) build -ldflags="-w -s" -o $(BIN_DIR)/client ./cmd
+
+# Check if webui build exists
+check-webui:
+	@if [ ! -d "$(WEBUI_BUILD_DIR)" ] || [ -z "$$(ls -A $(WEBUI_BUILD_DIR) 2>/dev/null)" ]; then \
+		echo "WebUI build not found or empty. Building..."; \
+		$(MAKE) build-web; \
+	else \
+		echo "WebUI build exists at $(WEBUI_BUILD_DIR)"; \
+	fi
 
 clean:
+	@echo "Cleaning build artifacts..."
 	@rm -rf $(BIN_DIR) $(TMP_DIR)
+	@rm -rf $(WEBUI_BUILD_DIR)
+	@echo "Clean complete"
+
+# Help target
+help: ## Show this help message
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
+
+run-prod: build-prod ## Build for production and run the application
+	@echo "Starting application (production build)..."
+	@$(BIN_DIR)/client
