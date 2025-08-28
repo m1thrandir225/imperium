@@ -13,13 +13,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
-public class UserResponse {
-    @JsonProperty("user")
-    public UserDTO user;
 
-    public UserResponse(User user) {
-        this.user = new UserDTO(user);
-    }
+public record UserResponse(
+        @JsonProperty("user")
+        UserDTO user
+) {
 }

@@ -3,6 +3,7 @@ package me.sebastijanzindl.authserver.controller;
 import jakarta.validation.Valid;
 import me.sebastijanzindl.authserver.dto.UpdateUserDTO;
 import me.sebastijanzindl.authserver.dto.UpdateUserPasswordDTO;
+import me.sebastijanzindl.authserver.dto.UserDTO;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.responses.UserResponse;
 import me.sebastijanzindl.authserver.service.UserService;
@@ -23,7 +24,8 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(
             @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(new UserResponse(currentUser));
+        UserResponse response = new UserResponse(new UserDTO(currentUser));
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update")
@@ -34,7 +36,8 @@ public class UserController {
 
         User updatedUser = this.userService.update(user.getId(), updateUserDTO);
 
-        return ResponseEntity.ok(new UserResponse(updatedUser));
+        UserResponse response = new UserResponse(new UserDTO(updatedUser));
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update-password")
@@ -42,16 +45,18 @@ public class UserController {
             @AuthenticationPrincipal User user,
             @Valid @RequestBody UpdateUserPasswordDTO dto
     ) {
-        User updated = this.userService.updatePassword(user.getId(), dto.getPassword(), dto.getNewPassword());
-        return ResponseEntity.ok(new UserResponse(updated));
+        User updatedUser = this.userService.updatePassword(user.getId(), dto.getPassword(), dto.getNewPassword());
+        UserResponse response = new UserResponse(new UserDTO(updatedUser));
+
+        return ResponseEntity.ok(response);
 
     }
 
     @DeleteMapping
-    public ResponseEntity<User> deleteUser(
+    public ResponseEntity<Void> deleteUser(
             @AuthenticationPrincipal User user
     ) {
         User deletedUser = this.userService.delete(user.getId());
-        return ResponseEntity.ok(deletedUser);
+        return ResponseEntity.status(204).build();
     }
 }

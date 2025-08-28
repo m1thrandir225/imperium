@@ -7,6 +7,7 @@ import me.sebastijanzindl.authserver.model.Host;
 import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.model.enums.HOST_STATUS;
 import me.sebastijanzindl.authserver.responses.HostResponse;
+import me.sebastijanzindl.authserver.responses.SimpleHostResponse;
 import me.sebastijanzindl.authserver.service.AuthenticationService;
 import me.sebastijanzindl.authserver.service.HostService;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,8 @@ public class HostController {
             @Valid @RequestBody CreateHostDTO createHostDTO
     ) {
         Host host = this.hostService.create(createHostDTO, currentUser);
-        return ResponseEntity.ok(new HostResponse(host));
+        HostResponse response = new HostResponse(host.getId(), host.getIpAddress(), host.getPort(), host.getName(), host.getStatus().name());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -42,16 +44,21 @@ public class HostController {
             @PathVariable UUID id
     ){
         Host host = this.hostService.getHost(id);
-        return ResponseEntity.ok(new HostResponse(host));
+        HostResponse response = new HostResponse(host.getId(), host.getIpAddress(), host.getPort(), host.getName(), host.getStatus().name());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<HostResponse>> getUserHosts(
+    public ResponseEntity<List<SimpleHostResponse>> getUserHosts(
             @AuthenticationPrincipal User currentUser
     ) {
         List<Host> hosts = currentUser.getHosts();
 
-        List<HostResponse> hostResponses = hosts.stream().map(HostResponse::new).toList();
+        List<SimpleHostResponse> hostResponses = hosts.stream().map(host -> new SimpleHostResponse(
+                host.getId(),
+                host.getName(),
+                host.getStatus().name()
+        )).toList();
 
         return ResponseEntity.ok(hostResponses);
     }
@@ -63,7 +70,14 @@ public class HostController {
             @Valid @RequestBody UpdateHostDTO updateHostDTO
     ) {
         Host updatedHost = this.hostService.update(id, updateHostDTO);
-        return ResponseEntity.ok(new HostResponse(updatedHost));
+        HostResponse response = new HostResponse(
+                updatedHost.getId(),
+                updatedHost.getIpAddress(),
+                updatedHost.getPort(),
+                updatedHost.getName(),
+                updatedHost.getStatus().name()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/status")
@@ -73,7 +87,14 @@ public class HostController {
             @RequestBody HOST_STATUS hostStatus
     ) {
         Host updatedHost = this.hostService.updateStatus(id, hostStatus);
-        return ResponseEntity.ok(new HostResponse(updatedHost));
+        HostResponse response = new HostResponse(
+                updatedHost.getId(),
+                updatedHost.getIpAddress(),
+                updatedHost.getPort(),
+                updatedHost.getName(),
+                updatedHost.getStatus().name()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")

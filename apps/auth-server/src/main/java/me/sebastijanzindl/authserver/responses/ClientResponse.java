@@ -7,21 +7,13 @@ import me.sebastijanzindl.authserver.model.Client;
 
 import java.util.UUID;
 
-@Data
-@AllArgsConstructor
-public class ClientResponse {
+public record ClientResponse (
     @JsonProperty("id")
-    public UUID id;
-
+     UUID id,
     @JsonProperty("client_name")
-    public String clientName;
-
+     String clientName,
     @JsonProperty("ip_address")
-    public String ipAddress;
-    
-    public ClientResponse(Client client) {
-        this.id = client.getId();
-        this.clientName = client.getName();
-        this.ipAddress = client.getIpAddress();
-    }
+     String ipAddress
+)
+{
 }

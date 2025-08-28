@@ -45,8 +45,7 @@ public class AuthController {
            @Valid @RequestBody RegisterUserDTO registerUserDTO
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
-        UserResponse response = new UserResponse(registeredUser);
-
+        UserResponse response = new UserResponse(new UserDTO(registeredUser));
         return ResponseEntity.ok(response);
     }
 
@@ -60,19 +59,19 @@ public class AuthController {
         Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
-        LoginResponse response = new LoginResponse();
-        response.setUser(new UserDTO(user));
-        response.setAccessToken(jwtToken);
-        response.setAccessTokenExpiration(accessTokenExpiration);
-        response.setRefreshToken(refreshToken.getToken());
-        response.setRefreshTokenExpiration(Date.from(refreshToken.getExpiresAt()));
-
+        LoginResponse response = new LoginResponse(
+                new UserDTO(user),
+                jwtToken,
+                refreshToken.getToken(),
+                accessTokenExpiration,
+                Date.from(refreshToken.getExpiresAt())
+        );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshTokenResponse> refreshToken(
-            @Valid @RequestBody RefreshTokenDTO refreshTokenDTO
+        @Valid @RequestBody RefreshTokenDTO refreshTokenDTO
     ) {
         return refreshTokenService.findByToken(refreshTokenDTO.getToken())
                 .map(refreshTokenService::verifyExpiration)
@@ -80,9 +79,7 @@ public class AuthController {
                 .map(user -> {
                     String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
                     Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
-                    RefreshTokenResponse response = new RefreshTokenResponse();
-                    response.setAccessToken(jwtToken);
-                    response.setExpiresAt(accessTokenExpiration);
+                    RefreshTokenResponse response = new RefreshTokenResponse(jwtToken, accessTokenExpiration);
 
                     return ResponseEntity.ok(response);
                 }).orElseThrow(() -> new RuntimeException("Refresh token not found"));

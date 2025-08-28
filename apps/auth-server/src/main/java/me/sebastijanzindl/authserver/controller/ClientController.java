@@ -29,14 +29,20 @@ public class ClientController {
     ) {
         List<Client> clients = currentUser.getClients();
 
-        List<ClientResponse> clientResponses = clients.stream().map(ClientResponse::new).toList();
+        List<ClientResponse> clientResponses = clients.stream().map(client -> new ClientResponse(
+                client.getId(),
+                client.getName(),
+                client.getIpAddress()
+        )  ).toList();
         return ResponseEntity.ok(clientResponses);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ClientResponse> getClient(@PathVariable UUID id) {
         Client client = this.clientService.getClient(id);
-        return ResponseEntity.ok(new ClientResponse(client));
+
+        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -45,7 +51,8 @@ public class ClientController {
             @Valid @RequestBody CreateClientDTO input
     ) {
         Client client = this.clientService.create(input, currentUser);
-        return ResponseEntity.ok(new ClientResponse(client));
+        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
@@ -56,7 +63,9 @@ public class ClientController {
 
     ) {
         Client client = this.clientService.update(id, input, currentUser);
-        return ResponseEntity.ok(new ClientResponse(client));
+        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
