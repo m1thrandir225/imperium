@@ -26,3 +26,6 @@ vendor/
 .idea/
 .vscode/
 
+# Build
+bin
+tmp
