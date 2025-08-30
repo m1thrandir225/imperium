@@ -1,0 +1,70 @@
+volumes:
+  postgres-data:
+    driver: local
+  auth-server-logs:
+    driver: local
+networks:
+  auth-server-network:
+    driver: bridge
+
+services:
+  auth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imperium-auth-server
+    restart: unless-stopped
+    env_file: ./.env.prod
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    networks:
+      - auth-server-network
+    volumes:
+      - auth-server-logs:/app/logs
+    depends_on:
+      db-prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db-prod:5432/${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SECURITY_JWT_ACCESS_TOKEN_SECURITY_KEY=${JWT_ACCESS_SECRET}
+      - SECURITY_JWT_REFRESH_TOKEN_SECURITY_KEY=${JWT_REFRESH_SECRET}
+      - SECURITY_JWT_ACCESS_TOKEN_EXPIRATION_TIME=${JWT_ACCESS_EXPIRATION}
+      - SECURITY_JWT_REFRESH_TOKEN_EXPIRATION_TIME=${JWT_REFRESH_EXPIRATION}
+      - SERVER_PORT=${SERVER_PORT}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+  db-prod:
+    image: postgres:16-alpine
+    container_name: imperium-auth-server-db
+    restart: unless-stopped
+    env_file: ./.env.prod
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - auth-server-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-root} -d imperium-auth-server-db",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    command: postgres -c max_connections=100
