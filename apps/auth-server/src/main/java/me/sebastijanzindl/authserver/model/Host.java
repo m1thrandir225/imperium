@@ -36,10 +36,11 @@ public class Host {
     @Column(nullable = false)
     private Integer port;
 
-    @Column(nullable = false)
-//    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "host_status_enum")
     private HOST_STATUS status = HOST_STATUS.AVAILABLE;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 }

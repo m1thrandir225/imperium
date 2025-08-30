@@ -26,7 +26,7 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 }

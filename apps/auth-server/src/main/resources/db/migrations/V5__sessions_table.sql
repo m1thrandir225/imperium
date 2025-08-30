@@ -20,9 +20,9 @@ CREATE TABLE sessions
     CONSTRAINT fk_sessions_client FOREIGN KEY (client_id) REFERENCES clients (id)
 );
 
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_sessions_host_id ON sessions(host_id);
-CREATE INDEX idx_sessions_client_id ON sessions(client_id);
-CREATE INDEX idx_sessions_status ON sessions(status);
-CREATE INDEX idx_sessions_token ON sessions(session_token);
-CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_host_id ON sessions(host_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_client_id ON sessions(client_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status);
+CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
