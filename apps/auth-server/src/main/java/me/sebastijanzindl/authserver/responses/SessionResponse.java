@@ -1,6 +1,7 @@
 package me.sebastijanzindl.authserver.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import me.sebastijanzindl.authserver.model.Session;
 import me.sebastijanzindl.authserver.model.enums.SESSION_STATUS;
 
 import java.time.LocalDateTime;
@@ -28,10 +29,10 @@ public record SessionResponse(
         @JsonProperty("session_token")
         String sessionToken,
 
-        @JsonProperty("program_id")
+        @JsonProperty("webrtc_offer")
         String webrtcOffer,
 
-        @JsonProperty("answer")
+        @JsonProperty("webrtc_answer")
         String webrtcAnswer,
 
         @JsonProperty("expires_at")
@@ -40,7 +41,7 @@ public record SessionResponse(
         @JsonProperty("created_at")
         LocalDateTime createdAt,
 
-        @JsonProperty("updated_at")
+        @JsonProperty("started_at")
         LocalDateTime startedAt,
 
         @JsonProperty("ended_at")
@@ -49,4 +50,23 @@ public record SessionResponse(
         @JsonProperty("end_reason")
         String endReason
 ) {
+    public SessionResponse(Session session) {
+        this(
+                session.getId(),
+                session.getHost().getId(),
+                session.getHost().getName(),
+                session.getClient().getId(),
+                session.getClient().getName(),
+                session.getStatus(),
+                session.getSessionToken(),
+                session.getWebrtcOffer(),
+                session.getWebrtcAnswer(),
+                session.getExpiresAt(),
+                session.getCreatedAt(),
+                session.getStartedAt(),
+                session.getEndedAt(),
+                session.getEndReason()
+
+        );
+    }
 }

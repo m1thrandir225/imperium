@@ -25,6 +25,9 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    /*
+    JWT Exceptions
+     */
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<String> handleExpiredJwtException(ExpiredJwtException ex) {
         return new ResponseEntity<>("JWT token has expired", HttpStatus.UNAUTHORIZED);
@@ -50,6 +53,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
     }
 
+    /*
+    JPA Exceptions
+     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
         return new ResponseEntity<>("The requested resource was not found.", HttpStatus.NOT_FOUND);
@@ -75,6 +81,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>("There was an issue with the data access request.", HttpStatus.BAD_REQUEST);
     }
 
+    /*
+    Generic Exceptions
+     */
 
     @ExceptionHandler(Exception.class) // Catch-all for unhandled exceptions
     public ResponseEntity<String> handleGenericException(Exception ex) {
@@ -90,5 +99,13 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    /*
+    Session Exceptions
+     */
+    @ExceptionHandler(SessionException.class)
+    public ResponseEntity<String> handleSessionException(SessionException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }
