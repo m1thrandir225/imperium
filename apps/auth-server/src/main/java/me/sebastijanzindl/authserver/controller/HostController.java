@@ -34,7 +34,7 @@ public class HostController {
             @Valid @RequestBody CreateHostDTO createHostDTO
     ) {
         Host host = this.hostService.create(createHostDTO, currentUser);
-        HostResponse response = new HostResponse(host.getId(), host.getIpAddress(), host.getPort(), host.getName(), host.getStatus().name());
+        HostResponse response = HostResponse.from(host);
         return ResponseEntity.ok(response);
     }
 
@@ -44,7 +44,7 @@ public class HostController {
             @PathVariable UUID id
     ){
         Host host = this.hostService.getHost(id);
-        HostResponse response = new HostResponse(host.getId(), host.getIpAddress(), host.getPort(), host.getName(), host.getStatus().name());
+        HostResponse response = HostResponse.from(host);
         return ResponseEntity.ok(response);
     }
 
@@ -54,11 +54,7 @@ public class HostController {
     ) {
         List<Host> hosts = currentUser.getHosts();
 
-        List<SimpleHostResponse> hostResponses = hosts.stream().map(host -> new SimpleHostResponse(
-                host.getId(),
-                host.getName(),
-                host.getStatus().name()
-        )).toList();
+        List<SimpleHostResponse> hostResponses = SimpleHostResponse.fromList(hosts);
 
         return ResponseEntity.ok(hostResponses);
     }
@@ -70,13 +66,8 @@ public class HostController {
             @Valid @RequestBody UpdateHostDTO updateHostDTO
     ) {
         Host updatedHost = this.hostService.update(id, updateHostDTO);
-        HostResponse response = new HostResponse(
-                updatedHost.getId(),
-                updatedHost.getIpAddress(),
-                updatedHost.getPort(),
-                updatedHost.getName(),
-                updatedHost.getStatus().name()
-        );
+        HostResponse response = HostResponse.from(updatedHost);
+
         return ResponseEntity.ok(response);
     }
 
@@ -87,13 +78,7 @@ public class HostController {
             @RequestBody HOST_STATUS hostStatus
     ) {
         Host updatedHost = this.hostService.updateStatus(id, hostStatus);
-        HostResponse response = new HostResponse(
-                updatedHost.getId(),
-                updatedHost.getIpAddress(),
-                updatedHost.getPort(),
-                updatedHost.getName(),
-                updatedHost.getStatus().name()
-        );
+        HostResponse response = HostResponse.from(updatedHost);
         return ResponseEntity.ok(response);
     }
 

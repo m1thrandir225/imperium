@@ -15,4 +15,7 @@ public record RefreshTokenResponse(
     Date expiresIn
 )
 {
+    public static RefreshTokenResponse from(String accessToken, Date expiresIn) {
+        return new RefreshTokenResponse(accessToken, expiresIn);
+    }
 }

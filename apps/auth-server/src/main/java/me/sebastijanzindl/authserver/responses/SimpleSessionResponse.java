@@ -5,6 +5,7 @@ import me.sebastijanzindl.authserver.model.Session;
 import me.sebastijanzindl.authserver.model.enums.SESSION_STATUS;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record SimpleSessionResponse(
@@ -29,8 +30,8 @@ public record SimpleSessionResponse(
         @JsonProperty("ended_at")
         LocalDateTime endedAt
 ) {
-    public SimpleSessionResponse(Session session) {
-        this(
+    public static SimpleSessionResponse from(Session session) {
+        return new SimpleSessionResponse(
                 session.getId(),
                 session.getHost().getName(),
                 session.getClient().getName(),
@@ -39,5 +40,11 @@ public record SimpleSessionResponse(
                 session.getStartedAt(),
                 session.getEndedAt()
         );
+    }
+
+    public static List<SimpleSessionResponse> fromList(List<Session> sessions) {
+        return sessions.stream()
+                .map(SimpleSessionResponse::from)
+                .toList();
     }
 }

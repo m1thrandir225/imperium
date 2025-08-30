@@ -18,7 +18,7 @@ CREATE TABLE sessions
     CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT fk_sessions_host FOREIGN KEY (host_id) REFERENCES hosts (id),
     CONSTRAINT fk_sessions_client FOREIGN KEY (client_id) REFERENCES clients (id)
-)
+);
 
 CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX idx_sessions_host_id ON sessions(host_id);

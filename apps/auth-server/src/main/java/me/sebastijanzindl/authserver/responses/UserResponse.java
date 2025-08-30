@@ -18,4 +18,16 @@ public record UserResponse(
         @JsonProperty("user")
         UserDTO user
 ) {
+    public static UserResponse from(User user)
+    {
+        return new UserResponse(
+                new UserDTO(user)
+        );
+    }
+
+    public static List<UserResponse> fromList(List<User> users) {
+        return users.stream()
+                .map(UserResponse::from)
+                .toList();
+    }
 }

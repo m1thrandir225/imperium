@@ -29,11 +29,8 @@ public class ClientController {
     ) {
         List<Client> clients = currentUser.getClients();
 
-        List<ClientResponse> clientResponses = clients.stream().map(client -> new ClientResponse(
-                client.getId(),
-                client.getName(),
-                client.getIpAddress()
-        )  ).toList();
+        List<ClientResponse> clientResponses = ClientResponse.fromList(clients);
+
         return ResponseEntity.ok(clientResponses);
     }
 
@@ -41,7 +38,7 @@ public class ClientController {
     public ResponseEntity<ClientResponse> getClient(@PathVariable UUID id) {
         Client client = this.clientService.getClient(id);
 
-        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+        ClientResponse response = ClientResponse.from(client);
         return ResponseEntity.ok(response);
     }
 
@@ -51,7 +48,7 @@ public class ClientController {
             @Valid @RequestBody CreateClientDTO input
     ) {
         Client client = this.clientService.create(input, currentUser);
-        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+        ClientResponse response = ClientResponse.from(client);
         return ResponseEntity.ok(response);
     }
 
@@ -63,7 +60,7 @@ public class ClientController {
 
     ) {
         Client client = this.clientService.update(id, input, currentUser);
-        ClientResponse response = new ClientResponse(client.getId(), client.getName(), client.getIpAddress());
+        ClientResponse response = ClientResponse.from(client);
 
         return ResponseEntity.ok(response);
     }

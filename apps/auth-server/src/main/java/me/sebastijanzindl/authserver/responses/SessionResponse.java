@@ -5,6 +5,7 @@ import me.sebastijanzindl.authserver.model.Session;
 import me.sebastijanzindl.authserver.model.enums.SESSION_STATUS;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record SessionResponse(
@@ -50,8 +51,8 @@ public record SessionResponse(
         @JsonProperty("end_reason")
         String endReason
 ) {
-    public SessionResponse(Session session) {
-        this(
+    public static SessionResponse from(Session session) {
+        return new SessionResponse(
                 session.getId(),
                 session.getHost().getId(),
                 session.getHost().getName(),
@@ -68,5 +69,11 @@ public record SessionResponse(
                 session.getEndReason()
 
         );
+    }
+
+    public static List<SessionResponse> fromList(List<Session> sessions) {
+        return sessions.stream()
+                .map(SessionResponse::from)
+                .toList();
     }
 }

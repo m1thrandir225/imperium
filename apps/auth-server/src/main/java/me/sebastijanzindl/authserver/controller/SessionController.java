@@ -31,7 +31,7 @@ public class SessionController {
             @Valid @RequestBody CreateSessionDTO createSessionDTO
     ) {
         Session session = sessionService.createSession(createSessionDTO, currentUser);
-        SessionResponse response = new SessionResponse(session);
+        SessionResponse response = SessionResponse.from(session);
         return ResponseEntity.ok(response);
     }
 
@@ -42,7 +42,7 @@ public class SessionController {
             @Valid @RequestBody StartSessionDTO startSessionDTO
     ) {
         Session session = sessionService.startSession(sessionId, startSessionDTO);
-        SessionResponse response = new SessionResponse(session);
+        SessionResponse response = SessionResponse.from(session);
         return ResponseEntity.ok(response);
     }
 
@@ -53,7 +53,7 @@ public class SessionController {
             @RequestBody EndSessionDTO endSessionDTO
     ) {
         Session session = sessionService.endSession(sessionId, endSessionDTO);
-        SessionResponse response = new SessionResponse(session);
+        SessionResponse response = SessionResponse.from(session);
         return ResponseEntity.ok(response);
     }
 
@@ -64,7 +64,7 @@ public class SessionController {
             @RequestParam(defaultValue = "Cancelled by user") String reason
     ) {
         Session session = sessionService.cancelSession(sessionId, reason);
-        SessionResponse response = new SessionResponse(session);
+        SessionResponse response = SessionResponse.from(session);
         return ResponseEntity.ok(response);
     }
 
@@ -74,7 +74,7 @@ public class SessionController {
             @PathVariable UUID sessionId
     ) {
         Session session = sessionService.getSession(sessionId);
-        SessionResponse response = new SessionResponse(session);
+        SessionResponse response = SessionResponse.from(session);
         return ResponseEntity.ok(response);
     }
 
@@ -83,9 +83,7 @@ public class SessionController {
             @AuthenticationPrincipal User currentUser
     ) {
         List<Session> sessions = sessionService.getUserSessions(currentUser);
-        List<SimpleSessionResponse> responses = sessions.stream()
-                .map(SimpleSessionResponse::new)
-                .toList();
+        List<SimpleSessionResponse> responses = SimpleSessionResponse.fromList(sessions);
         return ResponseEntity.ok(responses);
     }
 
@@ -95,9 +93,7 @@ public class SessionController {
             @PathVariable UUID hostId
     ) {
         List<Session> sessions = sessionService.getHostSessions(hostId);
-        List<SimpleSessionResponse> responses = sessions.stream()
-                .map(SimpleSessionResponse::new)
-                .toList();
+        List<SimpleSessionResponse> responses = SimpleSessionResponse.fromList(sessions);
         return ResponseEntity.ok(responses);
     }
 
@@ -107,9 +103,7 @@ public class SessionController {
             @PathVariable UUID clientId
     ) {
         List<Session> sessions = sessionService.getClientSessions(clientId);
-        List<SimpleSessionResponse> responses = sessions.stream()
-                .map(SimpleSessionResponse::new)
-                .toList();
+        List<SimpleSessionResponse> responses = SimpleSessionResponse.fromList(sessions);
         return ResponseEntity.ok(responses);
     }
 

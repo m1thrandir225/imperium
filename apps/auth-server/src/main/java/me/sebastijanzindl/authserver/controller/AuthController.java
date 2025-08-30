@@ -45,7 +45,7 @@ public class AuthController {
            @Valid @RequestBody RegisterUserDTO registerUserDTO
     ) {
         User registeredUser = authenticationService.signup(registerUserDTO);
-        UserResponse response = new UserResponse(new UserDTO(registeredUser));
+        UserResponse response = UserResponse.from(registeredUser);
         return ResponseEntity.ok(response);
     }
 
@@ -59,8 +59,8 @@ public class AuthController {
         Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
         RefreshToken refreshToken = refreshTokenService.create(user);
 
-        LoginResponse response = new LoginResponse(
-                new UserDTO(user),
+        LoginResponse response = LoginResponse.from(
+                user,
                 jwtToken,
                 refreshToken.getToken(),
                 accessTokenExpiration,
@@ -79,7 +79,7 @@ public class AuthController {
                 .map(user -> {
                     String jwtToken = jwtUtils.generateToken(user, TOKEN_TYPE.ACCESS);
                     Date accessTokenExpiration = jwtUtils.extractExpiration(jwtToken, TOKEN_TYPE.ACCESS);
-                    RefreshTokenResponse response = new RefreshTokenResponse(jwtToken, accessTokenExpiration);
+                    RefreshTokenResponse response = RefreshTokenResponse.from(jwtToken, accessTokenExpiration);
 
                     return ResponseEntity.ok(response);
                 }).orElseThrow(() -> new RuntimeException("Refresh token not found"));
