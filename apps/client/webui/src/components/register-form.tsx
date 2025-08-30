@@ -21,7 +21,7 @@ import {
 } from "./ui/form";
 import {cn} from "@/lib/utils";
 import {Input} from "./ui/input";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {Button} from "./ui/button";
 import {Loader2} from "lucide-react";
 import {toast} from "sonner";
@@ -36,6 +36,7 @@ const formSchema = z.object({
 type RegisterFormProps = React.ComponentProps<"div">;
 
 const RegisterForm: React.FC<RegisterFormProps> = (props) => {
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
@@ -45,6 +46,7 @@ const RegisterForm: React.FC<RegisterFormProps> = (props) => {
     mutationFn: (values: RegisterRequest) => authService.register(values),
     onSuccess: () => {
       toast.success("Account created successfully");
+      navigate("/login");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -55,8 +57,8 @@ const RegisterForm: React.FC<RegisterFormProps> = (props) => {
     await mutateAsync({
       email: values.email,
       password: values.password,
-      firstName: values.firstName,
-      lastName: values.lastName,
+      first_name: values.firstName,
+      last_name: values.lastName,
     });
   };
 

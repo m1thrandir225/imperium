@@ -95,3 +95,53 @@ func (h *HTTPHandler) GetUserHosts(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, hosts)
 }
+
+func (h *HTTPHandler) GetHost(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	var uriID HostUriID
+	if err := ctx.ShouldBindUri(&uriID); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	host, err := h.hostService.GetHost(ctx, uriID.HostID, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, host)
+}
+
+func (h *HTTPHandler) GetConfigStatus(ctx *gin.Context) {
+	configured := config.IsConfigured()
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"configured": configured,
+	})
+}
+
+func (h *HTTPHandler) SetupConfig(ctx *gin.Context) {
+	var req SetupConfigRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.AuthServerBaseURL == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("auth server base url is required")))
+		return
+	}
+
+	if err := config.SaveConfig(req.AuthServerBaseURL); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, messageResponse("Config setup successfully"))
+}

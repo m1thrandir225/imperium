@@ -6,16 +6,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type HostUriID struct {
+	HostID string `uri:"hostId" binding:"required,uuid"`
+}
+
 type RegisterUserRequest struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email     string `json:"email" binding:"required"`
+	Password  string `json:"password" binding:"required"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
 }
 
 type RegisterClientRequest struct {
-	Name      string `json:"name"`
-	IPAddress string `json:"ipAddress"`
+	Name      string `json:"name" binding:"required"`
+	IPAddress string `json:"ipAddress" binding:"required"`
 	Port      int    `json:"port"`
 }
 
@@ -67,6 +71,14 @@ type DisconnectResponse struct {
 	HostID string `json:"hostId"`
 }
 
+type SetupConfigRequest struct {
+	AuthServerBaseURL string `json:"auth_server_base_url",binding:"required"`
+}
+
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
+}
+
+func messageResponse(message string) gin.H {
+	return gin.H{"message": message}
 }

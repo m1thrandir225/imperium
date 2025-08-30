@@ -76,3 +76,34 @@ func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleH
 
 	return hosts, nil
 }
+
+func (s *HostService) GetHost(ctx context.Context, hostID, token string) (*HostDTO, error) {
+	url := s.GetHostURL(hostID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.GetHTTPClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var host HostDTO
+	err = json.Unmarshal(body, &host)
+	if err != nil {
+		return nil, err
+	}
+
+	return &host, nil
+}

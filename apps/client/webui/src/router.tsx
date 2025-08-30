@@ -1,39 +1,48 @@
 import {createBrowserRouter} from "react-router-dom";
 import LoginPage from "./pages/login";
-import ProtectedRoute from "./components/protected-route";
+import ProtectedGuard from "./guards/protected-guard";
 import HostsPage from "./pages/hosts";
 import AuthLayout from "./layouts/auth-layout";
 import RegisterPage from "./pages/register";
 import DefaultLayout from "./layouts/default-layout";
 import SingleHostPage from "./pages/host";
+import SetupGuard from "./guards/setup-guard";
 
 const router = createBrowserRouter([
   {
-    element: <AuthLayout />,
+    path: "*",
+    element: <SetupGuard />,
     children: [
+      // Auth routes (login/register)
       {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
-    ],
-  },
-  {
-    element: <ProtectedRoute />,
-    children: [
-      {
-        element: <DefaultLayout />,
+        element: <AuthLayout />,
         children: [
           {
-            path: "/hosts",
-            element: <HostsPage />,
+            path: "login",
+            element: <LoginPage />,
           },
           {
-            path: "/hosts/:hostId",
-            element: <SingleHostPage />,
+            path: "register",
+            element: <RegisterPage />,
+          },
+        ],
+      },
+      // Protected routes
+      {
+        element: <ProtectedGuard />,
+        children: [
+          {
+            element: <DefaultLayout />,
+            children: [
+              {
+                path: "hosts",
+                element: <HostsPage />,
+              },
+              {
+                path: "hosts/:hostId",
+                element: <SingleHostPage />,
+              },
+            ],
           },
         ],
       },

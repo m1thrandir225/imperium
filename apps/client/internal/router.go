@@ -12,8 +12,12 @@ import (
 func SetupRouter(config *config.Config) *gin.Engine {
 	router := gin.Default()
 
-	authService := NewAuthService(config.AuthServerBaseURL)
-	hostService := NewHostService(fmt.Sprintf("%s/hosts", config.AuthServerBaseURL))
+	baseURL := config.AuthServerBaseURL
+
+	apiURL := fmt.Sprintf("%s/api/v1", baseURL)
+
+	authService := NewAuthService(apiURL)
+	hostService := NewHostService(fmt.Sprintf("%s/hosts", apiURL))
 	httpHandler := NewHTTPHandler(config, authService, hostService)
 
 	router.Use(CORSMiddleware())

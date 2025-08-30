@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -87,6 +88,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, cmd RegisterUserRequest)
 		return nil, err
 	}
 	url := s.GetRegisterURL()
+	log.Println("url", url)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -94,6 +96,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, cmd RegisterUserRequest)
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
+		log.Println("error creating request", err)
 		return nil, err
 	}
 
