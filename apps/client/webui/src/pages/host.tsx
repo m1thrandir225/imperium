@@ -43,11 +43,13 @@ const SingleHostPage: React.FC = () => {
         </div>
       )}
       {data && !isLoading && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Host {data?.name}</CardTitle>
-          </CardHeader>
-        </Card>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Host {data?.name}</CardTitle>
+            </CardHeader>
+          </Card>
+        </>
       )}
     </React.Fragment>
   );

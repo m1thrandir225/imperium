@@ -20,10 +20,16 @@ const router = createBrowserRouter([
           {
             path: "login",
             element: <LoginPage />,
+            handle: {
+              title: () => "Login | Imperium",
+            },
           },
           {
             path: "register",
             element: <RegisterPage />,
+            handle: {
+              title: () => "Register | Imperium",
+            },
           },
         ],
       },
@@ -37,10 +43,16 @@ const router = createBrowserRouter([
               {
                 path: "hosts",
                 element: <HostsPage />,
+                handle: {
+                  title: () => "Hosts | Imperium",
+                },
               },
               {
                 path: "hosts/:hostId",
                 element: <SingleHostPage />,
+                handle: {
+                  title: () => "Host Details | Imperium",
+                },
               },
             ],
           },
