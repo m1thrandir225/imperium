@@ -10,6 +10,7 @@ import me.sebastijanzindl.authserver.responses.HostResponse;
 import me.sebastijanzindl.authserver.responses.SimpleHostResponse;
 import me.sebastijanzindl.authserver.service.AuthenticationService;
 import me.sebastijanzindl.authserver.service.HostService;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,17 @@ public class HostController {
             @Valid @RequestBody CreateHostDTO createHostDTO
     ) {
         Host host = this.hostService.create(createHostDTO, currentUser);
+        HostResponse response = HostResponse.from(host);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/get-or-create")
+    public ResponseEntity<HostResponse> getOrCreate(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody CreateHostDTO createHostDTO
+    ) {
+        Host host = this.hostService.getOrCreateHost(createHostDTO, currentUser);
+
         HostResponse response = HostResponse.from(host);
         return ResponseEntity.ok(response);
     }

@@ -9,6 +9,7 @@ import me.sebastijanzindl.authserver.model.enums.HOST_STATUS;
 import me.sebastijanzindl.authserver.repository.HostRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -36,6 +37,16 @@ public class HostService {
 
     public Host getHostByName(String name) {
         return this.hostRepository.findByName(name);
+    }
+
+    public Host getOrCreateHost(CreateHostDTO dto, User owner) {
+        Optional<Host> existing = this.hostRepository.findByNameAndIpAddressAndPort(
+                dto.getName(),
+                dto.getIpAddress(),
+                dto.getPort()
+        );
+
+        return existing.orElseGet(() -> this.create(dto, owner));
     }
 
     public Host update(UUID id, UpdateHostDTO input) {
