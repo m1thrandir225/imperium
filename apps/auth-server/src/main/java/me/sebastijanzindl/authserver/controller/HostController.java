@@ -48,7 +48,7 @@ public class HostController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/name/{name")
+    @GetMapping("/name/{name}")
     public ResponseEntity<HostResponse> getHostByName(
             @AuthenticationPrincipal User currentUser,
             @RequestParam String name
