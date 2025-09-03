@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/config"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
@@ -21,14 +22,14 @@ type Manager struct {
 	app            fyne.App
 	window         fyne.Window
 	screens        map[string]Screen
-	config         *util.Config
+	config         *config.Config
 	authService    *auth.AuthService
 	programService *programs.ProgramService
 	sessionService *session.SessionService
 	hostManager    *host.HostManager
 }
 
-func NewUIManager(config *util.Config) *Manager {
+func NewUIManager(config *config.Config) *Manager {
 
 	manager := &Manager{
 		app:     app.NewWithID("imperium"),
@@ -89,6 +90,7 @@ func NewUIManager(config *util.Config) *Manager {
 		hostConfig,
 		manager.authService,
 		manager.programService,
+		config.SetHostConfig,
 	)
 
 	log.Println("shouldShowSetup", shouldShowSetup(config))
@@ -111,7 +113,7 @@ func (m *Manager) initializeScreens() {
 	}
 
 	if shouldShowSetup(m.config) {
-		m.screens[SETUP_SCREEN] = NewSetupScreen(m.config, util.SaveConfigSections, func() {
+		m.screens[SETUP_SCREEN] = NewSetupScreen(m.config, config.SaveConfigSections, func() {
 			m.OnSetupSuccess()
 		})
 	}
@@ -145,7 +147,7 @@ func (m *Manager) RunUI() {
 	m.window.ShowAndRun()
 }
 
-func shouldShowLogin(cfg *util.Config) bool {
+func shouldShowLogin(cfg *config.Config) bool {
 	authConfig := cfg.GetAuthConfig()
 
 	if authConfig == nil {
@@ -207,7 +209,7 @@ func (m *Manager) ResetScreens() {
 	m.initializeScreens()
 }
 
-func shouldShowSetup(cfg *util.Config) bool {
+func shouldShowSetup(cfg *config.Config) bool {
 
 	if cfg.VideoConfig == nil || cfg.VideoConfig.FFMPEGPath == "" {
 		return true

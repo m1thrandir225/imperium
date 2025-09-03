@@ -8,23 +8,26 @@ import (
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type HostManager struct {
-	config         *Config
-	authService    *auth.AuthService
-	programService *programs.ProgramService
-	statusManager  *StatusManager
-	hostID         string
+	config           *Config
+	authService      *auth.AuthService
+	programService   *programs.ProgramService
+	statusManager    *StatusManager
+	saveGlobalConfig func(config *Config)
+	hostID           string
 }
 
-func NewHostManager(config *Config, authService *auth.AuthService, programService *programs.ProgramService) *HostManager {
+func NewHostManager(config *Config, authService *auth.AuthService, programService *programs.ProgramService, saveGlobalConfig func(config *Config)) *HostManager {
 
 	manager := &HostManager{
-		config:         config,
-		authService:    authService,
-		programService: programService,
-		hostID:         config.HostName,
+		config:           config,
+		authService:      authService,
+		programService:   programService,
+		hostID:           config.HostName,
+		saveGlobalConfig: saveGlobalConfig,
 	}
 
 	return manager
@@ -41,20 +44,31 @@ func (hm *HostManager) Initialize(ctx context.Context) error {
 	}
 
 	// Get hostname and IP
-	hostname, err := os.Hostname()
+	hostname, err := util.GetHostname()
 	if err != nil {
 		return fmt.Errorf("failed to get hostname: %w", err)
 	}
 
-	ipAddress := getLocalIPAddress()
+	ipAddress, err := util.GetIPAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get IP address: %w", err)
+	}
+
 	port := 8080 // Make this configurable
 
 	// Register host with auth server
-	host, err := hm.authService.RegisterHost(ctx, hostname, ipAddress, port)
+	host, err := hm.authService.GetOrCreateHost(ctx, hostname, ipAddress, port)
 	if err != nil {
 		return fmt.Errorf("failed to register host: %w", err)
 	}
 
+	hm.config.HostName = host.Name
+	hm.config.IPAddress = host.IPAddress
+	hm.config.Port = host.Port
+	hm.config.UniqueID = host.ID
+	hm.config.Status = host.Status
+
+	hm.saveGlobalConfig(hm.config)
 	hm.hostID = host.ID
 	log.Printf("Host registered with ID: %s", hm.hostID)
 

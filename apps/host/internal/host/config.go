@@ -1,5 +1,7 @@
 package host
 
+import "github.com/m1thrandir225/imperium/apps/host/internal/util"
+
 type Config struct {
 	HostName  string `json:"host_name"`
 	IPAddress string `json:"ip_address"`
@@ -8,12 +10,25 @@ type Config struct {
 	Status    string `json:"status"`
 }
 
-func NewConfig(hostname, ipAddress string, port int, uniqueID string) *Config {
+func NewConfig(uniqueID string) *Config {
+	hostname, err := util.GetHostname()
+	if err != nil {
+		hostname = ""
+	}
+
+	ipAddress, err := util.GetIPAddress()
+	if err != nil {
+		ipAddress = ""
+	}
+
+	port := 8080
+
 	return &Config{
 		HostName:  hostname,
 		IPAddress: ipAddress,
 		Port:      port,
 		UniqueID:  uniqueID,
+		Status:    string(StatusAvailable),
 	}
 }
 

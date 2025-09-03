@@ -97,6 +97,26 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*Regis
 	return &result, nil
 }
 
+func (s *AuthService) GetHostByName(ctx context.Context, hostname string) (*Host, error) {
+	url := "/api/v1/hosts/name/" + hostname
+
+	resp, err := s.httpClient.Get(ctx, url, make(map[string]string), make(map[string]string), true)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("get host by name failed: %d", resp.StatusCode)
+	}
+
+	var result Host
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 func (s *AuthService) CreateHost(ctx context.Context, req CreateHostRequest) (*Host, error) {
 	url := "/api/v1/hosts"
 
@@ -157,6 +177,33 @@ func (s *AuthService) RegisterHost(ctx context.Context, hostname, ipAddress stri
 		log.Printf("Request JSON: %s", string(jsonData))
 	}
 	return s.CreateHost(ctx, req)
+}
+
+func (s *AuthService) GetOrCreateHost(ctx context.Context, hostname, ipAddress string, port int) (*Host, error) {
+	url := "/api/v1/hosts/get-or-create"
+
+	req := CreateHostRequest{
+		Name:      hostname,
+		IPAddress: ipAddress,
+		Port:      port,
+	}
+
+	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), true, make(map[string]string))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("get or create host failed: %d", resp.StatusCode)
+	}
+
+	var result Host
+	if err := json.Unmarshal(resp.Body, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (s *AuthService) Logout(ctx context.Context) error {

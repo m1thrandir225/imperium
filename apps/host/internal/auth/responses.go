@@ -16,7 +16,8 @@ type RegisterResponse struct {
 
 type Host struct {
 	ID        string `json:"id"`
-	IPAddress string `json:"ipAddress"`
+	IPAddress string `json:"ip_address"`
+	Name      string `json:"name"`
 	Port      int    `json:"port"`
 	Status    string `json:"status"`
 }

@@ -6,15 +6,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/config"
 	"github.com/m1thrandir225/imperium/apps/host/internal/ui"
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 func main() {
 	os.Setenv("LC_ALL", "C")
 	os.Setenv("FYNE_LANGUAGE", "en")
 
-	cfg, err := util.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
 	}

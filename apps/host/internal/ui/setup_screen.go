@@ -11,16 +11,17 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/m1thrandir225/imperium/apps/host/internal/config"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type SetupScreen struct {
-	cfg        *util.Config
-	saveConfig func(config *util.Config, sections ...string) error
+	cfg        *config.Config
+	saveConfig func(config *config.Config, sections ...string) error
 	onComplete func()
 }
 
-func NewSetupScreen(cfg *util.Config, saveConfig func(config *util.Config, sections ...string) error, onComplete func()) *SetupScreen {
+func NewSetupScreen(cfg *config.Config, saveConfig func(config *config.Config, sections ...string) error, onComplete func()) *SetupScreen {
 	return &SetupScreen{
 		cfg:        cfg,
 		saveConfig: saveConfig,

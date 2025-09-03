@@ -10,16 +10,16 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
+	"github.com/m1thrandir225/imperium/apps/host/internal/config"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )
 
 type SettingsScreen struct {
 	manager *Manager
-	config  *util.Config
+	config  *config.Config
 }
 
-func NewSettingsScreen(manager *Manager, config *util.Config) *SettingsScreen {
+func NewSettingsScreen(manager *Manager, config *config.Config) *SettingsScreen {
 	return &SettingsScreen{
 		manager: manager,
 		config:  config,
@@ -178,7 +178,7 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 		s.config.VideoConfig.SetEncoder(encoderSelect.Selected)
 		s.config.VideoConfig.SetFPS(fps)
 
-		if err := util.SaveConfigSections(s.config, "server_address", "video"); err != nil {
+		if err := config.SaveConfigSections(s.config, "server_address", "video"); err != nil {
 			dialog.ShowError(fmt.Errorf("failed to save settings: %v", err), w)
 			return
 		}

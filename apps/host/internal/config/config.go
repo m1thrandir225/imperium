@@ -1,4 +1,4 @@
-package util
+package config
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/spf13/viper"
 )
@@ -37,7 +38,7 @@ func (c *Config) GetHostConfig() *host.Config {
 }
 
 func LoadConfig() (*Config, error) {
-	configDir := GetConfigDir()
+	configDir := util.GetConfigDir()
 	configName := "config"
 	configPath := filepath.Join(configDir, "config.json")
 
@@ -65,18 +66,13 @@ func LoadConfig() (*Config, error) {
 				time.Time{},
 				time.Time{},
 			),
-			HostConfig: &host.Config{
-				HostName:  "",
-				IPAddress: "",
-				Port:      0,
-				Status:    string(host.StatusAvailable),
-				UniqueID:  "",
-			},
+			HostConfig: host.NewConfig(""),
 		}
 
 		viper.Set("video", config.VideoConfig)
 		viper.Set("server_address", config.ServerAddress)
 		viper.Set("auth_config", config.AuthConfig)
+		viper.Set("host_config", config.HostConfig)
 
 		if err := viper.SafeWriteConfigAs(configPath); err != nil {
 			return nil, fmt.Errorf("failed to write default config: %w", err)
