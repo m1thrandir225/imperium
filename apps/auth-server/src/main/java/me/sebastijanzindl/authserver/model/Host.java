@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import me.sebastijanzindl.authserver.model.enums.HOST_STATUS;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -38,6 +40,7 @@ public class Host {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "host_status_enum")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private HOST_STATUS status = HOST_STATUS.AVAILABLE;
 
     @ManyToOne(fetch = FetchType.LAZY)
