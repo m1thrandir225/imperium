@@ -34,6 +34,10 @@ public class HostService {
         return this.findById(id);
     }
 
+    public Host getHostByName(String name) {
+        return this.hostRepository.findByName(name);
+    }
+
     public Host update(UUID id, UpdateHostDTO input) {
         Host host = this.findById(id);
 

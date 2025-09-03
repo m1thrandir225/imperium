@@ -48,6 +48,16 @@ public class HostController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/name/{name")
+    public ResponseEntity<HostResponse> getHostByName(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam String name
+    ) {
+        Host host = this.hostService.getHostByName(name);
+        HostResponse response = HostResponse.from(host);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
     public ResponseEntity<List<SimpleHostResponse>> getUserHosts(
             @AuthenticationPrincipal User currentUser
