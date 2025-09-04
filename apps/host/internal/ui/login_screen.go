@@ -1,26 +1,21 @@
 package ui
 
 import (
-	"context"
-	"log"
+	"errors"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/app"
 )
 
 type LoginScreen struct {
-	manager     *Manager
-	authService *auth.AuthService
+	manager *Manager
 }
 
-func NewLoginScreen(manager *Manager, authService *auth.AuthService) *LoginScreen {
-	return &LoginScreen{
-		manager:     manager,
-		authService: authService,
-	}
+func NewLoginScreen(manager *Manager) *LoginScreen {
+	return &LoginScreen{manager: manager}
 }
 
 func (s *LoginScreen) Name() string {
@@ -34,19 +29,14 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 	passwordEntry.SetPlaceHolder("Password")
 
 	loginBtn := widget.NewButton("Login", func() {
-		req := auth.LoginRequest{
-			Email:    emailEntry.Text,
-			Password: passwordEntry.Text,
-		}
-
-		resp, err := s.authService.Login(context.Background(), req)
-		if err != nil {
-			dialog.ShowError(err, w)
+		if emailEntry.Text == "" || passwordEntry.Text == "" {
+			dialog.ShowError(errors.New("validation: Email and password are required"), w)
 			return
 		}
-
-		log.Printf("Login successful for user: %s", resp.User.Email)
-		s.manager.OnLoginSuccess()
+		s.manager.Publish(app.EventLoginRequested, app.LoginRequestedPayload{
+			Email:    emailEntry.Text,
+			Password: passwordEntry.Text,
+		})
 	})
 
 	registerBtn := widget.NewButton("Register", func() {
@@ -65,6 +55,5 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 		registerBtn,
 		backBtn,
 	)
-
 	return container.NewCenter(form)
 }

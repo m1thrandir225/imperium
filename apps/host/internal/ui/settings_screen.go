@@ -16,13 +16,11 @@ import (
 
 type SettingsScreen struct {
 	manager *Manager
-	config  *config.Config
 }
 
-func NewSettingsScreen(manager *Manager, config *config.Config) *SettingsScreen {
+func NewSettingsScreen(manager *Manager) *SettingsScreen {
 	return &SettingsScreen{
 		manager: manager,
-		config:  config,
 	}
 }
 

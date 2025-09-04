@@ -2,118 +2,85 @@ package ui
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/config"
-	"github.com/m1thrandir225/imperium/apps/host/internal/host"
-	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
-	"github.com/m1thrandir225/imperium/apps/host/internal/session"
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
-	"github.com/m1thrandir225/imperium/apps/host/internal/video"
-	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
+	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
 
 type Manager struct {
-	app            fyne.App
-	window         fyne.Window
-	screens        map[string]Screen
-	config         *config.Config
-	authService    *auth.AuthService
-	programService *programs.ProgramService
-	sessionService *session.SessionService
-	hostManager    *host.HostManager
+	app     fyne.App
+	window  fyne.Window
+	screens map[string]Screen
+	bus     *uapp.EventBus
+	state   *state.StateManager
 }
 
-func NewUIManager(config *config.Config) *Manager {
-
+func NewUIManager(stateManager *state.StateManager, bus *uapp.EventBus) *Manager {
 	manager := &Manager{
 		app:     app.NewWithID("imperium"),
 		screens: make(map[string]Screen),
-		config:  config,
+		state:   stateManager,
+		bus:     bus,
 	}
 	manager.window = manager.app.NewWindow("Imperium")
 
-	dbPath := fmt.Sprintf("%s/programs.db", util.GetConfigDir())
-
-	// Initialize services
-	manager.authService = auth.NewAuthService(
-		config.ServerAddress,
-		config.GetAuthConfig(),
-		config.SetAuthConfig,
-	)
-
-	manager.programService = programs.NewProgramService(
-		config.ServerAddress,
-		manager.authService.GetConfig().GetAccessToken(),
-		manager.authService,
-		dbPath,
-	)
-
-	videoRecorder := video.NewRecorder(&video.Config{
-		FFMPEGPath: config.VideoConfig.FFMPEGPath,
-		FPS:        config.VideoConfig.FPS,
-		Encoder:    config.VideoConfig.Encoder,
-	})
-
-	webrtcStreamer, err := webrtc.NewStreamer()
-	if err != nil {
-		log.Fatalf("Failed to create webrtc streamer: %v", err)
-	}
-
-	manager.sessionService = session.NewSessionService(
-		config.ServerAddress,
-		manager.authService.GetConfig().GetAccessToken(),
-		manager.authService,
-		manager.programService,
-		videoRecorder,
-		webrtcStreamer,
-	)
-
-	hostConfig := config.GetHostConfig()
-	if hostConfig == nil {
-		hostConfig = &host.Config{
-			HostName:  "",
-			IPAddress: "",
-			Port:      8080,
-			UniqueID:  "",
-			Status:    string(host.StatusAvailable),
-		}
-		config.SetHostConfig(hostConfig)
-	}
-
-	manager.hostManager = host.NewHostManager(
-		hostConfig,
-		manager.authService,
-		manager.programService,
-		config.SetHostConfig,
-	)
-
-	log.Println("shouldShowSetup", shouldShowSetup(config))
-	log.Println("shouldShowLogin", shouldShowLogin(config))
-
 	manager.initializeScreens()
-
+	manager.subscribeNavigation()
 	return manager
 }
 
-func (m *Manager) initializeScreens() {
-	m.screens[SETTINGS_SCREEN] = NewSettingsScreen(m, m.config)
-	m.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen(m, m.authService)
-	m.screens[STATUS_SCREEN] = NewStatusScreen(m, m.sessionService)
-	m.screens[PROGRAMS_SCREEN] = NewProgramsScreen(m, m.programService)
+func (m *Manager) subscribeNavigation() {
+	loginCh := m.bus.Subscribe(uapp.EventLoginSucceeded)
+	go func() {
+		for range loginCh {
+			m.ShowScreen(MAIN_MENU_SCREEN)
+		}
+	}()
 
-	if shouldShowLogin(m.config) {
-		m.screens[LOGIN_SCREEN] = NewLoginScreen(m, m.authService)
-		m.screens[REGISTER_SCREEN] = NewRegisterScreen(m, m.authService)
+	logoutCh := m.bus.Subscribe(uapp.EventLogoutCompleted)
+	go func() {
+		for range logoutCh {
+			m.ShowScreen(LOGIN_SCREEN)
+		}
+	}()
+
+	setupCh := m.bus.Subscribe(uapp.EventStatusCompleted)
+	go func() {
+		for range setupCh {
+			m.ShowScreen(MAIN_MENU_SCREEN)
+		}
+	}()
+}
+
+func (m *Manager) Publish(topic string, data any) {
+	if m.bus != nil {
+		m.bus.Publish(topic, data)
+	}
+}
+
+func (m *Manager) GetState() state.AppState {
+	return m.state.Get()
+}
+
+func (m *Manager) initializeScreens() {
+	m.screens[SETTINGS_SCREEN] = NewSettingsScreen(m)
+	m.screens[MAIN_MENU_SCREEN] = NewMainMenuScreen(m)
+	m.screens[STATUS_SCREEN] = NewStatusScreen(m)
+	m.screens[PROGRAMS_SCREEN] = NewProgramsScreen(m)
+
+	if m.shouldShowLogin() {
+		m.screens[LOGIN_SCREEN] = NewLoginScreen(m)
+		m.screens[REGISTER_SCREEN] = NewRegisterScreen(m)
 	}
 
-	if shouldShowSetup(m.config) {
-		m.screens[SETUP_SCREEN] = NewSetupScreen(m.config, config.SaveConfigSections, func() {
+	if m.shouldShowSetup() {
+		m.screens[SETUP_SCREEN] = NewSetupScreen(m, config.SaveConfigSections, func() {
 			m.OnSetupSuccess()
 		})
 	}
@@ -126,6 +93,7 @@ func (m *Manager) AddScreen(screen Screen) {
 func (m *Manager) ShowScreen(name string) {
 	if screen, ok := m.screens[name]; ok {
 		m.window.SetContent(screen.Render(m.window))
+		m.Publish(uapp.EventUIShowScreen, uapp.UIShowScreenPayload{Name: name})
 	}
 }
 
@@ -145,26 +113,6 @@ func (m *Manager) RunUI() {
 	m.window.SetFixedSize(true)
 
 	m.window.ShowAndRun()
-}
-
-func shouldShowLogin(cfg *config.Config) bool {
-	authConfig := cfg.GetAuthConfig()
-
-	if authConfig == nil {
-		return true
-	}
-
-	user := authConfig.GetCurrentUser()
-	if user.ID == "" || user.Email == "" {
-		return true
-	}
-
-	// If the refresh token is expired, we need to login again
-	if authConfig.IsRefreshTokenExpired() {
-		return true
-	}
-
-	return false
 }
 
 func (m *Manager) OnSetupSuccess() {
@@ -209,13 +157,29 @@ func (m *Manager) ResetScreens() {
 	m.initializeScreens()
 }
 
-func shouldShowSetup(cfg *config.Config) bool {
+func (m *Manager) shouldShowLogin() bool {
+	cfg := m.GetState()
 
-	if cfg.VideoConfig == nil || cfg.VideoConfig.FFMPEGPath == "" {
+	if cfg.UserInfo.ID == "" || cfg.UserInfo.Email == "" {
 		return true
 	}
 
-	if _, err := os.Stat(cfg.VideoConfig.FFMPEGPath); err != nil {
+	if cfg.UserSession.AccessToken == "" {
+		return true
+	}
+
+	return time.Now().After(cfg.UserSession.Expiry)
+
+}
+
+func (m *Manager) shouldShowSetup() bool {
+	cfg := m.GetState().Settings
+
+	if cfg.FFmpegPath == "" {
+		return true
+	}
+
+	if _, err := os.Stat(cfg.FFmpegPath); err != nil {
 		return true
 	}
 
