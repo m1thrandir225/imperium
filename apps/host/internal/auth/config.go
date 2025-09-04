@@ -81,3 +81,14 @@ func LoadConfig(user User, accessToken string, refreshToken string, accessTokenE
 		RefreshTokenExpiresAt: refreshTokenExpiresAt.Format(time.RFC3339),
 	}
 }
+
+// NewDefaultConfig returns a new Config with default values
+func NewDefaultConfig() *Config {
+	return &Config{
+		User:                  User{},
+		AccessToken:           "",
+		RefreshToken:          "",
+		AccessTokenExpiresAt:  "",
+		RefreshTokenExpiresAt: "",
+	}
+}

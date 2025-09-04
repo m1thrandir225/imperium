@@ -110,7 +110,7 @@ func SaveConfigSections(config *Config, sections ...string) error {
 	currentConfig, err := LoadConfig()
 	if err != nil {
 		// If we can't load current config, save everything
-		return SaveConfig(config)
+		currentConfig = NewDefaultConfig()
 	}
 
 	// Create a merged config
@@ -153,4 +153,13 @@ func (c *Config) SetVideoConfig(config *video.Config) {
 	c.VideoConfig = config
 
 	SaveConfig(c)
+}
+
+func NewDefaultConfig() *Config {
+	return &Config{
+		VideoConfig:   video.NewDefaultConfig(),
+		ServerAddress: "",
+		AuthConfig:    auth.NewDefaultConfig(),
+		HostConfig:    host.NewDefaultConfig(),
+	}
 }

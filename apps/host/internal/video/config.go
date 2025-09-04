@@ -26,3 +26,12 @@ func LoadConfig(encoder string, fps int, ffmpegPath string) *Config {
 		FFMPEGPath: ffmpegPath,
 	}
 }
+
+// NewDefaultConfig returns a new Config with default values
+func NewDefaultConfig() *Config {
+	return &Config{
+		Encoder:    "libx264",
+		FPS:        30,
+		FFMPEGPath: "",
+	}
+}

@@ -32,6 +32,11 @@ func NewConfig(uniqueID string) *Config {
 	}
 }
 
+// NewDefaultConfig returns a new Config with default values
+func NewDefaultConfig() *Config {
+	return NewConfig("")
+}
+
 func (c *Config) GetHostName() string {
 	return c.HostName
 }
