@@ -4,18 +4,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 )
 
 type MainMenuScreen struct {
-	manager     *Manager
-	authService *auth.AuthService
+	manager *Manager
 }
 
-func NewMainMenuScreen(manager *Manager, authService *auth.AuthService) *MainMenuScreen {
+func NewMainMenuScreen(manager *Manager) *MainMenuScreen {
 	return &MainMenuScreen{
-		manager:     manager,
-		authService: authService,
+		manager: manager,
 	}
 }
 

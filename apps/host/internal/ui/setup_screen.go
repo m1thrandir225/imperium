@@ -11,21 +11,18 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/config"
+	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type SetupScreen struct {
-	cfg        *config.Config
-	saveConfig func(config *config.Config, sections ...string) error
-	onComplete func()
+	manager *Manager
 }
 
-func NewSetupScreen(cfg *config.Config, saveConfig func(config *config.Config, sections ...string) error, onComplete func()) *SetupScreen {
+func NewSetupScreen(manager *Manager) *SetupScreen {
 	return &SetupScreen{
-		cfg:        cfg,
-		saveConfig: saveConfig,
-		onComplete: onComplete,
+		manager: manager,
 	}
 }
 
@@ -43,9 +40,6 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 	//server address entry
 	serverAddressEntry := widget.NewEntry()
 	serverAddressEntry.SetPlaceHolder("e.g., http://localhost:8080 or https://auth.example.com")
-	if s.cfg.ServerAddress != "" {
-		serverAddressEntry.SetText(s.cfg.ServerAddress)
-	}
 
 	validateServerAddress := func(address string) error {
 		if address == "" {
@@ -75,7 +69,6 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 				return
 			}
 			ffmpegPathEntry.SetText(uri.URI().Path())
-			s.cfg.VideoConfig.FFMPEGPath = uri.URI().Path()
 		}, w)
 	})
 	browseBtn.Hide()
@@ -91,17 +84,20 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 			return
 		}
 
-		if ffmpegPathEntry.Text != "" {
-			s.cfg.VideoConfig.FFMPEGPath = ffmpegPathEntry.Text
-		}
+		//Publish To Save Data
+		s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+			Settings: state.Settings{
+				FFmpegPath:    ffmpegPathEntry.Text,
+				ServerAddress: serverAddressEntry.Text,
+			},
+		})
 
-		s.cfg.ServerAddress = serverAddressEntry.Text
+		//OnComplete
+		s.manager.Publish(uapp.EventSetupCompleted, uapp.SetupCompletedPayload{
+			FFmpegPath:    ffmpegPathEntry.Text,
+			ServerAddress: serverAddressEntry.Text,
+		})
 
-		if err := s.saveConfig(s.cfg, "video", "server_address"); err != nil {
-			dialog.ShowError(err, w)
-			return
-		}
-		s.onComplete()
 	})
 	continueBtn.Hide()
 
@@ -112,7 +108,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 		installed, path := util.CheckFFMPEGInstallation()
 		if installed {
 			ffmpegStatusLabel.SetText("✅ FFmpeg is installed")
-			s.cfg.VideoConfig.FFMPEGPath = path
+			ffmpegPathEntry.SetText(path)
 			continueBtn.Show()
 			browseBtn.Hide()
 			downloadLink.Hide()

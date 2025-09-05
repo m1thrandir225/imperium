@@ -10,7 +10,8 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/config"
+	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )
 
@@ -29,18 +30,19 @@ func (s *SettingsScreen) Name() string {
 }
 
 func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
+	current := s.manager.GetState().Settings
 	// Server Address Section
 	serverAddressEntry := widget.NewEntry()
 	serverAddressEntry.SetPlaceHolder("e.g., http://localhost:8080 or https://auth.example.com")
-	if s.config.ServerAddress != "" {
-		serverAddressEntry.SetText(s.config.ServerAddress)
+	if current.ServerAddress != "" {
+		serverAddressEntry.SetText(current.ServerAddress)
 	}
 
 	// FFmpeg Path Section
 	ffmpegPathEntry := widget.NewEntry()
 	ffmpegPathEntry.SetPlaceHolder("Path to FFmpeg executable")
-	if s.config.VideoConfig.FFMPEGPath != "" {
-		ffmpegPathEntry.SetText(s.config.VideoConfig.FFMPEGPath)
+	if current.FFmpegPath != "" {
+		ffmpegPathEntry.SetText(current.FFmpegPath)
 	}
 
 	browseFFmpegBtn := widget.NewButton("Browse", func() {
@@ -61,8 +63,8 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	// Encoder Selection - Start with basic fallbacks
 	fallbackEncoders := []string{"libx264", "libx265"}
 	encoderSelect := widget.NewSelect(fallbackEncoders, nil)
-	if s.config.VideoConfig.Encoder != "" {
-		encoderSelect.SetSelected(s.config.VideoConfig.Encoder)
+	if current.Encoder != "" {
+		encoderSelect.SetSelected(current.Encoder)
 	} else {
 		encoderSelect.SetSelected("libx264") // Default
 	}
@@ -116,7 +118,7 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	}
 
 	// Auto-load encoders on startup if FFmpeg path is available
-	if s.config.VideoConfig.FFMPEGPath != "" {
+	if current.FFmpegPath != "" {
 		go loadAvailableEncoders() // Run in background to avoid blocking UI
 	}
 
@@ -127,7 +129,7 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 	fpsOptions := []string{"30", "60", "90", "120"}
 	fpsSelect := widget.NewSelect(fpsOptions, nil)
-	fpsSelect.SetSelected(fmt.Sprintf("%d", s.config.VideoConfig.FPS))
+	fpsSelect.SetSelected(fmt.Sprintf("%d", current.Framerate))
 
 	// Validation functions
 	validateServerAddress := func(address string) error {
@@ -171,15 +173,15 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			dialog.ShowError(fmt.Errorf("invalid FPS value"), w)
 			return
 		}
-		s.config.SetServerAddress(serverAddressEntry.Text)
-		s.config.VideoConfig.SetFFMPEGPath(ffmpegPathEntry.Text)
-		s.config.VideoConfig.SetEncoder(encoderSelect.Selected)
-		s.config.VideoConfig.SetFPS(fps)
 
-		if err := config.SaveConfigSections(s.config, "server_address", "video"); err != nil {
-			dialog.ShowError(fmt.Errorf("failed to save settings: %v", err), w)
-			return
-		}
+		s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+			Settings: state.Settings{
+				FFmpegPath:    ffmpegPathEntry.Text,
+				ServerAddress: serverAddressEntry.Text,
+				Encoder:       encoderSelect.Selected,
+				Framerate:     fps,
+			},
+		})
 
 		dialog.ShowInformation("Success", "Settings saved successfully!", w)
 	})

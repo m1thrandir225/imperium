@@ -14,6 +14,10 @@ const (
 	EventStateSaved   = "state.saved"
 	EventStateUpdated = "state.updated"
 
+	//Setup
+	EventSetupRequested = "setup.requested"
+	EventSetupCompleted = "setup.completed"
+
 	//Auth
 	EventLoginRequested  = "auth.login.requested"
 	EventLoginSucceeded  = "auth.login.succeeded"
@@ -59,4 +63,15 @@ type LoginSucceededPayload struct {
 }
 
 type SettingsSavedPayload struct {
+	Settings state.Settings
+}
+
+type SetupRequestedPayload struct {
+	FFmpegPath    string
+	ServerAddress string
+}
+
+type SetupCompletedPayload struct {
+	FFmpegPath    string
+	ServerAddress string
 }

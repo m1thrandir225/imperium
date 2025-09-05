@@ -4,18 +4,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 )
 
 type StatusScreen struct {
-	manager        *Manager
-	sessionService *session.SessionService
+	manager *Manager
 }
 
-func NewStatusScreen(manager *Manager, sessionService *session.SessionService) *StatusScreen {
+func NewStatusScreen(manager *Manager) *StatusScreen {
 	return &StatusScreen{
-		manager:        manager,
-		sessionService: sessionService,
+		manager: manager,
 	}
 }
 
@@ -23,6 +20,7 @@ func (s *StatusScreen) Name() string {
 	return STATUS_SCREEN
 }
 
+// TODO: Implement this
 func (s *StatusScreen) Render(w fyne.Window) fyne.CanvasObject {
 	return container.NewBorder(
 		nil,

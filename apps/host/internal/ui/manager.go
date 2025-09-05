@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"context"
 	"log"
 	"os"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
-	"github.com/m1thrandir225/imperium/apps/host/internal/config"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
 
@@ -50,10 +48,14 @@ func (m *Manager) subscribeNavigation() {
 		}
 	}()
 
-	setupCh := m.bus.Subscribe(uapp.EventStatusCompleted)
+	setupCh := m.bus.Subscribe(uapp.EventSetupCompleted)
 	go func() {
 		for range setupCh {
-			m.ShowScreen(MAIN_MENU_SCREEN)
+			if m.shouldShowLogin() {
+				m.ShowScreen(LOGIN_SCREEN)
+			} else {
+				m.ShowScreen(MAIN_MENU_SCREEN)
+			}
 		}
 	}()
 }
@@ -80,9 +82,8 @@ func (m *Manager) initializeScreens() {
 	}
 
 	if m.shouldShowSetup() {
-		m.screens[SETUP_SCREEN] = NewSetupScreen(m, config.SaveConfigSections, func() {
-			m.OnSetupSuccess()
-		})
+		m.screens[SETUP_SCREEN] = NewSetupScreen(m)
+		m.OnSetupSuccess()
 	}
 }
 
@@ -98,12 +99,12 @@ func (m *Manager) ShowScreen(name string) {
 }
 
 func (m *Manager) RunUI() {
-	log.Println("Starting UI with auth check:", shouldShowLogin(m.config))
-	log.Println("Starting UI with setup check:", shouldShowSetup(m.config))
+	log.Println("Starting UI with auth check:", m.shouldShowLogin())
+	log.Println("Starting UI with setup check:", m.shouldShowSetup())
 
-	if shouldShowSetup(m.config) {
+	if m.shouldShowSetup() {
 		m.ShowScreen(SETUP_SCREEN)
-	} else if shouldShowLogin(m.config) {
+	} else if m.shouldShowLogin() {
 		m.ShowScreen(LOGIN_SCREEN)
 	} else {
 		m.ShowScreen(MAIN_MENU_SCREEN)
@@ -118,10 +119,10 @@ func (m *Manager) RunUI() {
 func (m *Manager) OnSetupSuccess() {
 	delete(m.screens, SETUP_SCREEN)
 
-	if shouldShowLogin(m.config) {
+	if m.shouldShowLogin() {
 		if _, exists := m.screens[LOGIN_SCREEN]; !exists {
-			m.screens[LOGIN_SCREEN] = NewLoginScreen(m, m.authService)
-			m.screens[REGISTER_SCREEN] = NewRegisterScreen(m, m.authService)
+			m.screens[LOGIN_SCREEN] = NewLoginScreen(m)
+			m.screens[REGISTER_SCREEN] = NewRegisterScreen(m)
 		}
 		m.ShowScreen(LOGIN_SCREEN)
 	} else {
@@ -129,28 +130,28 @@ func (m *Manager) OnSetupSuccess() {
 	}
 }
 
-func (m *Manager) OnLoginSuccess() {
-	delete(m.screens, LOGIN_SCREEN)
-	delete(m.screens, REGISTER_SCREEN)
+// func (m *Manager) OnLoginSuccess() {
+// 	delete(m.screens, LOGIN_SCREEN)
+// 	delete(m.screens, REGISTER_SCREEN)
 
-	ctx := context.Background()
-	if err := m.hostManager.Initialize(ctx); err != nil {
-		log.Printf("Failed to initialize host manager: %v", err)
-	}
+// 	ctx := context.Background()
+// 	if err := m.hostManager.Initialize(ctx); err != nil {
+// 		log.Printf("Failed to initialize host manager: %v", err)
+// 	}
 
-	m.ShowScreen(MAIN_MENU_SCREEN)
-}
+// 	m.ShowScreen(MAIN_MENU_SCREEN)
+// }
 
-func (m *Manager) OnLogout() {
-	m.authService.Logout(context.Background())
+// func (m *Manager) OnLogout() {
+// 	m.authService.Logout(context.Background())
 
-	if m.hostManager != nil {
-		m.hostManager.Shutdown()
-	}
+// 	if m.hostManager != nil {
+// 		m.hostManager.Shutdown()
+// 	}
 
-	m.ResetScreens()
-	m.ShowScreen(LOGIN_SCREEN)
-}
+// 	m.ResetScreens()
+// 	m.ShowScreen(LOGIN_SCREEN)
+// }
 
 func (m *Manager) ResetScreens() {
 	m.screens = make(map[string]Screen)

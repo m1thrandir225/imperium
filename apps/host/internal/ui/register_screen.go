@@ -7,18 +7,15 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 )
 
 type RegisterScreen struct {
-	manager     *Manager
-	authService *auth.AuthService
+	manager *Manager
 }
 
-func NewRegisterScreen(manager *Manager, authService *auth.AuthService) *RegisterScreen {
+func NewRegisterScreen(manager *Manager) *RegisterScreen {
 	return &RegisterScreen{
-		manager:     manager,
-		authService: authService,
+		manager: manager,
 	}
 }
 

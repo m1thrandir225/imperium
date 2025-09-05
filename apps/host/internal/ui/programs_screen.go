@@ -11,16 +11,14 @@ import (
 )
 
 type ProgramsScreen struct {
-	manager        *Manager
-	programService *programs.ProgramService
-	programsList   *widget.List
-	programs       []programs.Program
+	manager      *Manager
+	programsList *widget.List
+	programs     []programs.Program
 }
 
-func NewProgramsScreen(manager *Manager, programService *programs.ProgramService) *ProgramsScreen {
+func NewProgramsScreen(manager *Manager) *ProgramsScreen {
 	return &ProgramsScreen{
-		manager:        manager,
-		programService: programService,
+		manager: manager,
 	}
 }
 
