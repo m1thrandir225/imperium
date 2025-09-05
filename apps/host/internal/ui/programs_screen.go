@@ -1,19 +1,17 @@
 package ui
 
 import (
-	"context"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
+	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 )
 
 type ProgramsScreen struct {
 	manager      *Manager
 	programsList *widget.List
-	programs     []programs.Program
+	programs     []uapp.ProgramItem
+	subscribed   bool
 }
 
 func NewProgramsScreen(manager *Manager) *ProgramsScreen {
@@ -27,12 +25,22 @@ func (s *ProgramsScreen) Name() string {
 }
 
 func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
-	// Discover programs
-	discoveredPrograms, err := s.programService.DiscoverPrograms()
-	if err != nil {
-		dialog.ShowError(err, w)
-	} else {
-		s.programs = discoveredPrograms
+	if !s.subscribed {
+		ch := s.manager.bus.Subscribe(uapp.EventProgramsDisocvered)
+		s.subscribed = true
+
+		go func() {
+			for evt := range ch {
+				payload, ok := evt.(uapp.ProgramDiscoveredPayload)
+				if !ok {
+					continue
+				}
+				s.programs = payload.Programs
+				if s.programsList != nil {
+					fyne.Do(func() { s.programsList.Refresh() })
+				}
+			}
+		}()
 	}
 
 	// Create list widget
@@ -56,24 +64,23 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			nameLabel.SetText(program.Name)
 			pathLabel.SetText(program.Path)
 			registerBtn.OnTapped = func() {
-				s.registerProgram(program, w)
+				s.manager.Publish(uapp.EvnetProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
+					Program: program,
+				})
 			}
 		},
 	)
 
 	refreshBtn := widget.NewButton("Refresh Programs", func() {
-		discoveredPrograms, err := s.programService.DiscoverPrograms()
-		if err != nil {
-			dialog.ShowError(err, w)
-			return
-		}
-		s.programs = discoveredPrograms
-		s.programsList.Refresh()
+		s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
 	})
 
 	backBtn := widget.NewButton("Back to Main Menu", func() {
 		s.manager.ShowScreen(MAIN_MENU_SCREEN)
 	})
+
+	//Request initial discovery
+	s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
 
 	content := container.NewBorder(
 		container.NewHBox(refreshBtn, backBtn),
@@ -82,20 +89,4 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	)
 
 	return content
-}
-
-func (s *ProgramsScreen) registerProgram(program programs.Program, w fyne.Window) {
-	req := programs.CreateProgramRequest{
-		Name:        program.Name,
-		Path:        program.Path,
-		Description: program.Description,
-	}
-
-	_, err := s.programService.RegisterProgram(context.Background(), req, "current-host-id")
-	if err != nil {
-		dialog.ShowError(err, w)
-		return
-	}
-
-	dialog.ShowInformation("Success", "Program registered successfully!", w)
 }

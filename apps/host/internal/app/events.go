@@ -75,3 +75,22 @@ type SetupCompletedPayload struct {
 	FFmpegPath    string
 	ServerAddress string
 }
+
+type ProgramItem struct {
+	ID          string
+	Name        string
+	Path        string
+	Description string
+}
+
+type ProgramDiscoveredPayload struct {
+	Programs []ProgramItem
+}
+
+type ProgramRegisterRequestedPayload struct {
+	Program ProgramItem
+}
+
+type ProgramRegisteredPayload struct {
+	Program ProgramItem
+}
