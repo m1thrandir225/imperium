@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/m1thrandir225/imperium/apps/host/internal/app"
 )
 
 type MainMenuScreen struct {
@@ -34,7 +35,7 @@ func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
 				s.manager.ShowScreen(SETTINGS_SCREEN)
 			}),
 			widget.NewButton("Logout", func() {
-				s.manager.OnLogout()
+				s.manager.Publish(app.EventLogoutRequested, nil)
 			}),
 		),
 	)

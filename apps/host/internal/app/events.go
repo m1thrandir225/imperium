@@ -37,7 +37,7 @@ const (
 	//Programs
 	EventProgramsDiscoverRequested = "programs.discover.requested"
 	EventProgramsDisocvered        = "programs.disocvered"
-	EvnetProgramRegisterRequested  = "programs.register.requested"
+	EventProgramRegisterRequested  = "programs.register.requested"
 	EventProgramRegistered         = "programs.registered"
 
 	//Host

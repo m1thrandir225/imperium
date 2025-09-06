@@ -64,7 +64,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			nameLabel.SetText(program.Name)
 			pathLabel.SetText(program.Path)
 			registerBtn.OnTapped = func() {
-				s.manager.Publish(uapp.EvnetProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
+				s.manager.Publish(uapp.EventProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
 					Program: program,
 				})
 			}

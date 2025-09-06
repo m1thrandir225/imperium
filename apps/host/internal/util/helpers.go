@@ -8,14 +8,14 @@ import (
 	"runtime"
 )
 
-func GetConfigDir() string {
-	home, err := os.UserHomeDir()
+func GetConfigDir(appName string) (string, error) {
+	configDir, err := os.UserConfigDir()
 	if err != nil {
 		log.Printf("Failed to get user's home directory: %v", err)
-		return ""
+		return "", err
 	}
 
-	return filepath.Join(home, "Documents", "imperium")
+	return filepath.Join(configDir, appName), nil
 }
 
 func CheckFFMPEGInstallation() (bool, string) {

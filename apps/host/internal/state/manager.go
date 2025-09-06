@@ -4,9 +4,9 @@ package state
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/spf13/viper"
 )
 
@@ -18,20 +18,19 @@ type StateManager struct {
 
 // NewStateManager creates a new StateManager
 func NewStateManager(appName string) (*StateManager, error) {
-	configDir, err := os.UserConfigDir()
+	configDir, err := util.GetConfigDir(appName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user config directory: %w", err)
+		return nil, fmt.Errorf("failed to get config directory: %w", err)
 	}
 
-	appdir := filepath.Join(configDir, appName)
-	if err := os.MkdirAll(appdir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create app directory: %w", err)
 	}
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 
-	viper.AddConfigPath(appdir)
+	viper.AddConfigPath(configDir)
 	viper.SafeWriteConfig()
 
 	m := &StateManager{}

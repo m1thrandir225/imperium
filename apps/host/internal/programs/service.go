@@ -19,13 +19,11 @@ import (
 type ProgramService struct {
 	authServerBaseURL string
 	httpClient        *httpclient.Client
-	token             string
 	db                *ProgramDB
 }
 
-func NewProgramService(authServerBaseURL string,
-	token string,
-	authService interface{ GetAuthenticatedClient() *httpclient.Client },
+func NewService(authServerBaseURL string,
+	httpClient *httpclient.Client,
 	dbPath string,
 ) *ProgramService {
 	db, err := NewProgramDB(dbPath)
@@ -35,8 +33,7 @@ func NewProgramService(authServerBaseURL string,
 	}
 	return &ProgramService{
 		authServerBaseURL: authServerBaseURL,
-		httpClient:        authService.GetAuthenticatedClient(),
-		token:             token,
+		httpClient:        httpClient,
 		db:                db,
 	}
 }

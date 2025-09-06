@@ -7,20 +7,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 )
 
+// AuthService is the authentication service for the host application.
+// It is responsible for communication with the external auth-provider service.
+
 type AuthService struct {
-	config             *Config
 	authServiceBaseURL string
 	httpClient         *httpclient.Client
-	saveConfig         func(config *Config)
-}
-
-func (s *AuthService) GetConfig() *Config {
-	return s.config
 }
 
 func (s *AuthService) GetAuthURL() string {
@@ -31,18 +27,11 @@ func (s *AuthService) GetAuthenticatedClient() *httpclient.Client {
 	return s.httpClient
 }
 
-func NewAuthService(authServiceBaseURL string, config *Config, saveConfig func(config *Config)) *AuthService {
+func NewService(authServiceBaseURL string, httpClient *httpclient.Client) *AuthService {
 	authService := &AuthService{
 		authServiceBaseURL: authServiceBaseURL,
-		config:             config,
-		saveConfig:         saveConfig,
+		httpClient:         httpClient,
 	}
-
-	authService.httpClient = httpclient.NewClient(
-		authServiceBaseURL,
-		config,
-		authService,
-	)
 
 	return authService
 }
@@ -63,17 +52,8 @@ func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginRespon
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return nil, err
 	}
-	config := s.config
-	config.SetAccessToken(result.AccessToken)
-	config.SetAccessTokenExpiresAt(result.AccessTokenExpiresAt)
-	config.SetRefreshToken(result.RefreshToken)
-	config.SetRefreshTokenExpiresAt(result.RefreshTokenExpiresAt)
-	config.SetCurrentUser(result.User)
 
 	log.Println("result", result)
-	log.Println("config", config)
-
-	s.saveConfig(config)
 
 	return &result, nil
 }
@@ -137,13 +117,10 @@ func (s *AuthService) CreateHost(ctx context.Context, req CreateHostRequest) (*H
 	return &result, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context) error {
-	if s.config.GetRefreshToken() == "" {
-		return fmt.Errorf("refresh token is empty")
-	}
+func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (*RefreshTokenResponse, error) {
 
 	requestBody := RefreshTokenRequest{
-		RefreshToken: s.config.GetRefreshToken(),
+		RefreshToken: refreshToken,
 	}
 
 	url := "/api/v1/auth/refresh"
@@ -151,19 +128,15 @@ func (s *AuthService) RefreshToken(ctx context.Context) error {
 	// Refresh token endpoint doesn't need Authorization header (uses refresh token in body)
 	resp, err := s.httpClient.Post(ctx, url, requestBody, make(map[string]string), false, make(map[string]string))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var response RefreshTokenResponse
 	if err := json.Unmarshal(resp.Body, &response); err != nil {
-		return err
+		return nil, err
 	}
 
-	s.config.SetAccessToken(response.AccessToken)
-	s.config.SetAccessTokenExpiresAt(response.ExpiresAt)
-	s.saveConfig(s.config)
-
-	return nil
+	return &response, nil
 }
 
 func (s *AuthService) RegisterHost(ctx context.Context, hostname, ipAddress string, port int) (*Host, error) {
@@ -204,14 +177,4 @@ func (s *AuthService) GetOrCreateHost(ctx context.Context, hostname, ipAddress s
 	}
 
 	return &result, nil
-}
-
-func (s *AuthService) Logout(ctx context.Context) error {
-	s.config.SetAccessToken("")
-	s.config.SetRefreshToken("")
-	s.config.SetAccessTokenExpiresAt(time.Time{})
-	s.config.SetRefreshTokenExpiresAt(time.Time{})
-	s.config.SetCurrentUser(User{})
-	s.saveConfig(s.config)
-	return nil
 }
