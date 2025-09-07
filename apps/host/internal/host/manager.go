@@ -12,22 +12,26 @@ import (
 )
 
 type HostManager struct {
-	config           *Config
-	authService      *auth.AuthService
-	programService   *programs.ProgramService
-	statusManager    *StatusManager
-	saveGlobalConfig func(config *Config)
-	hostID           string
+	authService    *auth.AuthService
+	programService *programs.ProgramService
+	statusManager  *StatusManager
+	hostID         string
 }
 
-func NewHostManager(config *Config, authService *auth.AuthService, programService *programs.ProgramService, saveGlobalConfig func(config *Config)) *HostManager {
+func NewHostManager(
+	authService *auth.AuthService,
+	programService *programs.ProgramService,
+) *HostManager {
+
+	hostID, err := util.GetHostname()
+	if err != nil {
+		hostID = ""
+	}
 
 	manager := &HostManager{
-		config:           config,
-		authService:      authService,
-		programService:   programService,
-		hostID:           config.HostName,
-		saveGlobalConfig: saveGlobalConfig,
+		authService:    authService,
+		programService: programService,
+		hostID:         hostID,
 	}
 
 	return manager
@@ -35,7 +39,7 @@ func NewHostManager(config *Config, authService *auth.AuthService, programServic
 
 func (hm *HostManager) Initialize(ctx context.Context) error {
 	// Check if we have valid authentication
-	if hm.authService.GetConfig().GetAccessToken() == "" {
+	if hm.authService.GetAccessToken() == "" {
 		return fmt.Errorf("no access token available")
 	}
 

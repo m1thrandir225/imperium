@@ -94,3 +94,11 @@ type ProgramRegisterRequestedPayload struct {
 type ProgramRegisteredPayload struct {
 	Program ProgramItem
 }
+
+type HostInitializedPayload struct {
+	Host state.HostInfo
+}
+
+type HostStatusChangedPayload struct {
+	Status string
+}

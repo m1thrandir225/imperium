@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
@@ -19,6 +20,7 @@ type App struct {
 	AuthBaseURL    string
 	ProgramService *programs.ProgramService
 	AuthService    *auth.AuthService
+	StatusManager  *host.StatusManager
 	HTTPClient     *httpclient.Client
 }
 
