@@ -22,7 +22,9 @@ func (a *App) WireHostHandlers() {
 				continue
 			}
 
-			host, err := a.AuthService.GetOrCreateHost(context.Background(), hostName, ip, 8080)
+			host, err := a.AuthService.GetOrCreateHost(
+				context.Background(), hostName, ip, 8080,
+			)
 			if err != nil {
 				continue
 			}
@@ -36,12 +38,9 @@ func (a *App) WireHostHandlers() {
 				}
 			})
 
-			if a.StatusManager != nil {
-				a.StatusManager.Stop()
-				a.StatusManager = nil
-			}
+			a.Bus.Publish(EventStateUpdated, a.State.Get())
 
-			a.StatusManager.Start(context.Background())
+			a.startStatusManagerIfReady()
 
 			a.Bus.Publish(EventHostInitialized, HostInitializedPayload{
 				Host: a.State.Get().HostInfo,

@@ -47,7 +47,7 @@ func (m *Manager) subscribeNavigation() {
 	go func() {
 		for range logoutCh {
 			fyne.Do(func() {
-				m.ShowScreen(LOGIN_SCREEN)
+				m.OnLogout()
 			})
 		}
 	}()
@@ -146,16 +146,10 @@ func (m *Manager) OnSetupSuccess() {
 // 	m.ShowScreen(MAIN_MENU_SCREEN)
 // }
 
-// func (m *Manager) OnLogout() {
-// 	m.authService.Logout(context.Background())
-
-// 	if m.hostManager != nil {
-// 		m.hostManager.Shutdown()
-// 	}
-
-// 	m.ResetScreens()
-// 	m.ShowScreen(LOGIN_SCREEN)
-// }
+func (m *Manager) OnLogout() {
+	m.ResetScreens()
+	m.ShowScreen(LOGIN_SCREEN)
+}
 
 func (m *Manager) ResetScreens() {
 	m.screens = make(map[string]Screen)

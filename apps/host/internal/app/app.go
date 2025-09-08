@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 	"path/filepath"
 	"time"
@@ -90,4 +91,35 @@ func (a *App) buildClients() {
 		a.HTTPClient,
 		dbPath,
 	)
+
+	a.startStatusManagerIfReady()
+}
+
+func (a *App) startStatusManagerIfReady() {
+	if a.StatusManager != nil {
+		a.StatusManager.Stop()
+		a.StatusManager = nil
+	}
+
+	st := a.State.Get()
+
+	if st.UserInfo.ID == "" || st.UserInfo.Email == "" {
+		return
+	}
+
+	if st.UserSession.AccessToken == "" {
+		return
+	}
+
+	if st.HostInfo.ID == "" {
+		a.Bus.Publish(EventHostInitRequested, nil)
+		return
+	}
+
+	a.StatusManager = host.NewStatusManager(
+		st.HostInfo.ID,
+		a.AuthBaseURL,
+		a.HTTPClient,
+	)
+	a.StatusManager.Start(context.Background())
 }
