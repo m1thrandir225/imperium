@@ -37,25 +37,27 @@ func (m *Manager) subscribeNavigation() {
 	loginCh := m.bus.Subscribe(uapp.EventLoginSucceeded)
 	go func() {
 		for range loginCh {
-			m.ShowScreen(MAIN_MENU_SCREEN)
+			fyne.Do(func() {
+				m.ShowScreen(MAIN_MENU_SCREEN)
+			})
 		}
 	}()
 
 	logoutCh := m.bus.Subscribe(uapp.EventLogoutCompleted)
 	go func() {
 		for range logoutCh {
-			m.ShowScreen(LOGIN_SCREEN)
+			fyne.Do(func() {
+				m.ShowScreen(LOGIN_SCREEN)
+			})
 		}
 	}()
 
 	setupCh := m.bus.Subscribe(uapp.EventSetupCompleted)
 	go func() {
 		for range setupCh {
-			if m.shouldShowLogin() {
-				m.ShowScreen(LOGIN_SCREEN)
-			} else {
-				m.ShowScreen(MAIN_MENU_SCREEN)
-			}
+			fyne.Do(func() {
+				m.OnSetupSuccess()
+			})
 		}
 	}()
 }
@@ -83,7 +85,6 @@ func (m *Manager) initializeScreens() {
 
 	if m.shouldShowSetup() {
 		m.screens[SETUP_SCREEN] = NewSetupScreen(m)
-		m.OnSetupSuccess()
 	}
 }
 
@@ -93,8 +94,11 @@ func (m *Manager) AddScreen(screen Screen) {
 
 func (m *Manager) ShowScreen(name string) {
 	if screen, ok := m.screens[name]; ok {
-		m.window.SetContent(screen.Render(m.window))
-		m.Publish(uapp.EventUIShowScreen, uapp.UIShowScreenPayload{Name: name})
+		fyne.Do(func() {
+			m.window.SetContent(screen.Render(m.window))
+			m.Publish(uapp.EventUIShowScreen, uapp.UIShowScreenPayload{Name: name})
+		})
+
 	}
 }
 

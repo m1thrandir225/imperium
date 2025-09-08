@@ -32,12 +32,16 @@ func New(name string) (*App, error) {
 
 	st := sm.Get()
 
-	return &App{
+	a := &App{
 		Name:        name,
 		Bus:         NewEventBus(),
 		State:       sm,
 		AuthBaseURL: st.Settings.ServerAddress,
-	}, nil
+	}
+
+	a.buildClients()
+
+	return a, nil
 }
 
 func (a *App) Start() {

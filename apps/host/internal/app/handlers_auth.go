@@ -100,6 +100,15 @@ func (a *App) WireAuthHandlers() {
 				continue
 			}
 
+			if a.AuthService == nil || a.HTTPClient == nil {
+				a.buildClients()
+			}
+
+			if a.AuthBaseURL == "" {
+				a.Bus.Publish(EventLoginFailed, fmt.Errorf("auth base URL is empty"))
+				return
+			}
+
 			req := auth.LoginRequest{
 				Email:    payload.Email,
 				Password: payload.Password,
@@ -108,6 +117,8 @@ func (a *App) WireAuthHandlers() {
 			resp, err := a.AuthService.Login(context.Background(), req)
 			if err != nil {
 				log.Printf("failed to login: %v", err)
+				a.Bus.Publish(EventLoginFailed, err)
+				continue
 			}
 
 			err = a.State.Update(func(s *state.AppState) {
@@ -146,6 +157,7 @@ func (a *App) WireAuthHandlers() {
 
 			a.Bus.Publish(EventStateSaved, a.State.Get())
 			a.buildClients()
+			a.Bus.Publish(EventHostInitRequested, nil)
 		}
 	}()
 

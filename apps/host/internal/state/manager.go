@@ -88,9 +88,6 @@ func (m *StateManager) Get() AppState {
 
 // Update applies a function to modify the state and persist the changes
 func (m *StateManager) Update(fn func(*AppState)) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	fn(m.state)
 
 	if err := m.Save(); err != nil {

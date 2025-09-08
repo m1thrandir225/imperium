@@ -13,7 +13,7 @@ import (
 const (
 	APP_NAME = "imperium-host"
 )
-// 
+
 func main() {
 	os.Setenv("LC_ALL", "C")
 	os.Setenv("FYNE_LANGUAGE", "en")
@@ -26,6 +26,7 @@ func main() {
 	application.WireAuthHandlers()
 	application.WireSettingsHandlers()
 	application.WireProgramsHandlers()
+	application.WireHostHandlers()
 
 	uiManager := ui.NewUIManager(application.State, application.Bus)
 	uiManager.RunUI()
