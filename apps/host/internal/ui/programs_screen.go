@@ -1,10 +1,14 @@
 package ui
 
 import (
+	"path/filepath"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
 
 type ProgramsScreen struct {
@@ -75,18 +79,81 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 		s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
 	})
 
+	addProgramBtn := widget.NewButton("Add Program", func() {
+		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+			defer func() {
+				if uri != nil {
+					_ = uri.Close()
+				}
+			}()
+			if err != nil {
+				dialog.ShowError(err, s.manager.window)
+				return
+			}
+			if uri == nil {
+				return
+			}
+
+			path := uri.URI().Path()
+			name := filepath.Base(path)
+
+			s.manager.Publish(uapp.EventProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
+				Program: uapp.ProgramItem{
+					Name:        name,
+					Path:        path,
+					Description: "",
+				},
+			})
+		}, w)
+	})
+
+	addScanPathBtn := widget.NewButton("Add Scan Path", func() {
+		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
+			if err != nil {
+				dialog.ShowError(err, w)
+				return
+			}
+			if uri == nil {
+				return
+			}
+
+			current := s.manager.GetState().Settings.CustomProgramPaths
+			newPath := uri.Path()
+
+			found := false
+			for _, p := range current {
+				if p == newPath {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				current = append(current, newPath)
+				s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+					Settings: state.Settings{
+						CustomProgramPaths: current,
+					},
+				})
+
+				s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
+				dialog.ShowInformation("Scan Path Added", newPath, w)
+			}
+		}, w)
+	})
+
 	backBtn := widget.NewButton("Back to Main Menu", func() {
 		s.manager.ShowScreen(MAIN_MENU_SCREEN)
 	})
 
-	//Request initial discovery
-	s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
-
 	content := container.NewBorder(
-		container.NewHBox(refreshBtn, backBtn),
+		container.NewHBox(refreshBtn, backBtn, addProgramBtn, addScanPathBtn),
 		nil, nil, nil,
 		s.programsList,
 	)
+
+	//Request initial discovery
+	s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
 
 	return content
 }

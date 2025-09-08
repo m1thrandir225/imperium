@@ -16,12 +16,25 @@ func (a *App) WireProgramsHandlers() {
 
 			progs, err := a.ProgramService.DiscoverPrograms()
 			if err != nil {
-				continue
-
+				progs = make([]programs.Program, 0)
 			}
+
+			custom := a.State.Get().Settings.CustomProgramPaths
+			if len(custom) > 0 {
+				extra, err := a.ProgramService.DiscoverProgramsIn(custom)
+				if err == nil {
+					progs = append(progs, extra...)
+				}
+			}
+
+			seen := map[string]bool{}
 
 			items := make([]ProgramItem, 0, len(progs))
 			for _, p := range progs {
+				if seen[p.Path] {
+					continue
+				}
+				seen[p.Path] = true
 				items = append(items, ProgramItem{
 					ID:          p.ID,
 					Name:        p.Name,

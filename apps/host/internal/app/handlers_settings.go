@@ -33,6 +33,10 @@ func (a *App) WireSettingsHandlers() {
 				if payload.Settings.Bitrate != "" {
 					s.Settings.Bitrate = payload.Settings.Bitrate
 				}
+
+				if len(payload.Settings.CustomProgramPaths) > 0 {
+					s.Settings.CustomProgramPaths = payload.Settings.CustomProgramPaths
+				}
 			})
 			if err != nil {
 				log.Printf("failed to update state: %v", err)

@@ -48,6 +48,11 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	browseFFmpegBtn := widget.NewButton("Browse", func() {
 
 		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+			defer func() {
+				if uri != nil {
+					_ = uri.Close()
+				}
+			}()
 			if err != nil {
 				dialog.ShowError(err, w)
 				return

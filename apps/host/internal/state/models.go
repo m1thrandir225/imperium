@@ -29,9 +29,10 @@ type HostInfo struct {
 }
 
 type Settings struct {
-	FFmpegPath    string `mapstructure:"ffmpeg_path" json:"ffmpeg_path" yaml:"ffmpeg_path"`
-	Encoder       string `mapstructure:"encoder" json:"encoder" yaml:"encoder"`
-	Framerate     int    `mapstructure:"framerate" json:"framerate" yaml:"framerate"`
-	Bitrate       string `mapstructure:"bitrate" json:"bitrate" yaml:"bitrate"`
-	ServerAddress string `mapstructure:"server_address" json:"server_address" yaml:"server_address"`
+	FFmpegPath         string   `mapstructure:"ffmpeg_path" json:"ffmpeg_path" yaml:"ffmpeg_path"`
+	Encoder            string   `mapstructure:"encoder" json:"encoder" yaml:"encoder"`
+	Framerate          int      `mapstructure:"framerate" json:"framerate" yaml:"framerate"`
+	Bitrate            string   `mapstructure:"bitrate" json:"bitrate" yaml:"bitrate"`
+	ServerAddress      string   `mapstructure:"server_address" json:"server_address" yaml:"server_address"`
+	CustomProgramPaths []string `mapstructure:"custom_program_paths" json:"custom_program_paths" yaml:"custom_program_paths"`
 }

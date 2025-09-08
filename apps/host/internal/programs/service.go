@@ -76,6 +76,18 @@ func (s *ProgramService) GetLocalProgramByPath(path string) (*Program, error) {
 	return s.db.GetProgramByPath(path)
 }
 
+func (s *ProgramService) DiscoverProgramsIn(paths []string) ([]Program, error) {
+	var programs []Program
+	for _, p := range paths {
+		discoveredPrograms, err := s.scanDirectoryForPrograms(p)
+		if err != nil {
+			continue
+		}
+		programs = append(programs, discoveredPrograms...)
+	}
+	return programs, nil
+}
+
 func (s *ProgramService) DiscoverPrograms() ([]Program, error) {
 	var programs []Program
 

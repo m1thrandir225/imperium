@@ -61,6 +61,11 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 	browseBtn := widget.NewButton("Browse for FFmpeg", func() {
 		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+			defer func() {
+				if uri != nil {
+					_ = uri.Close()
+				}
+			}()
 			if err != nil {
 				dialog.ShowError(err, w)
 				return
@@ -69,6 +74,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 				return
 			}
 			ffmpegPathEntry.SetText(uri.URI().Path())
+
 		}, w)
 	})
 	browseBtn.Hide()
