@@ -10,9 +10,10 @@ type AppState struct {
 }
 
 type UserSession struct {
-	AccessToken  string    `mapstructure:"access_token" json:"access_token" yaml:"access_token"`
-	RefreshToken string    `mapstructure:"refresh_token" json:"refresh_token" yaml:"refresh_token"`
-	Expiry       time.Time `mapstructure:"expiry" json:"expiry" yaml:"expiry"`
+	AccessToken           string    `mapstructure:"access_token" json:"access_token" yaml:"access_token"`
+	RefreshToken          string    `mapstructure:"refresh_token" json:"refresh_token" yaml:"refresh_token"`
+	AccessTokenExpiresAt  time.Time `mapstructure:"access_token_expires_at" json:"access_token_expires_at" yaml:"access_token_expires_at"`
+	RefreshTokenExpiresAt time.Time `mapstructure:"refresh_token_expires_at" json:"refresh_token_expires_at" yaml:"refresh_token_expires_at"`
 }
 
 type UserInfo struct {
@@ -35,4 +36,5 @@ type Settings struct {
 	Bitrate            string   `mapstructure:"bitrate" json:"bitrate" yaml:"bitrate"`
 	ServerAddress      string   `mapstructure:"server_address" json:"server_address" yaml:"server_address"`
 	CustomProgramPaths []string `mapstructure:"custom_program_paths" json:"custom_program_paths" yaml:"custom_program_paths"`
+	RawgAPIKey         string   `mapstructure:"rawg_api_key" json:"rawg_api_key" yaml:"rawg_api_key"`
 }

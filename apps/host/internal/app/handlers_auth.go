@@ -26,22 +26,32 @@ func (t *stateTokens) GetAccessToken() string {
 
 // IsAccessTokenExpired returns true if the access token is expired
 func (t *stateTokens) IsAccessTokenExpired() bool {
-	return time.Now().After(t.sm.Get().UserSession.Expiry)
+	return time.Now().After(t.sm.Get().UserSession.AccessTokenExpiresAt)
 }
 
 // GetAccessTokenExpiresAt returns the access token expiry from the state
 func (t *stateTokens) GetAccessTokenExpiresAt() time.Time {
-	return t.sm.Get().UserSession.Expiry
+	return t.sm.Get().UserSession.AccessTokenExpiresAt
+}
+
+// GetRefreshTokenExpiresAt returns the refresh token expiry from the state
+func (t *stateTokens) GetRefreshTokenExpiresAt() time.Time {
+	return t.sm.Get().UserSession.RefreshTokenExpiresAt
+}
+
+// IsRefreshTokenExpired returns true if the refresh token is expired
+func (t *stateTokens) IsRefreshTokenExpired() bool {
+	return time.Now().After(t.sm.Get().UserSession.RefreshTokenExpiresAt)
+}
+
+func (t *stateTokens) NeedsToRefreshToken() bool {
+	return t.IsAccessTokenExpired() && !t.IsRefreshTokenExpired()
 }
 
 // GetRefreshToken returns the refresh token from the state
 func (t *stateTokens) GetRefreshToken() string {
 	return t.sm.Get().UserSession.RefreshToken
 }
-
-// func (t *stateTokens) GetRefreshTokenExpiresAt() time.Time {
-// 	return t.sm.Get().UserSession.RefreshTokenExpiry
-// }
 
 func (t *stateTokens) RefreshToken(ctx context.Context) error {
 	baseURL := t.baseURLFn()
@@ -81,9 +91,11 @@ func (t *stateTokens) RefreshToken(ctx context.Context) error {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	log.Println("Refreshed tokens")
+
 	return t.sm.Update(func(s *state.AppState) {
 		s.UserSession.AccessToken = response.AccessToken
-		s.UserSession.Expiry = response.ExpiresAt
+		s.UserSession.AccessTokenExpiresAt = response.ExpiresAt
 	})
 }
 
@@ -128,9 +140,10 @@ func (a *App) WireAuthHandlers() {
 					Name:  resp.User.Name,
 				}
 				s.UserSession = state.UserSession{
-					AccessToken:  resp.AccessToken,
-					RefreshToken: resp.RefreshToken,
-					Expiry:       resp.AccessTokenExpiresAt,
+					AccessToken:           resp.AccessToken,
+					RefreshToken:          resp.RefreshToken,
+					AccessTokenExpiresAt:  resp.AccessTokenExpiresAt,
+					RefreshTokenExpiresAt: resp.RefreshTokenExpiresAt,
 				}
 			})
 			if err != nil {
@@ -149,9 +162,10 @@ func (a *App) WireAuthHandlers() {
 					Name:  resp.User.Name,
 				},
 				Session: state.UserSession{
-					AccessToken:  resp.AccessToken,
-					RefreshToken: resp.RefreshToken,
-					Expiry:       resp.AccessTokenExpiresAt,
+					AccessToken:           resp.AccessToken,
+					RefreshToken:          resp.RefreshToken,
+					AccessTokenExpiresAt:  resp.AccessTokenExpiresAt,
+					RefreshTokenExpiresAt: resp.RefreshTokenExpiresAt,
 				},
 			})
 
@@ -164,6 +178,7 @@ func (a *App) WireAuthHandlers() {
 	logoutCh := a.Bus.Subscribe(EventLogoutRequested)
 	go func() {
 		for range logoutCh {
+			a.stopTokenRefresher()
 			err := a.State.Update(func(s *state.AppState) {
 				s.UserInfo = state.UserInfo{}
 				s.UserSession = state.UserSession{}

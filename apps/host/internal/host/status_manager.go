@@ -67,10 +67,10 @@ func (sm *StatusManager) statusUpdateLoop(ctx context.Context) {
 }
 
 func (sm *StatusManager) sendStatusUpdate(ctx context.Context, status Status) {
-	url := fmt.Sprintf("/api/v1/hosts/%s", sm.hostID)
+	url := fmt.Sprintf("/api/v1/hosts/%s/status", sm.hostID)
 
 	// Create request body with status
-	requestBody := map[string]string{"status": string(status)}
+	requestBody := status.toAPIEnum()
 
 	resp, err := sm.httpClient.Patch(ctx, url, requestBody, make(map[string]string), true, make(map[string]string))
 	if err != nil {
@@ -80,6 +80,7 @@ func (sm *StatusManager) sendStatusUpdate(ctx context.Context, status Status) {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Status update failed with status: %d", resp.StatusCode)
+		log.Printf("Response body: %s", string(resp.Body))
 		return
 	}
 

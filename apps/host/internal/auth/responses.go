@@ -24,5 +24,5 @@ type Host struct {
 
 type RefreshTokenResponse struct {
 	AccessToken string    `json:"access_token"`
-	ExpiresAt   time.Time `json:"expires_at"`
+	ExpiresAt   time.Time `json:"expires_in"`
 }

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"image/color"
 	"net/url"
+	"os"
 	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
@@ -60,7 +62,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 	}
 
 	browseBtn := widget.NewButton("Browse for FFmpeg", func() {
-		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+		fd := dialog.NewFileOpen(func(uri fyne.URIReadCloser, err error) {
 			defer func() {
 				if uri != nil {
 					_ = uri.Close()
@@ -76,6 +78,12 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 			ffmpegPathEntry.SetText(uri.URI().Path())
 
 		}, w)
+
+		home, _ := os.UserHomeDir()
+		u := storage.NewFileURI(home)
+		l, _ := storage.ListerForURI(u)
+		fd.SetLocation(l)
+		fd.Show()
 	})
 	browseBtn.Hide()
 

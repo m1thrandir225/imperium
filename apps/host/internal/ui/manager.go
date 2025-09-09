@@ -167,7 +167,7 @@ func (m *Manager) shouldShowLogin() bool {
 		return true
 	}
 
-	return time.Now().After(cfg.UserSession.Expiry)
+	return time.Now().After(cfg.UserSession.AccessTokenExpiresAt)
 
 }
 

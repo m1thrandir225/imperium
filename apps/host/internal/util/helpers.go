@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func GetConfigDir(appName string) (string, error) {
@@ -48,4 +49,50 @@ func CheckFFMPEGInstallation() (bool, string) {
 	}
 
 	return false, ""
+}
+
+func NormalizeName(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " ", "")
+	s = strings.ReplaceAll(s, "-", "")
+	return s
+}
+
+func Similarity(a, b string) float64 {
+	na, nb := NormalizeName(a), NormalizeName(b)
+	minLen := len(na)
+	if len(nb) < minLen {
+		minLen = len(nb)
+	}
+	match := 0
+	for i := 0; i < minLen; i++ {
+		if na[i] == nb[i] {
+			match++
+		} else {
+			break
+		}
+	}
+	return float64(match) / float64(len(na))
+}
+
+func ShortPath(p string) string {
+	vol := filepath.VolumeName(p)
+	rest := strings.TrimPrefix(p, vol)
+	parts := strings.Split(rest, string(filepath.Separator))
+
+	if len(parts) == 0 {
+		return p
+	}
+	if len(parts) == 1 {
+		if vol != "" {
+			return filepath.Join(vol, parts[0])
+		}
+		return parts[0]
+	}
+
+	tail := filepath.Join(parts[len(parts)-2], parts[len(parts)-1])
+	if vol != "" {
+		return filepath.Join(vol, "...", tail)
+	}
+	return filepath.Join("...", tail)
 }

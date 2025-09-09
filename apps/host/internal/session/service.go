@@ -49,7 +49,8 @@ func (s *SessionService) StartSession(ctx context.Context, programID, clientID s
 	defer s.mu.Unlock()
 
 	// Launch the program
-	program, err := s.programService.GetProgramByID(ctx, programID)
+	//TODO: fix
+	program, err := s.programService.GetLocalProgramByPath(programID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get program: %w", err)
 	}

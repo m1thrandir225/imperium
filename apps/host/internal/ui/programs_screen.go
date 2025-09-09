@@ -1,14 +1,17 @@
 package ui
 
 import (
+	"os"
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type ProgramsScreen struct {
@@ -35,7 +38,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 		go func() {
 			for evt := range ch {
-				payload, ok := evt.(uapp.ProgramDiscoveredPayload)
+				payload, ok := evt.(uapp.ProgramsDiscoveredPayload)
 				if !ok {
 					continue
 				}
@@ -54,7 +57,6 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			return container.NewHBox(
 				widget.NewLabel("Program Name"),
 				widget.NewLabel("Path"),
-				widget.NewButton("Register", nil),
 			)
 		},
 		func(id widget.ListItemID, obj fyne.CanvasObject) {
@@ -63,15 +65,9 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 			nameLabel := box.Objects[0].(*widget.Label)
 			pathLabel := box.Objects[1].(*widget.Label)
-			registerBtn := box.Objects[2].(*widget.Button)
 
 			nameLabel.SetText(program.Name)
-			pathLabel.SetText(program.Path)
-			registerBtn.OnTapped = func() {
-				s.manager.Publish(uapp.EventProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
-					Program: program,
-				})
-			}
+			pathLabel.SetText(util.ShortPath(program.Path))
 		},
 	)
 
@@ -80,7 +76,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	})
 
 	addProgramBtn := widget.NewButton("Add Program", func() {
-		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
+		fd := dialog.NewFileOpen(func(uri fyne.URIReadCloser, err error) {
 			defer func() {
 				if uri != nil {
 					_ = uri.Close()
@@ -105,10 +101,15 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 				},
 			})
 		}, w)
+		home, _ := os.UserHomeDir()
+		u := storage.NewFileURI(home)
+		l, _ := storage.ListerForURI(u)
+		fd.SetLocation(l)
+		fd.Show()
 	})
 
 	addScanPathBtn := widget.NewButton("Add Scan Path", func() {
-		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
+		fd := dialog.NewFolderOpen(func(uri fyne.ListableURI, err error) {
 			if err != nil {
 				dialog.ShowError(err, w)
 				return
@@ -140,6 +141,12 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 				dialog.ShowInformation("Scan Path Added", newPath, w)
 			}
 		}, w)
+
+		home, _ := os.UserHomeDir()
+		u := storage.NewFileURI(home)
+		l, _ := storage.ListerForURI(u)
+		fd.SetLocation(l)
+		fd.Show()
 	})
 
 	backBtn := widget.NewButton("Back to Main Menu", func() {

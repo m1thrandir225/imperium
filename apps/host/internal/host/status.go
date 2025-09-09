@@ -9,3 +9,21 @@ const (
 	StatusDisabled  Status = "disabled"
 	StatusUnknown   Status = "unknown"
 )
+
+func (s Status) toAPIEnum() string {
+	switch s {
+	case StatusAvailable:
+		return "AVAILABLE"
+	case StatusOffline:
+		return "OFFLINE"
+	case StatusInuse:
+		return "INUSE"
+	case StatusDisabled:
+		return "DISABLED"
+	case StatusUnknown:
+		return "UNKNOWN"
+	default:
+		return "UNKNOWN"
+
+	}
+}

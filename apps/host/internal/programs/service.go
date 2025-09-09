@@ -2,29 +2,26 @@
 package programs
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type ProgramService struct {
-	authServerBaseURL string
-	httpClient        *httpclient.Client
-	db                *ProgramDB
+	db         *ProgramDB
+	rawgClient *RAWGClient
 }
 
-func NewService(authServerBaseURL string,
-	httpClient *httpclient.Client,
+// NewService creates a new program service
+func NewService(
 	dbPath string,
+	rawgAPIKey string,
 ) *ProgramService {
 	db, err := NewProgramDB(dbPath)
 	if err != nil {
@@ -32,23 +29,54 @@ func NewService(authServerBaseURL string,
 		log.Printf("Failed to initialize program database: %v", err)
 	}
 	return &ProgramService{
-		authServerBaseURL: authServerBaseURL,
-		httpClient:        httpClient,
-		db:                db,
+		db:         db,
+		rawgClient: NewRAWGClient(rawgAPIKey),
 	}
 }
 
-func (s *ProgramService) DiscoverAndSavePrograms() error {
+// DiscoverAndSavePrograms discovers program in common and custom paths and saves them to the local db
+func (s *ProgramService) DiscoverAndSavePrograms(paths []string) error {
 	programs, err := s.DiscoverPrograms()
 	if err != nil {
 		return err
 	}
 
+	seen := make(map[string]bool)
 	for _, program := range programs {
+		if _, ok := seen[program.Path]; ok {
+			continue
+		}
+
+		program = s.RawgSearch(program)
+
 		if s.db != nil {
 			if err := s.db.SaveProgram(&program); err != nil {
 				log.Printf("Failed to save program %s: %v", program.Name, err)
 			}
+		}
+
+		seen[program.Path] = true
+	}
+
+	if len(paths) > 0 {
+		customPathProgs, err := s.DiscoverProgramsIn(paths)
+		if err != nil {
+			return err
+		}
+		for _, program := range customPathProgs {
+			if _, ok := seen[program.Path]; ok {
+				continue
+			}
+
+			program = s.RawgSearch(program)
+
+			if s.db != nil {
+				if err := s.db.SaveProgram(&program); err != nil {
+					log.Printf("Failed to save program %s: %v", program.Name, err)
+				}
+			}
+
+			seen[program.Path] = true
 		}
 	}
 
@@ -61,6 +89,7 @@ func (s *ProgramService) DiscoverAndSavePrograms() error {
 	return nil
 }
 
+// GetLocalPrograms gets all programs from the local db
 func (s *ProgramService) GetLocalPrograms() ([]*Program, error) {
 	if s.db == nil {
 		return nil, fmt.Errorf("program database not initialized")
@@ -69,6 +98,7 @@ func (s *ProgramService) GetLocalPrograms() ([]*Program, error) {
 	return s.db.GetPrograms()
 }
 
+// GetLocalProgramByPath gets a program from the local db by path
 func (s *ProgramService) GetLocalProgramByPath(path string) (*Program, error) {
 	if s.db == nil {
 		return nil, fmt.Errorf("program database not initialized")
@@ -76,18 +106,7 @@ func (s *ProgramService) GetLocalProgramByPath(path string) (*Program, error) {
 	return s.db.GetProgramByPath(path)
 }
 
-func (s *ProgramService) DiscoverProgramsIn(paths []string) ([]Program, error) {
-	var programs []Program
-	for _, p := range paths {
-		discoveredPrograms, err := s.scanDirectoryForPrograms(p)
-		if err != nil {
-			continue
-		}
-		programs = append(programs, discoveredPrograms...)
-	}
-	return programs, nil
-}
-
+// DiscoverPrograms discovers programs in the common paths
 func (s *ProgramService) DiscoverPrograms() ([]Program, error) {
 	var programs []Program
 
@@ -117,25 +136,77 @@ func (s *ProgramService) DiscoverPrograms() ([]Program, error) {
 	return programs, nil
 }
 
+// DiscoverProgramsIn discovers programs in the given paths
+func (s *ProgramService) DiscoverProgramsIn(paths []string) ([]Program, error) {
+	var programs []Program
+	for _, p := range paths {
+		discoveredPrograms, err := s.scanDirectoryForPrograms(p)
+		if err != nil {
+			continue
+		}
+		programs = append(programs, discoveredPrograms...)
+	}
+	return programs, nil
+}
+
 func (s *ProgramService) scanDirectoryForPrograms(path string) ([]Program, error) {
 	var programs []Program
 
-	files, err := os.ReadDir(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read directory: %w", err)
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			discoveredPrograms, err := s.scanDirectoryForPrograms(filepath.Join(path, file.Name()))
-			if err != nil {
-				continue
-			}
-			programs = append(programs, discoveredPrograms...)
+	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
 		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if shgouldIgnoreProgram(info.Name()) {
+			return nil
+		}
+
+		if info.Size() < 5*1024*1024 {
+			return nil
+		}
+
+		switch runtime.GOOS {
+		case "windows":
+			if strings.HasSuffix(strings.ToLower(info.Name()), ".exe") {
+				programs = append(programs, Program{
+					Name: info.Name(),
+					Path: p,
+				})
+			}
+		default:
+			return nil
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk directory: %w", err)
 	}
 
 	return programs, nil
+}
+
+func (s *ProgramService) SaveProgram(req CreateProgramRequest) (*Program, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("program database not initialized")
+	}
+
+	progr := &Program{
+		Name:        req.Name,
+		Path:        req.Path,
+		Description: req.Description,
+		HostID:      req.HostID,
+	}
+
+	if err := s.db.SaveProgram(progr); err != nil {
+		return nil, err
+	}
+
+	return progr, nil
 }
 
 func (s *ProgramService) LaunchProgram(path string) (*exec.Cmd, error) {
@@ -163,42 +234,66 @@ func (s *ProgramService) GetWindowTitle(processName string) (string, error) {
 	}
 }
 
-func (s *ProgramService) RegisterProgram(ctx context.Context, req CreateProgramRequest, hostID string) (*Program, error) {
-	url := fmt.Sprintf("/api/v1/hosts/%s/programs", hostID)
-
-	resp, err := s.httpClient.Post(ctx, url, req, make(map[string]string), true, make(map[string]string))
-	if err != nil {
-		return nil, err
+func shgouldIgnoreProgram(name string) bool {
+	var ignoredExecutables = []string{
+		"unins", "uninstall", "setup", "update", "updater",
+		"launcher", "crashreporter", "helper",
+		"steamerrorreporter", "steamservice",
+		"witcherscriptmerger", "quickbms", "scc", "kdiff3",
+		"vcredist", "dotnet", "dxsetup", "crashreport", "reportclient",
+		"helper", "bootstrapper", "redist", "redistributable",
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("register program failed: %d", resp.StatusCode)
-	}
+	base := strings.ToLower(strings.TrimSuffix(name, filepath.Ext(name)))
 
-	var result Program
-	if err := json.Unmarshal(resp.Body, &result); err != nil {
-		return nil, err
+	for _, ignore := range ignoredExecutables {
+		if strings.Contains(base, ignore) {
+			return true
+		}
 	}
-
-	return &result, nil
+	return false
 }
 
-func (s *ProgramService) GetProgramByID(ctx context.Context, programID string) (*Program, error) {
-	url := fmt.Sprintf("/api/v1/programs/%s", programID)
+func cleanQueryFromExeName(name string) (string, bool) {
+	base := strings.ToLower(strings.TrimSuffix(name, filepath.Ext(name)))
 
-	resp, err := s.httpClient.Get(ctx, url, make(map[string]string), make(map[string]string), true)
-	if err != nil {
-		return nil, err
+	// hard ignore
+	if shgouldIgnoreProgram(base) {
+		return "", false
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("get program failed: %d", resp.StatusCode)
+	// too short or mostly symbols
+	if len(base) < 4 {
+		return "", false
 	}
 
-	var program Program
-	if err := json.Unmarshal(resp.Body, &program); err != nil {
-		return nil, err
+	// strip known suffixes
+	suffixes := []string{"launcher", "setup", "updater", "merger", "tool"}
+	for _, s := range suffixes {
+		if strings.Contains(base, s) {
+			return "", false
+		}
 	}
 
-	return &program, nil
+	return base, true
+}
+
+func (s *ProgramService) RawgSearch(program Program) Program {
+	cleanedName, ok := cleanQueryFromExeName(program.Name)
+	if !ok {
+		return program
+	}
+	results, err := s.rawgClient.SearchGame(cleanedName)
+	log.Printf("Searching for program %s: %v", program.Name, results)
+
+	if err == nil && len(results) > 0 {
+		for _, game := range results {
+			if util.Similarity(program.Name, game.Name) >= 0.6 {
+				program.Name = game.Name
+				break
+			}
+		}
+	}
+
+	return program
 }

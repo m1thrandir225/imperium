@@ -23,6 +23,7 @@ type App struct {
 	AuthService    *auth.AuthService
 	StatusManager  *host.StatusManager
 	HTTPClient     *httpclient.Client
+	tokenRefresher *AuthTokenRefresher
 }
 
 func New(name string) (*App, error) {
@@ -61,7 +62,7 @@ func (a *App) NeedsLogin() bool {
 		return true
 	}
 
-	return time.Now().After(st.UserSession.Expiry)
+	return time.Now().After(st.UserSession.AccessTokenExpiresAt)
 }
 
 // Rebuild clients/services from current state
@@ -87,10 +88,13 @@ func (a *App) buildClients() {
 
 	dbPath := filepath.Join(configDir, "programs.db")
 	a.ProgramService = programs.NewService(
-		a.AuthBaseURL,
-		a.HTTPClient,
 		dbPath,
+		a.State.Get().Settings.RawgAPIKey,
 	)
+
+	a.stopTokenRefresher()
+	a.tokenRefresher = NewAuthTokenRefresher(tok, tok)
+	a.tokenRefresher.Start(context.Background())
 
 	a.startStatusManagerIfReady()
 }
@@ -122,4 +126,11 @@ func (a *App) startStatusManagerIfReady() {
 		a.HTTPClient,
 	)
 	a.StatusManager.Start(context.Background())
+}
+
+func (a *App) stopTokenRefresher() {
+	if a.tokenRefresher != nil {
+		a.tokenRefresher.Stop()
+		a.tokenRefresher = nil
+	}
 }

@@ -36,7 +36,7 @@ const (
 
 	//Programs
 	EventProgramsDiscoverRequested = "programs.discover.requested"
-	EventProgramsDisocvered        = "programs.disocvered"
+	EventProgramsDisocvered        = "programs.discovered"
 	EventProgramRegisterRequested  = "programs.register.requested"
 	EventProgramRegistered         = "programs.registered"
 
@@ -83,7 +83,7 @@ type ProgramItem struct {
 	Description string
 }
 
-type ProgramDiscoveredPayload struct {
+type ProgramsDiscoveredPayload struct {
 	Programs []ProgramItem
 }
 

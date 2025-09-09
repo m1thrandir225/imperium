@@ -1,7 +1,7 @@
 package app
 
 import (
-	"context"
+	"log"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 )
@@ -13,28 +13,17 @@ func (a *App) WireProgramsHandlers() {
 			if a.ProgramService == nil {
 				a.buildClients()
 			}
+			if err := a.ProgramService.DiscoverAndSavePrograms(a.State.Get().Settings.CustomProgramPaths); err != nil {
+				log.Printf("Failed to discover and save programs: %v", err)
+			}
 
-			progs, err := a.ProgramService.DiscoverPrograms()
+			list, err := a.ProgramService.GetLocalPrograms()
 			if err != nil {
-				progs = make([]programs.Program, 0)
+				continue
 			}
 
-			custom := a.State.Get().Settings.CustomProgramPaths
-			if len(custom) > 0 {
-				extra, err := a.ProgramService.DiscoverProgramsIn(custom)
-				if err == nil {
-					progs = append(progs, extra...)
-				}
-			}
-
-			seen := map[string]bool{}
-
-			items := make([]ProgramItem, 0, len(progs))
-			for _, p := range progs {
-				if seen[p.Path] {
-					continue
-				}
-				seen[p.Path] = true
+			items := make([]ProgramItem, 0, len(list))
+			for _, p := range list {
 				items = append(items, ProgramItem{
 					ID:          p.ID,
 					Name:        p.Name,
@@ -43,7 +32,7 @@ func (a *App) WireProgramsHandlers() {
 				})
 			}
 
-			a.Bus.Publish(EventProgramsDisocvered, ProgramDiscoveredPayload{
+			a.Bus.Publish(EventProgramsDisocvered, ProgramsDiscoveredPayload{
 				Programs: items,
 			})
 		}
@@ -61,15 +50,14 @@ func (a *App) WireProgramsHandlers() {
 				a.buildClients()
 			}
 
-			hostID := a.State.Get().HostInfo.ID
-
 			req := programs.CreateProgramRequest{
 				Name:        payload.Program.Name,
 				Path:        payload.Program.Path,
 				Description: payload.Program.Description,
+				HostID:      a.State.Get().HostInfo.ID,
 			}
 
-			prog, err := a.ProgramService.RegisterProgram(context.Background(), req, hostID)
+			prog, err := a.ProgramService.SaveProgram(req)
 			if err != nil {
 				continue
 			}
