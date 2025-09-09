@@ -145,3 +145,26 @@ func (h *HTTPHandler) SetupConfig(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, messageResponse("Config setup successfully"))
 }
+
+func (h *HTTPHandler) GetHostPrograms(ctx *gin.Context) {
+
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	var uriID HostUriID
+	if err := ctx.ShouldBindUri(&uriID); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	programs, err := h.hostService.GetHostPrograms(ctx, uriID.HostID, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, programs)
+}

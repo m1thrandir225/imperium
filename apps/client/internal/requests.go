@@ -75,6 +75,14 @@ type SetupConfigRequest struct {
 	AuthServerBaseURL string `json:"auth_server_base_url",binding:"required"`
 }
 
+type ProgramDTO struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	Description string `json:"description"`
+	HostID      string `json:"hostId"`
+}
+
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
 }

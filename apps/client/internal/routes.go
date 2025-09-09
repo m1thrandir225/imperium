@@ -25,6 +25,7 @@ func SetupRoutes(router *gin.Engine, handler *HTTPHandler) {
 		{
 			hosts.GET("", handler.GetUserHosts)
 			hosts.GET("/:hostId", handler.GetHost)
+			hosts.GET("/:hostId/programs", handler.GetHostPrograms)
 		}
 	}
 }
