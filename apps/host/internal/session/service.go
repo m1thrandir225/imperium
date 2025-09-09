@@ -4,8 +4,6 @@ package session
 import (
 	"context"
 	"fmt"
-	"log"
-	"net/http"
 	"sync"
 	"time"
 
@@ -15,7 +13,6 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
-	internal_websocket "github.com/m1thrandir225/imperium/apps/host/internal/websocket"
 )
 
 type SessionService struct {
@@ -46,6 +43,10 @@ func NewSessionService(
 		token:             token,
 		httpClient:        authService.GetAuthenticatedClient(),
 	}
+}
+
+func (s *SessionService) WebRTCStreamer() *webrtc.Streamer {
+	return s.webrtcStreamer
 }
 
 func (s *SessionService) StartSession(ctx context.Context, programID, clientID string) (*Session, error) {
@@ -102,28 +103,6 @@ func (s *SessionService) StartSession(ctx context.Context, programID, clientID s
 
 	s.currentSession = session
 	s.webrtcStreamer = streamer
-
-	go func() {
-		addr := ":8090"
-		if err := webrtc.StartHTTPServer(streamer, addr); err != nil {
-			log.Printf("failed to start WebRTC server: %v", err)
-		}
-	}()
-
-	go func() {
-		wsServer := internal_websocket.NewWebSocketServer()
-		wsServer.RegisterSession(session.ID, s)
-
-		mux := http.NewServeMux()
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "public/index.html")
-		})
-		mux.HandleFunc("/ws", wsServer.HandleWebSocket)
-
-		if err := http.ListenAndServe(":8091", mux); err != nil {
-			log.Printf("failed to start WebSocket server: %v", err)
-		}
-	}()
 
 	// Start input handling
 	go s.handleInputCommands()

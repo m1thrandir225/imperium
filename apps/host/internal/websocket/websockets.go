@@ -13,7 +13,7 @@ type Session interface {
 	ProcessInputCommand(cmd input.InputCommand)
 }
 
-type WebSocketServer struct {
+type WebsocketHandler struct {
 	upgrader websocket.Upgrader
 	sessions map[string]Session
 }
@@ -23,8 +23,8 @@ type InputMessage struct {
 	Command   input.InputCommand `json:"command"`
 }
 
-func NewWebSocketServer() *WebSocketServer {
-	return &WebSocketServer{
+func NewWebsocketHandler() *WebsocketHandler {
+	return &WebsocketHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // In production, implement proper origin checking
@@ -34,7 +34,7 @@ func NewWebSocketServer() *WebSocketServer {
 	}
 }
 
-func (s *WebSocketServer) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+func (s *WebsocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
@@ -73,10 +73,10 @@ func (s *WebSocketServer) HandleWebSocket(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (s *WebSocketServer) RegisterSession(sessionID string, sessionService Session) {
+func (s *WebsocketHandler) RegisterSession(sessionID string, sessionService Session) {
 	s.sessions[sessionID] = sessionService
 }
 
-func (s *WebSocketServer) UnregisterSession(sessionID string) {
+func (s *WebsocketHandler) UnregisterSession(sessionID string) {
 	delete(s.sessions, sessionID)
 }

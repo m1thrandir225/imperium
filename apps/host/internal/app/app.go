@@ -9,9 +9,12 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	"github.com/m1thrandir225/imperium/apps/host/internal/httpserver"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
+	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
+	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )
 
 type App struct {
@@ -24,6 +27,8 @@ type App struct {
 	StatusManager  *host.StatusManager
 	HTTPClient     *httpclient.Client
 	tokenRefresher *AuthTokenRefresher
+	SessionService *session.SessionService
+	HTTPServer     *httpserver.Server
 }
 
 func New(name string) (*App, error) {
@@ -133,4 +138,24 @@ func (a *App) stopTokenRefresher() {
 		a.tokenRefresher.Stop()
 		a.tokenRefresher = nil
 	}
+}
+
+func (a *App) buildSessionService() {
+	recorder := video.NewRecorder(
+		&video.Config{
+			Encoder:    a.State.Get().Settings.Encoder,
+			FPS:        a.State.Get().Settings.Framerate,
+			FFMPEGPath: a.State.Get().Settings.FFmpegPath,
+		},
+	)
+
+	a.SessionService = session.NewSessionService(
+		a.AuthBaseURL,
+		a.State.Get().UserSession.AccessToken,
+		a.AuthService,
+		a.ProgramService,
+		recorder,
+		nil,
+	)
+
 }

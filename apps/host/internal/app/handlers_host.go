@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
+	"github.com/m1thrandir225/imperium/apps/host/internal/httpserver"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
@@ -75,12 +76,35 @@ func (a *App) WireHostHandlers() {
 		}
 	}()
 
+	hostInitDone := a.Bus.Subscribe(EventHostInitialized)
+	go func() {
+		for range hostInitDone {
+			if a.SessionService == nil {
+				a.buildSessionService()
+			}
+
+			if a.HTTPServer == nil {
+				a.HTTPServer = httpserver.NewServer(a.SessionService)
+				go func() {
+					_ = a.HTTPServer.Serve(":8090")
+				}()
+			}
+		}
+	}()
+
 	logoutDone := a.Bus.Subscribe(EventLogoutCompleted)
 	go func() {
 		for range logoutDone {
 			if a.StatusManager != nil {
 				a.StatusManager.Stop()
 				a.StatusManager = nil
+			}
+			if a.HTTPServer != nil {
+				a.HTTPServer = nil
+			}
+			if a.SessionService != nil {
+				a.SessionService.EndSession()
+				a.SessionService = nil
 			}
 		}
 	}()
