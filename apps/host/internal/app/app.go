@@ -54,6 +54,9 @@ func New(name string) (*App, error) {
 func (a *App) Start() {
 	a.Bus.Publish(EventStateLoaded, a.State.Get())
 	a.Bus.Publish(EventAppStarted, nil)
+	a.Bus.Publish(EventHostInitRequested, nil)
+
+	a.checkAndRefreshTokensAtStartup()
 	log.Println("App started")
 }
 
@@ -158,4 +161,41 @@ func (a *App) buildSessionService() {
 		nil,
 	)
 
+}
+
+func (a *App) checkAndRefreshTokensAtStartup() {
+	st := a.State.Get()
+
+	if st.UserInfo.ID == "" || st.UserInfo.Email == "" {
+		return
+	}
+
+	if st.UserSession.AccessToken == "" || st.UserSession.RefreshToken == "" {
+		return
+	}
+
+	if time.Now().After(st.UserSession.RefreshTokenExpiresAt) {
+		log.Println("Refresh token expired, user needs to login again.")
+		return
+	}
+
+	accessTokenExpiresAt := st.UserSession.AccessTokenExpiresAt
+
+	if time.Now().After(accessTokenExpiresAt) {
+		log.Println("Access token expired, attempting to refresh.")
+
+		tok := &stateTokens{
+			sm:        a.State,
+			baseURLFn: func() string { return a.AuthBaseURL },
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := tok.RefreshToken(ctx); err != nil {
+			log.Printf("failed to refresh token: %v", err)
+		} else {
+			log.Println("Token refreshed successfully.")
+		}
+	}
 }

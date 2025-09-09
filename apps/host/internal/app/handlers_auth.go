@@ -60,7 +60,7 @@ func (t *stateTokens) RefreshToken(ctx context.Context) error {
 	}
 
 	body := map[string]string{
-		"refresh_token": t.GetRefreshToken(),
+		"token": t.GetRefreshToken(),
 	}
 
 	data, err := json.Marshal(body)
@@ -86,17 +86,33 @@ func (t *stateTokens) RefreshToken(ctx context.Context) error {
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to refresh token: %d", resp.StatusCode)
+	}
+
 	var response auth.RefreshTokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	log.Println("Refreshed tokens")
-
-	return t.sm.Update(func(s *state.AppState) {
+	err = t.sm.Update(func(s *state.AppState) {
 		s.UserSession.AccessToken = response.AccessToken
 		s.UserSession.AccessTokenExpiresAt = response.ExpiresAt
 	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update state: %w", err)
+	}
+
+	refreshToken := t.GetRefreshToken()
+	err = state.SaveTokens(response.AccessToken, refreshToken)
+	if err != nil {
+		log.Printf("failed to save tokens to keyring: %v", err)
+	}
+
+	log.Println("Refreshed tokens successfully.")
+
+	return nil
 }
 
 func (a *App) httpClient() *httpclient.Client {

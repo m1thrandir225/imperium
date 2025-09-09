@@ -32,6 +32,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/session/start", s.handleStartSession)
 	s.mux.HandleFunc("/api/session/status", s.handleStatus)
 	s.mux.HandleFunc("/api/session/end", s.handleStop)
+	s.mux.HandleFunc("/api/session/programs", s.handleGetPrograms)
 	s.mux.HandleFunc("/ws", s.wsServer.HandleWebSocket)
 
 	webrtc.RegisterSignalingHandlers(s.mux, s.sessionService.WebRTCStreamer)
@@ -80,4 +81,32 @@ func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
 func (s *Server) handleStop(w http.ResponseWriter, _ *http.Request) {
 	_ = s.sessionService.EndSession()
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleGetPrograms(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	log.Println("Getting programs")
+
+	log.Printf("request context: %v", r.Context())
+	log.Printf("request url: %v", r.URL)
+	log.Printf("request method: %v", r.Method)
+	log.Printf("request headers: %v", r.Header)
+	log.Printf("request body: %v", r.Body)
+	log.Printf("request context: %v", r.Context())
+	log.Printf("request url: %v", r.URL)
+	log.Printf("request method: %v", r.Method)
+	log.Printf("request headers: %v", r.Header)
+	log.Printf("request body: %v", r.Body)
+
+	programs, err := s.sessionService.GetPrograms()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(programs)
 }

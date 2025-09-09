@@ -28,6 +28,8 @@ func main() {
 	application.WireProgramsHandlers()
 	application.WireHostHandlers()
 
+	application.Start()
+
 	uiManager := ui.NewUIManager(application.State, application.Bus)
 	uiManager.RunUI()
 

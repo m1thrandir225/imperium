@@ -187,3 +187,11 @@ func (s *SessionService) SetWebSocketConnection(conn *websocket.Conn) {
 func (s *SessionService) ProcessInputCommand(cmd input.InputCommand) {
 	input.HandleCommand(cmd)
 }
+
+func (s *SessionService) GetPrograms() ([]*programs.Program, error) {
+	if s.programService == nil {
+		return nil, fmt.Errorf("program service not initialized")
+	}
+
+	return s.programService.GetLocalPrograms()
+}
