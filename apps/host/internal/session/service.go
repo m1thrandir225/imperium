@@ -4,14 +4,18 @@ package session
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	"github.com/m1thrandir225/imperium/apps/host/internal/input"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
+	internal_websocket "github.com/m1thrandir225/imperium/apps/host/internal/websocket"
 )
 
 type SessionService struct {
@@ -99,6 +103,28 @@ func (s *SessionService) StartSession(ctx context.Context, programID, clientID s
 	s.currentSession = session
 	s.webrtcStreamer = streamer
 
+	go func() {
+		addr := ":8090"
+		if err := webrtc.StartHTTPServer(streamer, addr); err != nil {
+			log.Printf("failed to start WebRTC server: %v", err)
+		}
+	}()
+
+	go func() {
+		wsServer := internal_websocket.NewWebSocketServer()
+		wsServer.RegisterSession(session.ID, s)
+
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "public/index.html")
+		})
+		mux.HandleFunc("/ws", wsServer.HandleWebSocket)
+
+		if err := http.ListenAndServe(":8091", mux); err != nil {
+			log.Printf("failed to start WebSocket server: %v", err)
+		}
+	}()
+
 	// Start input handling
 	go s.handleInputCommands()
 
@@ -112,7 +138,7 @@ func (s *SessionService) handleInputCommands() {
 			continue
 		}
 
-		var cmd InputCommand
+		var cmd input.InputCommand
 		err := s.wsConn.ReadJSON(&cmd)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -121,29 +147,8 @@ func (s *SessionService) handleInputCommands() {
 			break
 		}
 
-		s.processInputCommand(cmd)
+		input.HandleCommand(cmd)
 	}
-}
-
-func (s *SessionService) processInputCommand(cmd InputCommand) {
-	switch cmd.Type {
-	case "keyboard":
-		s.handleKeyboardInput(cmd)
-	case "mouse":
-		s.handleMouseInput(cmd)
-	}
-}
-
-func (s *SessionService) handleKeyboardInput(cmd InputCommand) {
-	// Implementation for keyboard input forwarding
-	// This would use Windows API or similar to send keystrokes to the active window
-	fmt.Printf("Keyboard input: %+v\n", cmd)
-}
-
-func (s *SessionService) handleMouseInput(cmd InputCommand) {
-	// Implementation for mouse input forwarding
-	// This would use Windows API or similar to send mouse events to the active window
-	fmt.Printf("Mouse input: %+v\n", cmd)
 }
 
 func (s *SessionService) EndSession() error {
@@ -200,6 +205,6 @@ func (s *SessionService) SetWebSocketConnection(conn *websocket.Conn) {
 	s.wsConn = conn
 }
 
-func (s *SessionService) ProcessInputCommand(cmd InputCommand) {
-	s.processInputCommand(cmd)
+func (s *SessionService) ProcessInputCommand(cmd input.InputCommand) {
+	input.HandleCommand(cmd)
 }

@@ -5,17 +5,22 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/m1thrandir225/imperium/apps/host/internal/session"
+	"github.com/m1thrandir225/imperium/apps/host/internal/input"
 )
+
+type Session interface {
+	SetWebSocketConnection(conn *websocket.Conn)
+	ProcessInputCommand(cmd input.InputCommand)
+}
 
 type WebSocketServer struct {
 	upgrader websocket.Upgrader
-	sessions map[string]*session.SessionService
+	sessions map[string]Session
 }
 
 type InputMessage struct {
-	SessionID string               `json:"sessionId"`
-	Command   session.InputCommand `json:"command"`
+	SessionID string             `json:"sessionId"`
+	Command   input.InputCommand `json:"command"`
 }
 
 func NewWebSocketServer() *WebSocketServer {
@@ -25,7 +30,7 @@ func NewWebSocketServer() *WebSocketServer {
 				return true // In production, implement proper origin checking
 			},
 		},
-		sessions: make(map[string]*session.SessionService),
+		sessions: make(map[string]Session),
 	}
 }
 
@@ -68,7 +73,7 @@ func (s *WebSocketServer) HandleWebSocket(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (s *WebSocketServer) RegisterSession(sessionID string, sessionService *session.SessionService) {
+func (s *WebSocketServer) RegisterSession(sessionID string, sessionService Session) {
 	s.sessions[sessionID] = sessionService
 }
 
