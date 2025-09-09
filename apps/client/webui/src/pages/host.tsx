@@ -43,8 +43,12 @@ const SingleHostPage: React.FC = () => {
     setConnecting(true);
     try {
       const hostIP = data.ip_address;
-      const signalingURL = `http://${hostIP}:8090/offer`;
-      const wsURL = `ws://${hostIP}:8091/ws?session_id=${hostId}`;
+
+      // TODO: actuall sessionID from auth-server needs to be used
+      const sessionId = String(hostId);
+
+      const signalingURL = `http://${hostIP}:8080/api/session/webrtc/offer`;
+      const wsURL = `ws://${hostIP}:8080/ws?session_id=${sessionId}`;
 
       const peer = new RTCPeerConnection();
       peer.addTransceiver("video", {direction: "recvonly"});
