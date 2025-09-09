@@ -30,6 +30,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    testImplementation("io.projectreactor:reactor-test")
     compileOnly("org.projectlombok:lombok")
     "developmentOnly"("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")

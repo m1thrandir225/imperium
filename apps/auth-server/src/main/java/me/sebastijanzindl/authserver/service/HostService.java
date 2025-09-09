@@ -8,16 +8,23 @@ import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.model.enums.HOST_STATUS;
 import me.sebastijanzindl.authserver.repository.HostRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.net.ProxySelector;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class HostService {
     private final HostRepository hostRepository;
+    private final WebClient webClient;
 
-    public HostService(HostRepository hostRepository) {
+    public HostService(HostRepository hostRepository, WebClient.Builder builder) {
         this.hostRepository = hostRepository;
+        this.webClient = builder.build();
     }
 
     public Host create(CreateHostDTO input, User owner) {
@@ -47,6 +54,21 @@ public class HostService {
         );
 
         return existing.orElseGet(() -> this.create(dto, owner));
+    }
+
+    public String getPrograms(UUID id) {
+        Host host = this.findById(id);
+        if (host.getStatus() != HOST_STATUS.AVAILABLE) {
+            throw new IllegalStateException("Host is not available");
+        }
+        String url = String.format("http://%s:%d/api/session/programs", host.getIpAddress(), host.getPort());
+
+        return webClient
+                .get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
     }
 
     public Host update(UUID id, UpdateHostDTO input) {

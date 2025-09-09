@@ -104,6 +104,16 @@ public class HostController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/programs")
+    public ResponseEntity<String> getHostPrograms(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable UUID id
+    ) {
+        String programs = this.hostService.getPrograms(id);
+
+        return ResponseEntity.ok(programs);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteHost(
             @AuthenticationPrincipal User currentUser,
