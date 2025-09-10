@@ -52,6 +52,16 @@ public class ClientController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/upsert")
+    public ResponseEntity<ClientResponse> upsertClient(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody CreateClientDTO input
+    ) {
+        Client client = this.clientService.upsert(input, currentUser);
+        ClientResponse response = ClientResponse.from(client);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ClientResponse> updateClient(
             @AuthenticationPrincipal User currentUser,

@@ -8,6 +8,7 @@ import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,6 +29,23 @@ public class ClientService {
 
     public Client getClient(UUID id){
         return this.findById(id);
+    }
+
+    public Client upsert(CreateClientDTO input, User owner) {
+        Optional<Client> client = this.clientRepository.findByNameAndIpAddress(input.getClientName(), input.getIpAddress());
+
+        if(client.isPresent()) {
+            Client existing = client.get();
+            existing.setName(input.getClientName());
+            existing.setIpAddress(input.getIpAddress());
+            return this.clientRepository.updateOrInsert(existing);
+        } else {
+            Client newClient = new Client();
+            newClient.setName(input.getClientName());
+            newClient.setIpAddress(input.getIpAddress());
+            newClient.setOwner(owner);
+            return this.clientRepository.updateOrInsert(newClient);
+        }
     }
 
     @SneakyThrows
