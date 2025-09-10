@@ -49,6 +49,7 @@ func (h *HTTPHandler) Login(ctx *gin.Context) {
 		return
 	}
 
+	channelClient := make(chan ClientDTO)
 	// upsert client
 	go func() {
 		hostname, err := GetHostname()
@@ -60,18 +61,29 @@ func (h *HTTPHandler) Login(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-		_, err = h.clientService.RegisterOrUpdateClient(ctx, RegisterClientRequest{
+		clientResponse, err := h.clientService.RegisterOrUpdateClient(ctx, RegisterClientRequest{
 			Name:      hostname,
 			IPAddress: ip,
 		}, loginResponse.AccessToken)
 		if err != nil {
 			log.Println("error upserting client", err)
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		} else {
 			log.Println("client upserted successfully")
+			client := ClientDTO{
+				ID:        clientResponse.ID,
+				Name:      clientResponse.Name,
+				IPAddress: clientResponse.IPAddress,
+			}
+			channelClient <- client
 		}
 	}()
+	loginResponseWithClient := LoginResponseWithClient{
+		LoginResponse: *loginResponse,
+		Client:        <-channelClient,
+	}
 
-	ctx.JSON(http.StatusOK, loginResponse)
+	ctx.JSON(http.StatusOK, loginResponseWithClient)
 }
 
 func (h *HTTPHandler) Register(ctx *gin.Context) {

@@ -1,3 +1,4 @@
+import type {Client} from "../models/client";
 import type {User} from "../models/user";
 
 /*
@@ -17,6 +18,7 @@ export type LoginResponse = {
   refresh_token: string;
   access_token_expires_in: string;
   refresh_token_expires_in: string;
+  client: Client;
 };
 
 /*

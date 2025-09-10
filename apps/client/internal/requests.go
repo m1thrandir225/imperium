@@ -18,8 +18,8 @@ type RegisterUserRequest struct {
 }
 
 type RegisterClientRequest struct {
-	Name      string `json:"name" binding:"required"`
-	IPAddress string `json:"ipAddress" binding:"required"`
+	Name      string `json:"client_name" binding:"required"`
+	IPAddress string `json:"ip_address" binding:"required"`
 }
 
 type RefreshTokenRequest struct {
@@ -52,13 +52,18 @@ type LoginResponse struct {
 	RefreshTokenExpiresIn time.Time `json:"refresh_token_expires_in"`
 }
 
+type LoginResponseWithClient struct {
+	LoginResponse
+	Client ClientDTO `json:"client"`
+}
+
 type RegisterUserResponse struct {
 	User UserDTO `json:"user"`
 }
 
 type RegisterClientResponse struct {
 	ID        string `json:"id"`
-	Name      string `json:"name"`
+	Name      string `json:"client_name"`
 	IPAddress string `json:"ip_address"`
 }
 

@@ -1,3 +1,4 @@
+import type {Client} from "../models/client";
 import type {User} from "../models/user";
 import type {LoginResponse, RefreshTokenResponse} from "../responses/auth";
 
@@ -9,12 +10,14 @@ type State = {
   refreshToken: string | null;
   refreshTokenExpiresAt: Date | null;
   user: User | null;
+  client: Client | null;
 
   isHydrated: boolean;
 };
 
 type Actions = {
   setUser: (user: User) => void;
+  setClient: (client: Client) => void;
   login: (data: LoginResponse) => void;
   refreshAccessToken: (data: RefreshTokenResponse) => void;
   canRefresh: () => boolean;

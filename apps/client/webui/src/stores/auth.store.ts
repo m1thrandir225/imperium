@@ -13,9 +13,13 @@ const useAuthStore = create<AuthStore>()(
       refreshToken: null,
       refreshTokenExpiresAt: null,
       user: null,
+      client: null,
       isHydrated: false,
       setUser: (newUser) => {
         set({user: newUser});
+      },
+      setClient: (newClient) => {
+        set({client: newClient});
       },
       login: (data) => {
         set({
@@ -24,6 +28,7 @@ const useAuthStore = create<AuthStore>()(
           accessTokenExpiresAt: new Date(data.access_token_expires_in),
           refreshToken: data.refresh_token,
           refreshTokenExpiresAt: new Date(data.refresh_token_expires_in),
+          client: data.client,
         });
       },
       refreshAccessToken: (data) => {
