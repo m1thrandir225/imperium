@@ -20,7 +20,6 @@ type RegisterUserRequest struct {
 type RegisterClientRequest struct {
 	Name      string `json:"name" binding:"required"`
 	IPAddress string `json:"ipAddress" binding:"required"`
-	Port      int    `json:"port"`
 }
 
 type RefreshTokenRequest struct {

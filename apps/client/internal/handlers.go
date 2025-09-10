@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,16 +10,23 @@ import (
 )
 
 type HTTPHandler struct {
-	config      *config.Config
-	authService *AuthService
-	hostService *HostService
+	config        *config.Config
+	authService   *AuthService
+	hostService   *HostService
+	clientService *ClientService
 }
 
-func NewHTTPHandler(config *config.Config, authService *AuthService, hostService *HostService) *HTTPHandler {
+func NewHTTPHandler(
+	config *config.Config,
+	authService *AuthService,
+	hostService *HostService,
+	clientService *ClientService,
+) *HTTPHandler {
 	return &HTTPHandler{
-		config:      config,
-		authService: authService,
-		hostService: hostService,
+		config:        config,
+		authService:   authService,
+		hostService:   hostService,
+		clientService: clientService,
 	}
 }
 
@@ -40,6 +48,28 @@ func (h *HTTPHandler) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	// upsert client
+	go func() {
+		hostname, err := GetHostname()
+		if err != nil {
+			hostname = "unknown-hostname"
+		}
+		ip, err := GetIPV4Address()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		_, err = h.clientService.RegisterOrUpdateClient(ctx, RegisterClientRequest{
+			Name:      hostname,
+			IPAddress: ip,
+		}, loginResponse.AccessToken)
+		if err != nil {
+			log.Println("error upserting client", err)
+		} else {
+			log.Println("client upserted successfully")
+		}
+	}()
 
 	ctx.JSON(http.StatusOK, loginResponse)
 }
