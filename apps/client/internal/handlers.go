@@ -210,3 +210,30 @@ func (h *HTTPHandler) GetHostPrograms(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, programs)
 }
+
+func (h *HTTPHandler) GetClientInfo(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	hostname, ip, err := h.clientService.GetClientInfo()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	clientReq := RegisterClientRequest{
+		Name:      hostname,
+		IPAddress: ip,
+	}
+
+	clientResponse, err := h.clientService.RegisterOrUpdateClient(ctx, clientReq, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, clientResponse)
+}

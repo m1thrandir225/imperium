@@ -27,5 +27,11 @@ func SetupRoutes(router *gin.Engine, handler *HTTPHandler) {
 			hosts.GET("/:hostId", handler.GetHost)
 			hosts.GET("/:hostId/programs", handler.GetHostPrograms)
 		}
+
+		clients := apiV1.Group("/clients")
+		clients.Use(AuthMiddleware())
+		{
+			clients.GET("", handler.GetClientInfo)
+		}
 	}
 }

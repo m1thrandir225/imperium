@@ -1,4 +1,8 @@
-import {IconDotsVertical, IconLogout} from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconInfoCircle,
+  IconLogout,
+} from "@tabler/icons-react";
 
 import {Avatar, AvatarFallback} from "@/components/ui/avatar";
 import {
@@ -11,10 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useAuthStore from "@/stores/auth.store";
 import {Button} from "./ui/button";
+import {useClientInfo} from "@/hooks/use-client-info";
 
 export function NavUser() {
   const {user, logout} = useAuthStore();
-  if (!user) {
+  const {client} = useClientInfo();
+  if (!user || !client) {
     return null;
   }
   return (
@@ -62,6 +68,12 @@ export function NavUser() {
             </div>
           </div>
         </DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <IconInfoCircle />
+          Client: <span className="text-[10px]">{client.client_name}</span>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>

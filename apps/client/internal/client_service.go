@@ -31,6 +31,20 @@ func (s *ClientService) GetHTTPClient() *http.Client {
 	return s.httpClient
 }
 
+func (s *ClientService) GetClientInfo() (string, string, error) {
+	hostname, err := GetHostname()
+	if err != nil {
+		return "", "", err
+	}
+
+	ip, err := GetIPV4Address()
+	if err != nil {
+		return "", "", err
+	}
+
+	return hostname, ip, nil
+}
+
 func (s *ClientService) RegisterOrUpdateClient(ctx context.Context, req RegisterClientRequest, token string) (*RegisterClientResponse, error) {
 	body, err := json.Marshal(req)
 	if err != nil {

@@ -31,6 +31,7 @@ const useAuthStore = create<AuthStore>()(
           client: data.client,
         });
       },
+
       refreshAccessToken: (data) => {
         set({
           accessToken: data.access_token,
