@@ -33,5 +33,16 @@ func SetupRoutes(router *gin.Engine, handler *HTTPHandler) {
 		{
 			clients.GET("", handler.GetClientInfo)
 		}
+
+		sessions := apiV1.Group("/sessions")
+		sessions.Use(AuthMiddleware())
+		{
+			sessions.POST("/create", handler.CreateSession)
+			sessions.GET("/:sessionId", handler.GetSession)
+
+			sessions.POST("/:sessionId/start", handler.StartSession)
+			sessions.POST("/:sessionId/end", handler.EndSession)
+			sessions.POST("/:sessionId/cancel", handler.CancelSession)
+		}
 	}
 }

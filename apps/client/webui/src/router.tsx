@@ -7,6 +7,7 @@ import RegisterPage from "./pages/register";
 import DefaultLayout from "./layouts/default-layout";
 import SingleHostPage from "./pages/host";
 import SetupGuard from "./guards/setup-guard";
+import SessionPage from "./pages/session";
 
 const router = createBrowserRouter([
   {
@@ -52,6 +53,13 @@ const router = createBrowserRouter([
                 element: <SingleHostPage />,
                 handle: {
                   title: () => "Host Details | Imperium",
+                },
+              },
+              {
+                path: "sessions/:sessionId",
+                element: <SessionPage />,
+                handle: {
+                  title: () => "Session | Imperium",
                 },
               },
             ],

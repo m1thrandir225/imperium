@@ -10,10 +10,11 @@ import (
 )
 
 type HTTPHandler struct {
-	config        *config.Config
-	authService   *AuthService
-	hostService   *HostService
-	clientService *ClientService
+	config         *config.Config
+	authService    *AuthService
+	hostService    *HostService
+	clientService  *ClientService
+	sessionService *SessionService
 }
 
 func NewHTTPHandler(
@@ -21,12 +22,14 @@ func NewHTTPHandler(
 	authService *AuthService,
 	hostService *HostService,
 	clientService *ClientService,
+	sessionService *SessionService,
 ) *HTTPHandler {
 	return &HTTPHandler{
-		config:        config,
-		authService:   authService,
-		hostService:   hostService,
-		clientService: clientService,
+		config:         config,
+		authService:    authService,
+		hostService:    hostService,
+		clientService:  clientService,
+		sessionService: sessionService,
 	}
 }
 
@@ -236,4 +239,132 @@ func (h *HTTPHandler) GetClientInfo(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, clientResponse)
+}
+
+func (h *HTTPHandler) CreateSession(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	var req CreateSessionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	sessionResponse, err := h.sessionService.CreateSession(ctx, req, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sessionResponse)
+}
+
+func (h *HTTPHandler) GetSession(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	sessionID := ctx.Param("sessionId")
+	if sessionID == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("session id is required")))
+		return
+	}
+
+	sessionResponse, err := h.sessionService.GetSession(ctx, sessionID, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sessionResponse)
+}
+
+func (h *HTTPHandler) StartSession(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	sessionID := ctx.Param("sessionId")
+	if sessionID == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("session id is required")))
+		return
+	}
+
+	var req StartSessionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	sessionResponse, err := h.sessionService.StartSession(ctx, sessionID, req, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sessionResponse)
+}
+
+func (h *HTTPHandler) EndSession(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	sessionID := ctx.Param("sessionId")
+	if sessionID == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("session id is required")))
+		return
+	}
+
+	var req EndSessionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	sessionResponse, err := h.sessionService.EndSession(ctx, sessionID, req, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sessionResponse)
+}
+
+func (h *HTTPHandler) CancelSession(ctx *gin.Context) {
+	token := GetAuthToken(ctx)
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("unauthorized")))
+		return
+	}
+
+	sessionID := ctx.Param("sessionId")
+	if sessionID == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("session id is required")))
+		return
+	}
+
+	reason := ctx.Query("reason")
+	if reason == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("reason is required")))
+		return
+	}
+
+	sessionResponse, err := h.sessionService.CancelSession(ctx, sessionID, reason, token)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, sessionResponse)
 }

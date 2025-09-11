@@ -19,7 +19,15 @@ func SetupRouter(config *config.Config) *gin.Engine {
 	authService := NewAuthService(apiURL)
 	hostService := NewHostService(fmt.Sprintf("%s/hosts", apiURL))
 	clientService := NewClientService(fmt.Sprintf("%s/clients", apiURL))
-	httpHandler := NewHTTPHandler(config, authService, hostService, clientService)
+	sessionService := NewSessionService(fmt.Sprintf("%s/sessions", apiURL))
+
+	httpHandler := NewHTTPHandler(
+		config,
+		authService,
+		hostService,
+		clientService,
+		sessionService,
+	)
 
 	router.Use(CORSMiddleware())
 
