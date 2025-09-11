@@ -73,7 +73,7 @@ public class SessionService {
         session.setClient(client);
         session.setStatus(SESSION_STATUS.PENDING);
         session.setSessionToken(generateSessionToken());
-        session.setExpiresAt(LocalDateTime.now().plusMinutes(30)); // 30 minute expiry
+        session.setExpiresAt(LocalDateTime.now().plusMinutes(60)); // 60-minute expiry
 
         return sessionRepository.save(session);
     }
