@@ -16,12 +16,14 @@ type StatusManager struct {
 	httpClient        *httpclient.Client
 	statusChan        chan Status
 	stopChan          chan struct{}
+	sessionService    interface{ GetCurrentSession() any }
 }
 
 func NewStatusManager(
 	hostID,
 	authServerBaseURL string,
 	httpClient *httpclient.Client,
+	sessionService interface{ GetCurrentSession() any },
 ) *StatusManager {
 	return &StatusManager{
 		hostID:            hostID,
@@ -29,6 +31,7 @@ func NewStatusManager(
 		httpClient:        httpClient,
 		statusChan:        make(chan Status, 10),
 		stopChan:          make(chan struct{}),
+		sessionService:    sessionService,
 	}
 }
 
@@ -61,6 +64,10 @@ func (sm *StatusManager) statusUpdateLoop(ctx context.Context) {
 		case status := <-sm.statusChan:
 			sm.sendStatusUpdate(ctx, status)
 		case <-ticker.C:
+			//skip if there is a session
+			if sm.sessionService.GetCurrentSession() != nil {
+				continue
+			}
 			sm.sendStatusUpdate(ctx, StatusAvailable)
 		}
 	}

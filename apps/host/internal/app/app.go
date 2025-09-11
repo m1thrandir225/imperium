@@ -27,7 +27,7 @@ type App struct {
 	StatusManager  *host.StatusManager
 	HTTPClient     *httpclient.Client
 	tokenRefresher *AuthTokenRefresher
-	SessionService *session.SessionService
+	SessionService *session.Service
 	HTTPServer     *httpserver.Server
 }
 
@@ -152,7 +152,7 @@ func (a *App) buildSessionService() {
 		},
 	)
 
-	a.SessionService = session.NewSessionService(
+	a.SessionService = session.NewService(
 		a.AuthBaseURL,
 		a.State.Get().UserSession.AccessToken,
 		a.AuthService,

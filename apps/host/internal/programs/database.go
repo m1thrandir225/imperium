@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver
@@ -75,7 +76,17 @@ func (pdb *ProgramDB) SaveProgram(program *Program) error {
 		lastModified = fileInfo.ModTime()
 	}
 
-	_, err = pdb.db.Exec(query, program.Name, program.Path, program.Description, lastModified)
+	result, err := pdb.db.Exec(query, program.Name, program.Path, program.Description, lastModified)
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	program.ID = strconv.FormatInt(id, 10)
 	return err
 }
 
@@ -90,7 +101,7 @@ func (pdb *ProgramDB) GetPrograms() ([]*Program, error) {
 	var programs []*Program
 	for rows.Next() {
 		program := &Program{}
-		err := rows.Scan(&program.Name, &program.Path, &program.Description)
+		err := rows.Scan(&program.ID, &program.Name, &program.Path, &program.Description)
 		if err != nil {
 			log.Printf("Error scanning program: %v", err)
 			continue
@@ -104,7 +115,7 @@ func (pdb *ProgramDB) GetProgramByPath(path string) (*Program, error) {
 	query := `SELECT name, path, description FROM programs WHERE path = ?`
 
 	program := &Program{}
-	err := pdb.db.QueryRow(query, path).Scan(&program.Name, &program.Path, &program.Description)
+	err := pdb.db.QueryRow(query, path).Scan(&program.ID, &program.Name, &program.Path, &program.Description)
 	if err != nil {
 		return nil, err
 	}

@@ -12,11 +12,11 @@ import (
 
 type Server struct {
 	mux            *http.ServeMux
-	sessionService *session.SessionService
+	sessionService *session.Service
 	wsServer       *ws.WebsocketHandler
 }
 
-func NewServer(sessionService *session.SessionService) *Server {
+func NewServer(sessionService *session.Service) *Server {
 	s := &Server{
 		mux:            http.NewServeMux(),
 		sessionService: sessionService,

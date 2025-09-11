@@ -15,7 +15,7 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
 )
 
-type SessionService struct {
+type Service struct {
 	authServerBaseURL string
 	httpClient        *httpclient.Client
 	token             string
@@ -27,15 +27,15 @@ type SessionService struct {
 	mu                sync.Mutex
 }
 
-func NewSessionService(
+func NewService(
 	authServerBaseURL string,
 	token string,
 	authService interface{ GetAuthenticatedClient() *httpclient.Client },
 	programService *programs.ProgramService,
 	videoRecorder *video.Recorder,
 	webrtcStreamer *webrtc.Streamer,
-) *SessionService {
-	return &SessionService{
+) *Service {
+	return &Service{
 		authServerBaseURL: authServerBaseURL,
 		programService:    programService,
 		videoRecorder:     videoRecorder,
@@ -45,11 +45,11 @@ func NewSessionService(
 	}
 }
 
-func (s *SessionService) WebRTCStreamer() *webrtc.Streamer {
+func (s *Service) WebRTCStreamer() *webrtc.Streamer {
 	return s.webrtcStreamer
 }
 
-func (s *SessionService) StartSession(ctx context.Context, programID, clientID string) (*Session, error) {
+func (s *Service) StartSession(ctx context.Context, programID, clientID string) (*Session, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -110,7 +110,7 @@ func (s *SessionService) StartSession(ctx context.Context, programID, clientID s
 	return session, nil
 }
 
-func (s *SessionService) handleInputCommands() {
+func (s *Service) handleInputCommands() {
 	for {
 		if s.wsConn == nil {
 			time.Sleep(100 * time.Millisecond)
@@ -130,7 +130,7 @@ func (s *SessionService) handleInputCommands() {
 	}
 }
 
-func (s *SessionService) EndSession() error {
+func (s *Service) EndSession() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -167,7 +167,7 @@ func (s *SessionService) EndSession() error {
 	return nil
 }
 
-func (s *SessionService) GetCurrentSession() *Session {
+func (s *Service) GetCurrentSession() *Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.currentSession
@@ -177,18 +177,18 @@ func generateSessionID() string {
 	return fmt.Sprintf("session_%d", time.Now().UnixNano())
 }
 
-func (s *SessionService) SetWebSocketConnection(conn *websocket.Conn) {
+func (s *Service) SetWebSocketConnection(conn *websocket.Conn) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.wsConn = conn
 }
 
-func (s *SessionService) ProcessInputCommand(cmd input.InputCommand) {
+func (s *Service) ProcessInputCommand(cmd input.InputCommand) {
 	input.HandleCommand(cmd)
 }
 
-func (s *SessionService) GetPrograms() ([]*programs.Program, error) {
+func (s *Service) GetPrograms() ([]*programs.Program, error) {
 	if s.programService == nil {
 		return nil, fmt.Errorf("program service not initialized")
 	}
