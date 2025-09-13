@@ -132,6 +132,7 @@ func (a *App) startStatusManagerIfReady() {
 		st.HostInfo.ID,
 		a.AuthBaseURL,
 		a.HTTPClient,
+		a.SessionService,
 	)
 	a.StatusManager.Start(context.Background())
 }
@@ -160,7 +161,6 @@ func (a *App) buildSessionService() {
 		recorder,
 		nil,
 	)
-
 }
 
 func (a *App) checkAndRefreshTokensAtStartup() {

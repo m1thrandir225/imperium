@@ -49,18 +49,30 @@ func (s *Service) WebRTCStreamer() *webrtc.Streamer {
 	return s.webrtcStreamer
 }
 
-func (s *Service) StartSession(ctx context.Context, programID, clientID string) (*Session, error) {
+type StartSessionCommand struct {
+	ProgramID    string
+	ClientID     string
+	ClientName   string
+	SessionToken string
+	Status       string
+	WebrtcOffer  string
+	SessionID    string
+	HostID       string
+	HostName     string
+	StartedAt    time.Time
+	CreatedAt    time.Time
+}
+
+func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*Session, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Launch the program
-	//TODO: fix
-	program, err := s.programService.GetLocalProgramByPath(programID)
+	program, err := s.programService.GetLocalProgramByPath(cmd.ProgramID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get program: %w", err)
 	}
 
-	cmd, err := s.programService.LaunchProgram(program.Path)
+	programCmd, err := s.programService.LaunchProgram(program.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch program: %w", err)
 	}
@@ -75,30 +87,35 @@ func (s *Service) StartSession(ctx context.Context, programID, clientID string) 
 	// Create WebRTC streamer
 	streamer, err := webrtc.NewStreamer()
 	if err != nil {
-		cmd.Process.Kill()
+		programCmd.Process.Kill()
 		return nil, fmt.Errorf("failed to create WebRTC streamer: %w", err)
 	}
 
 	// Start video recording
 	videoStream, err := s.videoRecorder.RecordWindow(windowTitle, nil)
 	if err != nil {
-		cmd.Process.Kill()
+		programCmd.Process.Kill()
 		streamer.Close()
 		return nil, fmt.Errorf("failed to start video recording: %w", err)
 	}
 
 	// Start streaming
+	//TODO: fix fps limit
 	streamer.StartStream(videoStream, 30) // 30 FPS
 
 	session := &Session{
-		ID:          generateSessionID(),
-		ProgramID:   programID,
-		HostID:      "current-host-id", // This should come from auth service
-		ClientID:    clientID,
-		Status:      "active",
-		StartedAt:   time.Now(),
-		Process:     cmd,
-		WindowTitle: windowTitle,
+		ID:           cmd.SessionID,
+		ProgramID:    cmd.ProgramID,
+		HostID:       cmd.HostID,
+		HostName:     cmd.HostName,
+		ClientID:     cmd.ClientID,
+		ClientName:   cmd.ClientName,
+		Status:       cmd.Status,
+		Process:      programCmd,
+		WindowTitle:  windowTitle,
+		SessionToken: cmd.SessionToken,
+		CreatedAt:    cmd.CreatedAt,
+		StartedAt:    cmd.StartedAt,
 	}
 
 	s.currentSession = session
@@ -158,11 +175,6 @@ func (s *Service) EndSession() error {
 		s.wsConn.Close()
 	}
 
-	// Update session status
-	now := time.Now()
-	s.currentSession.EndedAt = &now
-	s.currentSession.Status = "ended"
-
 	s.currentSession = nil
 	return nil
 }
@@ -171,10 +183,6 @@ func (s *Service) GetCurrentSession() *Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.currentSession
-}
-
-func generateSessionID() string {
-	return fmt.Sprintf("session_%d", time.Now().UnixNano())
 }
 
 func (s *Service) SetWebSocketConnection(conn *websocket.Conn) {
@@ -194,4 +202,17 @@ func (s *Service) GetPrograms() ([]*programs.Program, error) {
 	}
 
 	return s.programService.GetLocalPrograms()
+}
+
+func (s *Service) GenerateWebRTCAnswer(offer string) (string, error) {
+	if s.webrtcStreamer == nil {
+		return "", fmt.Errorf("webrtc streamer not initialized")
+	}
+
+	answer, err := s.webrtcStreamer.HandleOffer(offer)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate webRTC answer: %w", err)
+	}
+
+	return answer, nil
 }

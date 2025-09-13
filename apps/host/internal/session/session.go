@@ -6,13 +6,16 @@ import (
 )
 
 type Session struct {
-	ID          string     `json:"id"`
-	ProgramID   string     `json:"programId"`
-	HostID      string     `json:"hostId"`
-	ClientID    string     `json:"clientId"`
-	Status      string     `json:"status"`
-	StartedAt   time.Time  `json:"startedAt"`
-	EndedAt     *time.Time `json:"endedAt,omitempty"`
-	Process     *exec.Cmd  `json:"-"`
-	WindowTitle string     `json:"windowTitle"`
+	ID           string    `json:"id"`
+	ProgramID    string    `json:"program_id"`
+	HostID       string    `json:"host_id"`
+	HostName     string    `json:"host_name"`
+	ClientID     string    `json:"client_id"`
+	ClientName   string    `json:"client_name"`
+	Status       string    `json:"status"`
+	SessionToken string    `json:"session_token"`
+	StartedAt    time.Time `json:"started_at"`
+	CreatedAt    time.Time `json:"created_at"`
+	Process      *exec.Cmd `json:"-"`
+	WindowTitle  string    `json:"window_title"`
 }

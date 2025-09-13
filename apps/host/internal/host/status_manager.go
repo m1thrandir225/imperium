@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 )
 
 type StatusManager struct {
@@ -16,14 +17,14 @@ type StatusManager struct {
 	httpClient        *httpclient.Client
 	statusChan        chan Status
 	stopChan          chan struct{}
-	sessionService    interface{ GetCurrentSession() any }
+	sessionService    interface{ GetCurrentSession() *session.Session }
 }
 
 func NewStatusManager(
 	hostID,
 	authServerBaseURL string,
 	httpClient *httpclient.Client,
-	sessionService interface{ GetCurrentSession() any },
+	sessionService interface{ GetCurrentSession() *session.Session },
 ) *StatusManager {
 	return &StatusManager{
 		hostID:            hostID,
