@@ -1,0 +1,1 @@
+ALTER TABLE sessions ADD COLUMN program_id TEXT;

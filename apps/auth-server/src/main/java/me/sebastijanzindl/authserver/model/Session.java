@@ -43,6 +43,9 @@ public class Session {
     @Column(nullable = false, unique = true, name = "session_token")
     private String sessionToken;
 
+    @Column(name = "program_id")
+    private String programId;
+
     @Column(columnDefinition = "TEXT", name = "webrtc_offer")
     private String webrtcOffer;
 

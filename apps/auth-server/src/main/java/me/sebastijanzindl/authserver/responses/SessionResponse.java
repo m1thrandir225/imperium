@@ -30,6 +30,9 @@ public record SessionResponse(
         @JsonProperty("session_token")
         String sessionToken,
 
+        @JsonProperty("program_id")
+        String programId,
+
         @JsonProperty("webrtc_offer")
         String webrtcOffer,
 
@@ -60,6 +63,7 @@ public record SessionResponse(
                 session.getClient().getName(),
                 session.getStatus(),
                 session.getSessionToken(),
+                session.getProgramId(),
                 session.getWebrtcOffer(),
                 session.getWebrtcAnswer(),
                 session.getExpiresAt(),
