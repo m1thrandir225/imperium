@@ -1,5 +1,6 @@
 package me.sebastijanzindl.authserver.responses;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import me.sebastijanzindl.authserver.model.Session;
 import me.sebastijanzindl.authserver.model.enums.SESSION_STATUS;
@@ -40,15 +41,19 @@ public record SessionResponse(
         String webrtcAnswer,
 
         @JsonProperty("expires_at")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
         LocalDateTime expiresAt,
 
         @JsonProperty("created_at")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
         LocalDateTime createdAt,
 
         @JsonProperty("started_at")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
         LocalDateTime startedAt,
 
         @JsonProperty("ended_at")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
         LocalDateTime endedAt,
 
         @JsonProperty("end_reason")
