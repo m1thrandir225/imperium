@@ -6,9 +6,13 @@ export const useSessionStore = create<SessionStore>()((set) => ({
   currentSession: null,
   isConnecting: false,
   connectionError: null,
+  host: null,
 
   setCurrentSession: (session) => {
     set({currentSession: session});
+  },
+  setHost: (host) => {
+    set({host: host});
   },
   createSession: async (request) => {
     set({isConnecting: true, connectionError: null});

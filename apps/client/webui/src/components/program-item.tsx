@@ -7,16 +7,19 @@ import useAuthStore from "@/stores/auth.store";
 import {useState} from "react";
 import sessionService from "@/services/session.service";
 import {Loader2} from "lucide-react";
+import type {Host} from "@/types/models/host";
+import {useSessionStore} from "@/stores/session.store";
 
 type ComponentProps = {
   program: Program;
-  hostId: string;
+  host: Host;
 };
 
 const ProgramItem: React.FC<ComponentProps> = (props) => {
-  const {program, hostId} = props;
+  const {program, host} = props;
   const navigate = useNavigate();
   const client = useAuthStore((state) => state.client);
+  const sessionStore = useSessionStore();
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -28,13 +31,15 @@ const ProgramItem: React.FC<ComponentProps> = (props) => {
     setIsCreating(true);
     try {
       const session = await sessionService.create({
-        host_id: hostId,
+        host_id: host.id,
         client_id: client.id,
         program_id: props.program.id,
       });
+      sessionStore.setHost(host);
+      sessionStore.setCurrentSession(session);
 
       navigate(
-        `/sessions/${session.id}?host_id=${hostId}&client_id=${client.id}`
+        `/sessions/${session.id}?host_id=${host.id}&client_id=${client.id}`
       );
     } catch (e: unknown) {
       console.error(e);

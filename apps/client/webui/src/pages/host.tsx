@@ -17,7 +17,11 @@ const SingleHostPage: React.FC = () => {
     }
   }, [hostId, navigate]);
 
-  const {data, error, isLoading} = useQuery({
+  const {
+    data: host,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ["host", hostId],
     queryFn: () => hostService.getHost(hostId as string),
     enabled: !!hostId,
@@ -30,7 +34,7 @@ const SingleHostPage: React.FC = () => {
   } = useQuery({
     queryKey: ["programs", hostId],
     queryFn: () => hostService.getHostPrograms(hostId as string),
-    enabled: !!hostId && !!data,
+    enabled: !!hostId && !!host,
   });
 
   useEffect(() => {
@@ -50,11 +54,11 @@ const SingleHostPage: React.FC = () => {
           <Loader2 className="w-4 h-4 animate-spin" />
         </div>
       )}
-      {data && !isLoading && (
+      {host && !isLoading && (
         <React.Fragment>
           <Card>
             <CardHeader>
-              <CardTitle>Host {data?.name}</CardTitle>
+              <CardTitle>Host {host?.name}</CardTitle>
             </CardHeader>
           </Card>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 w-full h-full">
@@ -69,11 +73,7 @@ const SingleHostPage: React.FC = () => {
             {programs &&
               !programsLoading &&
               programs.map((program) => (
-                <ProgramItem
-                  key={program.id}
-                  program={program}
-                  hostId={hostId as string}
-                />
+                <ProgramItem key={program.id} program={program} host={host} />
               ))}
           </div>
         </React.Fragment>
