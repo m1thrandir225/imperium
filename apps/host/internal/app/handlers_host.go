@@ -83,6 +83,8 @@ func (a *App) WireHostHandlers() {
 				a.buildSessionService()
 			}
 
+			a.startStatusManagerIfReady()
+
 			if a.HTTPServer == nil {
 				a.HTTPServer = httpserver.NewServer(a.SessionService)
 				go func() {

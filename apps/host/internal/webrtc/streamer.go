@@ -18,8 +18,9 @@ type Streamer struct {
 	videoTrack  *pionwebrtc.TrackLocalStaticRTP
 	payloadType uint8
 
-	readyOnce sync.Once
-	readyCh   chan struct{}
+	readyOnce  sync.Once
+	readyCh    chan struct{}
+	iceReadyCh chan struct{}
 }
 
 func NewStreamer() (*Streamer, error) {
@@ -60,16 +61,35 @@ func NewStreamer() (*Streamer, error) {
 		}
 	}()
 
-	pc.OnICEConnectionStateChange(func(state pionwebrtc.ICEConnectionState) {
-		log.Printf("ICE state: %s", state.String())
-	})
-
-	return &Streamer{
+	streamer := &Streamer{
 		pc:          pc,
 		videoTrack:  videoTrack,
 		payloadType: 96,
 		readyCh:     make(chan struct{}),
-	}, nil
+		iceReadyCh:  make(chan struct{}),
+	}
+
+	pc.OnICEConnectionStateChange((func(state pionwebrtc.ICEConnectionState) {
+		log.Printf("ICE state: %s", state.String())
+
+		// Signal when ICE connection is established
+		if state == pionwebrtc.ICEConnectionStateConnected {
+			log.Printf("ICE connection established, ready to stream video")
+			streamer.readyOnce.Do(func() { close(streamer.iceReadyCh) })
+		} else if state == pionwebrtc.ICEConnectionStateFailed {
+			log.Printf("ICE connection failed - may need TURN server")
+		}
+
+		if state == pionwebrtc.ICEConnectionStateConnected {
+			close(streamer.iceReadyCh)
+		}
+	}))
+
+	pc.OnConnectionStateChange(func(state pionwebrtc.PeerConnectionState) {
+		log.Printf("PeerConnection state: %s", state.String())
+	})
+
+	return streamer, nil
 }
 
 func (s *Streamer) StartStream(stream io.ReadCloser, fps int) {
@@ -79,7 +99,9 @@ func (s *Streamer) StartStream(stream io.ReadCloser, fps int) {
 func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
 	defer stream.Close()
 
-	<-s.readyCh
+	log.Printf("Waiting for ice ready channel")
+	<-s.iceReadyCh
+	log.Printf("Ice ready channel closed")
 
 	reader, err := h264reader.NewReader(stream)
 	if err != nil {
@@ -96,6 +118,8 @@ func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
 	frameDuration := time.Second / time.Duration(fps)
 	tsStep := uint32(90000 / uint32(fps))
 	var ts uint32
+
+	log.Printf("Starting video stream at %d FPS", fps)
 
 	for {
 		nal, err := reader.NextNAL()

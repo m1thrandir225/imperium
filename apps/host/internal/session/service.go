@@ -4,6 +4,7 @@ package session
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -67,7 +68,7 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	program, err := s.programService.GetLocalProgramByPath(cmd.ProgramID)
+	program, err := s.programService.GetLocalProgramByID(cmd.ProgramID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get program: %w", err)
 	}
@@ -75,13 +76,6 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 	programCmd, err := s.programService.LaunchProgram(program.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch program: %w", err)
-	}
-
-	// Wait a bit for the program to start and get window title
-	time.Sleep(2 * time.Second)
-	windowTitle, err := s.programService.GetWindowTitle(program.Name)
-	if err != nil {
-		windowTitle = program.Name // fallback
 	}
 
 	// Create WebRTC streamer
@@ -92,16 +86,17 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 	}
 
 	// Start video recording
-	videoStream, err := s.videoRecorder.RecordWindow(windowTitle, nil)
+	videoStream, err := s.videoRecorder.RecordGameScreen(nil)
 	if err != nil {
 		programCmd.Process.Kill()
 		streamer.Close()
 		return nil, fmt.Errorf("failed to start video recording: %w", err)
 	}
 
+	configFPS := s.videoRecorder.GetFPS()
+	log.Printf("Starting video stream at %d FPS", configFPS)
 	// Start streaming
-	//TODO: fix fps limit
-	streamer.StartStream(videoStream, 30) // 30 FPS
+	streamer.StartStream(videoStream, configFPS)
 
 	session := &Session{
 		ID:           cmd.SessionID,
@@ -112,7 +107,7 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 		ClientName:   cmd.ClientName,
 		Status:       cmd.Status,
 		Process:      programCmd,
-		WindowTitle:  windowTitle,
+		WindowTitle:  program.Name,
 		SessionToken: cmd.SessionToken,
 		CreatedAt:    cmd.CreatedAt,
 		StartedAt:    cmd.StartedAt,

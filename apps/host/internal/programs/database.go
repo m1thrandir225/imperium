@@ -91,7 +91,7 @@ func (pdb *ProgramDB) SaveProgram(program *Program) error {
 }
 
 func (pdb *ProgramDB) GetPrograms() ([]*Program, error) {
-	query := `SELECT name, path, description FROM programs ORDER BY name`
+	query := `SELECT id, name, path, description FROM programs ORDER BY name`
 
 	rows, err := pdb.db.Query(query)
 	if err != nil {
@@ -111,8 +111,18 @@ func (pdb *ProgramDB) GetPrograms() ([]*Program, error) {
 	return programs, nil
 }
 
+func (pdb *ProgramDB) GetProgramByID(id string) (*Program, error) {
+	query := `SELECT id, name, path, description FROM programs WHERE id = ?`
+	program := &Program{}
+	err := pdb.db.QueryRow(query, id).Scan(&program.ID, &program.Name, &program.Path, &program.Description)
+	if err != nil {
+		return nil, err
+	}
+	return program, nil
+}
+
 func (pdb *ProgramDB) GetProgramByPath(path string) (*Program, error) {
-	query := `SELECT name, path, description FROM programs WHERE path = ?`
+	query := `SELECT id, name, path, description FROM programs WHERE path = ?`
 
 	program := &Program{}
 	err := pdb.db.QueryRow(query, path).Scan(&program.ID, &program.Name, &program.Path, &program.Description)

@@ -66,7 +66,7 @@ func (sm *StatusManager) statusUpdateLoop(ctx context.Context) {
 			sm.sendStatusUpdate(ctx, status)
 		case <-ticker.C:
 			//skip if there is a session
-			if sm.sessionService.GetCurrentSession() != nil {
+			if sm.sessionService != nil && sm.sessionService.GetCurrentSession() != nil {
 				continue
 			}
 			sm.sendStatusUpdate(ctx, StatusAvailable)
