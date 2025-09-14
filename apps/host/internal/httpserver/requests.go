@@ -17,7 +17,7 @@ type StatusResponse struct {
 }
 
 type AuthServerSessionRequest struct {
-	SessionID    string    `json:"session_id"`
+	SessionID    string    `json:"id"`
 	SessionToken string    `json:"session_token"`
 	ClientID     string    `json:"client_id"`
 	ClientName   string    `json:"client_name"`

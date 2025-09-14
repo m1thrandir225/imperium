@@ -29,7 +29,7 @@ func NewWebsocketHandler() *WebsocketHandler {
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				log.Printf("WebSocket origin check: %s", r.Header.Get("Origin"))
-				return true // In production, implement proper origin checking
+				return true // TODO: Implement proper origin checking
 			},
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -81,7 +81,12 @@ func (s *WebsocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	sessionService, exists := s.sessions[sessionID]
 	if !exists {
-		log.Printf("Session not found: %s. Available sessions: %v", sessionID, s.getSessionIDs())
+		log.Printf("❌ Session not found: %s. Available sessions: %v", sessionID, s.getSessionIDs())
+		log.Printf("🔍 Session ID comparison:")
+		for id := range s.sessions {
+			log.Printf("  - Registered: '%s' (len: %d)", id, len(id))
+		}
+		log.Printf("  - Requested: '%s' (len: %d)", sessionID, len(sessionID))
 		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, "Session not found"))
 		return
 	}

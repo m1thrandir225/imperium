@@ -1,246 +1,221 @@
 package input
 
 import (
+	"fmt"
 	"log"
-	"syscall"
-	"unsafe"
+	"strings"
+
+	"github.com/stephen-fox/user32util"
 )
 
-var (
-	user32        = syscall.MustLoadDLL("user32.dll")
-	procSendInput = user32.MustFindProc("SendInput")
-)
+var user32DLL *user32util.User32DLL
 
-const (
-	INPUT_MOUSE    = 0
-	INPUT_KEYBOARD = 1
-
-	KEYEVENTF_KEYUP    = 0x0002
-	KEYEVENTF_SCANCODE = 0x0008
-
-	MOUSEEVENTF_MOVE      = 0x0001
-	MOUSEEVENTF_LEFTDOWN  = 0x0002
-	MOUSEEVENTF_LEFTUP    = 0x0004
-	MOUSEEVENTF_RIGHTDOWN = 0x0008
-	MOUSEEVENTF_RIGHTUP   = 0x0010
-
-	MOUSEEVENTF_WHEEL = 0x0800
-)
-
-type KEYBDINPUT struct {
-	WVk         uint16
-	WScan       uint16
-	DwFlags     uint32
-	Time        uint32
-	DwExtraInfo uintptr
-}
-
-type MOUSEINPUT struct {
-	Dx          int32
-	Dy          int32
-	MouseData   uint32
-	DwFlags     uint32
-	Time        uint32
-	DwExtraInfo uintptr
-}
-
-type INPUT struct {
-	Type  uint32
-	_     [4]byte // alignment
-	Union [24]byte
-}
-
-func SendKey(scanCode uint16, keyUp bool) {
-	var ki KEYBDINPUT
-	ki.WScan = scanCode
-	ki.DwFlags = KEYEVENTF_SCANCODE
-	if keyUp {
-		ki.DwFlags |= KEYEVENTF_KEYUP
+func init() {
+	var err error
+	user32DLL, err = user32util.LoadUser32DLL()
+	if err != nil {
+		log.Fatalf("Failed to load user32 DLL: %v", err)
 	}
-
-	input := INPUT{Type: INPUT_KEYBOARD}
-	*(*KEYBDINPUT)(unsafe.Pointer(&input.Union[0])) = ki
-
-	procSendInput.Call(
-		1,
-		uintptr(unsafe.Pointer(&input)),
-		unsafe.Sizeof(input),
-	)
-}
-
-func SendMouse(flags uint32, dx, dy int32) {
-	var mi MOUSEINPUT
-	mi.Dx, mi.Dy, mi.DwFlags = dx, dy, flags
-	input := INPUT{Type: INPUT_MOUSE}
-	*(*MOUSEINPUT)(unsafe.Pointer(&input.Union[0])) = mi
-
-	procSendInput.Call(
-		1,
-		uintptr(unsafe.Pointer(&input)),
-		unsafe.Sizeof(input),
-	)
-}
-
-func ScrollMouse(amount int32) {
-	var mi MOUSEINPUT
-	mi.DwFlags = MOUSEEVENTF_WHEEL
-	mi.MouseData = uint32(amount)
-
-	input := INPUT{Type: INPUT_MOUSE}
-	*(*MOUSEINPUT)(unsafe.Pointer(&input.Union[0])) = mi
-
-	procSendInput.Call(
-		1,
-		uintptr(unsafe.Pointer(&input)),
-		unsafe.Sizeof(input),
-	)
-}
-
-func KeyToScanCode(key string) uint16 {
-	scanCode, ok := keyScancodes[key]
-	if !ok {
-		return 0
-	}
-	return scanCode
+	log.Printf("✅ Successfully loaded user32 DLL")
 }
 
 func HandleCommand(cmd InputCommand) {
-	switch cmd.Type {
-	case "keyboard":
-		sc := KeyToScanCode(cmd.Key)
-		if sc == 0 {
-			log.Printf("Invalid key: %s", cmd.Key)
-			return
-		}
+	log.Printf("🎮 Processing input command: Type=%s, Action=%s, Key=%s, X=%d, Y=%d, Button=%s",
+		cmd.Type, cmd.Action, cmd.Key, cmd.X, cmd.Y, cmd.Button)
 
-		if cmd.Action == "press" {
-			SendKey(sc, false)
-		} else if cmd.Action == "release" {
-			SendKey(sc, true)
-		}
+	switch cmd.Type {
 	case "mouse":
-		switch cmd.Action {
-		case "move":
-			SendMouse(MOUSEEVENTF_MOVE, int32(cmd.X), int32(cmd.Y))
-		case "click":
-			if cmd.Button == "left" {
-				SendMouse(MOUSEEVENTF_LEFTDOWN, 0, 0)
-				SendMouse(MOUSEEVENTF_LEFTUP, 0, 0)
-			} else if cmd.Button == "right" {
-				SendMouse(MOUSEEVENTF_RIGHTDOWN, 0, 0)
-				SendMouse(MOUSEEVENTF_RIGHTUP, 0, 0)
-			}
-		case "scroll":
-			ScrollMouse(int32(cmd.Y * 120))
-		}
+		handleMouseCommand(cmd)
+	case "keyboard":
+		handleKeyboardCommand(cmd)
+	default:
+		log.Printf("❌ Unknown input type: %s", cmd.Type)
 	}
 }
 
-var keyScancodes = map[string]uint16{
-	"A":            0x1E,
-	"B":            0x30,
-	"C":            0x2E,
-	"D":            0x20,
-	"E":            0x12,
-	"F":            0x21,
-	"G":            0x22,
-	"H":            0x23,
-	"I":            0x17,
-	"J":            0x24,
-	"K":            0x25,
-	"L":            0x26,
-	"M":            0x32,
-	"N":            0x31,
-	"O":            0x18,
-	"P":            0x19,
-	"Q":            0x10,
-	"R":            0x13,
-	"S":            0x1F,
-	"T":            0x14,
-	"U":            0x16,
-	"V":            0x2F,
-	"W":            0x11,
-	"X":            0x2D,
-	"Y":            0x15,
-	"Z":            0x2C,
-	"1":            0x02,
-	"2":            0x03,
-	"3":            0x04,
-	"4":            0x05,
-	"5":            0x06,
-	"6":            0x07,
-	"7":            0x08,
-	"8":            0x09,
-	"9":            0x0A,
-	"0":            0x0B,
-	"-":            0x0C,
-	"=":            0x0D,
-	"`":            0x0E,
-	"[":            0x1A,
-	"]":            0x1B,
-	"\\":           0x2B,
-	"#":            0x27,
-	"*":            0x37,
-	"+":            0x0F,
-	"/":            0x39,
-	"CapsLock":     0x3A,
-	"F1":           0x3B,
-	"F2":           0x3C,
-	"F3":           0x3D,
-	"F4":           0x3E,
-	"F5":           0x3F,
-	"F6":           0x40,
-	"F7":           0x41,
-	"F8":           0x42,
-	"F9":           0x43,
-	"F10":          0x44,
-	"F11":          0x57,
-	"F12":          0x58,
-	"Insert":       0x49,
-	"Delete":       0x53,
-	"Home":         0x47,
-	"End":          0x4F,
-	"PageUp":       0x4B,
-	"PageDown":     0x4E,
-	"Up":           0xC8,
-	"Down":         0xD0,
-	"Left":         0xCB,
-	"Right":        0xD3,
-	"Tab":          0x0F,
-	"Enter":        0x1C,
-	"Escape":       0x01,
-	"Backspace":    0x0E,
-	"Space":        0x39,
-	"Shift":        0x2A,
-	"Ctrl":         0x1D,
-	"Alt":          0x38,
-	"Win":          0x5B,
-	"Apps":         0x5D,
-	"NumLock":      0x45,
-	"ScrollLock":   0x46,
-	"Pause":        0x48,
-	"PrintScreen":  0x46,
-	"Sleep":        0x48,
-	"Num0":         0x52,
-	"Num1":         0x4F,
-	"Num2":         0x50,
-	"Num3":         0x51,
-	"Num4":         0x4B,
-	"Num5":         0x4C,
-	"Num6":         0x4D,
-	"Num7":         0x47,
-	"Num8":         0x48,
-	"Num9":         0x49,
-	"NumAdd":       0x4E,
-	"NumSubtract":  0x4A,
-	"NumMultiply":  0x37,
-	"NumDivide":    0x38,
-	"NumDecimal":   0x53,
-	"NumEnter":     0x1C,
-	"NumBackspace": 0x0E,
-	"NumTab":       0x0F,
-	"NumHome":      0x47,
-	"NumEnd":       0x4F,
-	"NumPageUp":    0x4B,
-	"NumPageDown":  0x4E,
+func handleMouseCommand(cmd InputCommand) {
+	switch cmd.Action {
+	case "move":
+		log.Printf("🖱️ Moving mouse: X=%d, Y=%d", cmd.X, cmd.Y)
+		if err := moveMouse(cmd.X, cmd.Y); err != nil {
+			log.Printf("❌ Failed to move mouse: %v", err)
+		} else {
+			log.Printf("✅ Mouse moved successfully")
+		}
+	case "press":
+		log.Printf("🖱️ Mouse press: %s", cmd.Button)
+		if err := pressMouseButton(cmd.Button); err != nil {
+			log.Printf("❌ Failed to press mouse button: %v", err)
+		} else {
+			log.Printf("✅ Mouse button pressed successfully")
+		}
+	case "release":
+		log.Printf("🖱️ Mouse release: %s", cmd.Button)
+		if err := releaseMouseButton(cmd.Button); err != nil {
+			log.Printf("❌ Failed to release mouse button: %v", err)
+		} else {
+			log.Printf("✅ Mouse button released successfully")
+		}
+	case "click":
+		log.Printf("🖱️ Mouse click: %s", cmd.Button)
+		if err := clickMouseButton(cmd.Button); err != nil {
+			log.Printf("❌ Failed to click mouse button: %v", err)
+		} else {
+			log.Printf("✅ Mouse clicked successfully")
+		}
+	default:
+		log.Printf("❌ Unknown mouse action: %s", cmd.Action)
+	}
+}
+
+func handleKeyboardCommand(cmd InputCommand) {
+	switch cmd.Action {
+	case "press":
+		log.Printf("⌨️ Key press: %s", cmd.Key)
+		if err := pressKey(cmd.Key); err != nil {
+			log.Printf("❌ Failed to press key: %v", err)
+		} else {
+			log.Printf("✅ Key pressed successfully")
+		}
+	case "release":
+		log.Printf("⌨️ Key release: %s", cmd.Key)
+		if err := releaseKey(cmd.Key); err != nil {
+			log.Printf("❌ Failed to release key: %v", err)
+		} else {
+			log.Printf("✅ Key released successfully")
+		}
+	default:
+		log.Printf("❌ Unknown keyboard action: %s", cmd.Action)
+	}
+}
+
+func moveMouse(x, y int) error {
+	log.Printf("🔍 Setting cursor position: X=%d, Y=%d", x, y)
+
+	_, err := user32util.SetCursorPos(int32(x), int32(y), user32DLL)
+	if err != nil {
+		return fmt.Errorf("SetCursorPos failed: %w", err)
+	}
+
+	return nil
+}
+
+func pressMouseButton(button string) error {
+	var flags uint32
+	switch strings.ToLower(button) {
+	case "left":
+		flags = user32util.MouseEventFLeftDown
+	case "right":
+		flags = user32util.MouseEventFRightDown
+	case "middle":
+		flags = user32util.MouseEventFMiddleDown
+	default:
+		return fmt.Errorf("unknown mouse button: %s", button)
+	}
+
+	mouseInput := user32util.MouseInput{
+		DwFlags: flags,
+	}
+
+	log.Printf("🔍 Sending mouse button press: %s (flags: %v)", button, flags)
+
+	err := user32util.SendMouseInput(mouseInput, user32DLL)
+	if err != nil {
+		return fmt.Errorf("SendMouseInput failed: %w", err)
+	}
+
+	return nil
+}
+
+func releaseMouseButton(button string) error {
+	var flags uint32
+	switch strings.ToLower(button) {
+	case "left":
+		flags = user32util.MouseEventFLeftUp
+	case "right":
+		flags = user32util.MouseEventFRightUp
+	case "middle":
+		flags = user32util.MouseEventFMiddleUp
+	default:
+		return fmt.Errorf("unknown mouse button: %s", button)
+	}
+
+	mouseInput := user32util.MouseInput{
+		DwFlags: flags,
+	}
+
+	log.Printf("🔍 Sending mouse button release: %s (flags: %v)", button, flags)
+
+	err := user32util.SendMouseInput(mouseInput, user32DLL)
+	if err != nil {
+		return fmt.Errorf("SendMouseInput failed: %w", err)
+	}
+
+	return nil
+}
+
+func clickMouseButton(button string) error {
+	if err := pressMouseButton(button); err != nil {
+		return err
+	}
+	if err := releaseMouseButton(button); err != nil {
+		return err
+	}
+	return nil
+}
+
+var keyMap = map[string]uint16{
+	"a": 0x41, "b": 0x42, "c": 0x43, "d": 0x44, "e": 0x45, "f": 0x46, "g": 0x47, "h": 0x48,
+	"i": 0x49, "j": 0x4A, "k": 0x4B, "l": 0x4C, "m": 0x4D, "n": 0x4E, "o": 0x4F, "p": 0x50,
+	"q": 0x51, "r": 0x52, "s": 0x53, "t": 0x54, "u": 0x55, "v": 0x56, "w": 0x57, "x": 0x58,
+	"y": 0x59, "z": 0x5A,
+	"0": 0x30, "1": 0x31, "2": 0x32, "3": 0x33, "4": 0x34, "5": 0x35, "6": 0x36, "7": 0x37, "8": 0x38, "9": 0x39,
+	" ":     0x20, // Space character
+	"":      0x20, // Empty string (fallback for space)
+	"space": 0x20, // Keep the existing space mapping too
+	"enter": 0x0D, "escape": 0x1B, "tab": 0x09, "shift": 0x10, "ctrl": 0x11, "alt": 0x12,
+	"left": 0x25, "up": 0x26, "right": 0x27, "down": 0x28,
+	"arrowleft": 0x25, "arrowup": 0x26, "arrowright": 0x27, "arrowdown": 0x28,
+	"meta": 0x20,
+}
+
+func pressKey(key string) error {
+	vkCode, exists := keyMap[strings.ToLower(key)]
+	if !exists {
+		return fmt.Errorf("unknown key: %s", key)
+	}
+
+	keyInput := user32util.KeybdInput{
+		WVK: uint16(vkCode),
+	}
+
+	log.Printf("🔍 Sending key press: %s (VK: 0x%02X)", key, vkCode)
+
+	err := user32util.SendKeydbInput(keyInput, user32DLL)
+	if err != nil {
+		return fmt.Errorf("SendKeydbInput failed: %w", err)
+	}
+
+	return nil
+}
+
+func releaseKey(key string) error {
+	vkCode, exists := keyMap[strings.ToLower(key)]
+	if !exists {
+		return fmt.Errorf("unknown key: %s", key)
+	}
+
+	keyInput := user32util.KeybdInput{
+		WVK:     vkCode,
+		DwFlags: 0x0002, // KEYEVENTF_KEYUP
+	}
+
+	log.Printf("🔍 Sending key release: %s (VK: 0x%02X)", key, vkCode)
+
+	err := user32util.SendKeydbInput(keyInput, user32DLL)
+	if err != nil {
+		return fmt.Errorf("SendKeydbInput failed: %w", err)
+	}
+
+	return nil
 }

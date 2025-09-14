@@ -116,30 +116,7 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 	s.currentSession = session
 	s.webrtcStreamer = streamer
 
-	// Start input handling
-	go s.handleInputCommands()
-
 	return session, nil
-}
-
-func (s *Service) handleInputCommands() {
-	for {
-		if s.wsConn == nil {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-
-		var cmd input.InputCommand
-		err := s.wsConn.ReadJSON(&cmd)
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("WebSocket error: %v\n", err)
-			}
-			break
-		}
-
-		input.HandleCommand(cmd)
-	}
 }
 
 func (s *Service) EndSession() error {
