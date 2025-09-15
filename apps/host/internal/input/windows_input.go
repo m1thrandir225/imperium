@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/stephen-fox/user32util"
 )
 
@@ -36,35 +37,36 @@ func HandleCommand(cmd InputCommand) {
 func handleMouseCommand(cmd InputCommand) {
 	switch cmd.Action {
 	case "move":
-		log.Printf("🖱️ Moving mouse: X=%d, Y=%d", cmd.X, cmd.Y)
-		if err := moveMouse(cmd.X, cmd.Y); err != nil {
-			log.Printf("❌ Failed to move mouse: %v", err)
+		px, py := normalizeCoordsToScreen(cmd.X, cmd.Y)
+		log.Printf("Moving mouse: X=%d, Y=%d", cmd.X, cmd.Y)
+		if err := moveMouse(px, py); err != nil {
+			log.Printf("Failed to move mouse: %v", err)
 		} else {
-			log.Printf("✅ Mouse moved successfully")
+			log.Printf("Mouse moved successfully")
 		}
 	case "press":
-		log.Printf("🖱️ Mouse press: %s", cmd.Button)
+		log.Printf("Mouse press: %s", cmd.Button)
 		if err := pressMouseButton(cmd.Button); err != nil {
-			log.Printf("❌ Failed to press mouse button: %v", err)
+			log.Printf("Failed to press mouse button: %v", err)
 		} else {
-			log.Printf("✅ Mouse button pressed successfully")
+			log.Printf("Mouse button pressed successfully")
 		}
 	case "release":
-		log.Printf("🖱️ Mouse release: %s", cmd.Button)
+		log.Printf("Mouse release: %s", cmd.Button)
 		if err := releaseMouseButton(cmd.Button); err != nil {
-			log.Printf("❌ Failed to release mouse button: %v", err)
+			log.Printf("Failed to release mouse button: %v", err)
 		} else {
-			log.Printf("✅ Mouse button released successfully")
+			log.Printf("Mouse button released successfully")
 		}
 	case "click":
-		log.Printf("🖱️ Mouse click: %s", cmd.Button)
+		log.Printf("Mouse click: %s", cmd.Button)
 		if err := clickMouseButton(cmd.Button); err != nil {
-			log.Printf("❌ Failed to click mouse button: %v", err)
+			log.Printf("Failed to click mouse button: %v", err)
 		} else {
-			log.Printf("✅ Mouse clicked successfully")
+			log.Printf("Mouse clicked successfully")
 		}
 	default:
-		log.Printf("❌ Unknown mouse action: %s", cmd.Action)
+		log.Printf("Unknown mouse action: %s", cmd.Action)
 	}
 }
 
@@ -73,19 +75,19 @@ func handleKeyboardCommand(cmd InputCommand) {
 	case "press":
 		log.Printf("⌨️ Key press: %s", cmd.Key)
 		if err := pressKey(cmd.Key); err != nil {
-			log.Printf("❌ Failed to press key: %v", err)
+			log.Printf("Failed to press key: %v", err)
 		} else {
-			log.Printf("✅ Key pressed successfully")
+			log.Printf("Key pressed successfully")
 		}
 	case "release":
 		log.Printf("⌨️ Key release: %s", cmd.Key)
 		if err := releaseKey(cmd.Key); err != nil {
-			log.Printf("❌ Failed to release key: %v", err)
+			log.Printf("Failed to release key: %v", err)
 		} else {
-			log.Printf("✅ Key released successfully")
+			log.Printf("Key released successfully")
 		}
 	default:
-		log.Printf("❌ Unknown keyboard action: %s", cmd.Action)
+		log.Printf("Unknown keyboard action: %s", cmd.Action)
 	}
 }
 
@@ -152,6 +154,31 @@ func releaseMouseButton(button string) error {
 	}
 
 	return nil
+}
+
+// normalizeCoordsToScreen converts 0..65535 normalized coords to asbolute screen pixels
+// god knows why this works or is needed...
+func normalizeCoordsToScreen(nx, ny int) (int, int) {
+	mi, err := video.GetPrimaryMonitorInfo()
+	if err != nil {
+		return clamp16(nx), clamp16(ny)
+	}
+
+	x := int(float64(nx)/65535.0*float64(mi.Width)) + mi.OffsetX
+	y := int(float64(ny)/65535.0*float64(mi.Height)) + mi.OffsetY
+	return x, y
+}
+
+// clamp16 clamps a value between 0 and 65535
+func clamp16(v int) int {
+	if v < 0 {
+		return 0
+	}
+
+	if v > 65535 {
+		return 65535
+	}
+	return v
 }
 
 func clickMouseButton(button string) error {

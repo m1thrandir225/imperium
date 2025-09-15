@@ -19,7 +19,7 @@ const (
 	btnMiddle = 3
 )
 
-//DecodeInputCommand decodes a binary input command to the InputCommand struct
+// DecodeInputCommand decodes a binary input command to the InputCommand struct
 func DecodeInputCommand(b []byte) (InputCommand, bool) {
 	if len(b) < 10 {
 		return InputCommand{}, false
@@ -30,13 +30,14 @@ func DecodeInputCommand(b []byte) (InputCommand, bool) {
 	btn := b[2]
 
 	key := binary.LittleEndian.Uint16(b[4:6])
-	x := int16(binary.LittleEndian.Uint16(b[6:8]))
-	y := int16(binary.LittleEndian.Uint16(b[8:10]))
+	ux := int16(binary.LittleEndian.Uint16(b[6:8]))
+	uy := int16(binary.LittleEndian.Uint16(b[8:10]))
 
 	var cmd InputCommand
 
 	switch t {
 	case inpTypeKeyboard:
+		cmd.Type = "keyboard"
 		if a == actPress {
 			cmd.Action = "press"
 		} else {
@@ -45,9 +46,10 @@ func DecodeInputCommand(b []byte) (InputCommand, bool) {
 
 		cmd.Key = keyCodeToString(key)
 	case inpTypeMouseMove:
+		cmd.Type = "mouse"
 		cmd.Action = "move"
-		cmd.X = int(x)
-		cmd.Y = int(y)
+		cmd.X = int(ux)
+		cmd.Y = int(uy)
 	case inpTypeMouseButton:
 		cmd.Type = "mouse"
 		if a == actPress {
@@ -56,10 +58,12 @@ func DecodeInputCommand(b []byte) (InputCommand, bool) {
 			cmd.Action = "release"
 		}
 		cmd.Button = buttonToString(btn)
+		cmd.X = int(ux)
+		cmd.Y = int(uy)
 	case inpTypeWheel:
 		cmd.Type = "mouse"
 		cmd.Action = "scroll"
-		cmd.Y = int(y)
+		cmd.Y = int(int16(uy))
 	default:
 		return InputCommand{}, false
 	}
