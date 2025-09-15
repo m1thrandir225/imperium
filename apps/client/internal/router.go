@@ -12,11 +12,15 @@ import (
 func SetupRouter(config *config.Config) *gin.Engine {
 	router := gin.Default()
 
+	router.Use(gin.Recovery())
+	router.Use(gin.Logger())
+	router.Use(gin.ErrorLogger())
+
 	baseURL := config.AuthServerBaseURL
 
 	apiURL := fmt.Sprintf("%s/api/v1", baseURL)
 
-	authService := NewAuthService(apiURL)
+	authService := NewAuthService(fmt.Sprintf("%s/auth", apiURL))
 	hostService := NewHostService(fmt.Sprintf("%s/hosts", apiURL))
 	clientService := NewClientService(fmt.Sprintf("%s/clients", apiURL))
 	sessionService := NewSessionService(fmt.Sprintf("%s/sessions", apiURL))
@@ -38,7 +42,7 @@ func SetupRouter(config *config.Config) *gin.Engine {
 	router.GET("/", gin.WrapH(http.FileServer(DistFS())))
 
 	router.NoRoute(func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+		if strings.Contains(c.Request.URL.Path, "/api/") {
 			c.Status(http.StatusNotFound)
 			return
 		}
