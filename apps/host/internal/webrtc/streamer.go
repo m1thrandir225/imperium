@@ -14,9 +14,9 @@ import (
 )
 
 type Streamer struct {
-	pc          *pionwebrtc.PeerConnection
-	videoTrack  *pionwebrtc.TrackLocalStaticRTP
-	payloadType uint8
+	pc               *pionwebrtc.PeerConnection
+	videoTrack       *pionwebrtc.TrackLocalStaticRTP
+	videoPayloadType uint8
 
 	readyOnce  sync.Once
 	readyCh    chan struct{}
@@ -47,26 +47,27 @@ func NewStreamer() (*Streamer, error) {
 		return nil, fmt.Errorf("create track: %w", err)
 	}
 
-	sender, err := pc.AddTrack(videoTrack)
+	videoSender, err := pc.AddTrack(videoTrack)
 	if err != nil {
 		return nil, fmt.Errorf("add track: %w", err)
 	}
+
 	// Drain RTCP to keep sender unblocked
 	go func() {
 		buf := make([]byte, 1500)
 		for {
-			if _, _, rtcpErr := sender.Read(buf); rtcpErr != nil {
+			if _, _, rtcpErr := videoSender.Read(buf); rtcpErr != nil {
 				return
 			}
 		}
 	}()
 
 	streamer := &Streamer{
-		pc:          pc,
-		videoTrack:  videoTrack,
-		payloadType: 96,
-		readyCh:     make(chan struct{}),
-		iceReadyCh:  make(chan struct{}),
+		pc:               pc,
+		videoTrack:       videoTrack,
+		videoPayloadType: 96,
+		readyCh:          make(chan struct{}),
+		iceReadyCh:       make(chan struct{}),
 	}
 
 	pc.OnICEConnectionStateChange((func(state pionwebrtc.ICEConnectionState) {
@@ -112,7 +113,7 @@ func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
 	pay := &codecs.H264Payloader{}
 	seq := rtp.NewRandomSequencer()
 	// 1200 bytes keeps us under typical 1500 MTU with headers
-	pktizer := rtp.NewPacketizer(1200, s.payloadType, 0, pay, seq, 90000)
+	pktizer := rtp.NewPacketizer(1200, s.videoPayloadType, 0, pay, seq, 90000)
 
 	// If you know real FPS, set frameDuration accordingly
 	frameDuration := time.Second / time.Duration(fps)
@@ -144,6 +145,54 @@ func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
 	}
 }
 
+// pumpAudioStream currently not used, as unable to get audio stream from the host.
+// func (s *Streamer) pumpAudioStream(audioStream io.ReadCloser, sampleRate int) {
+// 	defer audioStream.Close()
+
+// 	log.Printf("Waiting for ice ready channel (audio)")
+// 	<-s.iceReadyCh
+// 	log.Printf("Ice ready channel closed (audio)")
+
+// 	pay := &codecs.OpusPayloader{}
+// 	seq := rtp.NewRandomSequencer()
+// 	pktizer := rtp.NewPacketizer(1200, s.videoPayloadType, 0, pay, seq, uint32(sampleRate))
+
+// 	frameDuration := 20 * time.Millisecond
+
+// 	samplesPerFrame := uint32(sampleRate * 20 / 1000)
+// 	log.Printf("Starting audio stream at %d Hz", sampleRate)
+
+// 	buf := make([]byte, 1920)
+// 	var ts uint32
+
+// 	for {
+// 		n, err := io.ReadFull(audioStream, buf)
+// 		if err != nil {
+// 			if err != io.EOF && err != io.ErrUnexpectedEOF {
+// 				log.Printf("read audio: %v", err)
+// 			}
+// 			return
+// 		}
+
+// 		if n == 0 {
+// 			continue
+// 		}
+
+// 		// Packetize the audio data
+// 		pkts := pktizer.Packetize(buf[:n], uint32(frameDuration))
+// 		for _, p := range pkts {
+// 			p.Timestamp = ts
+// 			if err := s.audioTrack.WriteRTP(p); err != nil {
+// 				log.Printf("WriteRTP (audio): %v", err)
+// 				return
+// 			}
+// 		}
+
+// 		ts += samplesPerFrame
+// 		time.Sleep(frameDuration) // Pace the audio
+// 	}
+// }
+
 func (s *Streamer) HandleOffer(offerSDP string) (string, error) {
 	offer := pionwebrtc.SessionDescription{Type: pionwebrtc.SDPTypeOffer, SDP: offerSDP}
 	if err := s.pc.SetRemoteDescription(offer); err != nil {
@@ -164,7 +213,7 @@ func (s *Streamer) HandleOffer(offerSDP string) (string, error) {
 	for _, sender := range s.pc.GetSenders() {
 		for _, c := range sender.GetParameters().Codecs {
 			if c.MimeType == pionwebrtc.MimeTypeH264 {
-				s.payloadType = uint8(c.PayloadType)
+				s.videoPayloadType = uint8(c.PayloadType)
 			}
 		}
 	}

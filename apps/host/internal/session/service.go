@@ -95,7 +95,6 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 
 	configFPS := s.videoRecorder.GetFPS()
 	log.Printf("Starting video stream at %d FPS", configFPS)
-	// Start streaming
 	streamer.StartStream(videoStream, configFPS)
 
 	session := &Session{
