@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/input"
 	"github.com/pion/rtp"
 	"github.com/pion/rtp/codecs"
 	pionwebrtc "github.com/pion/webrtc/v3"
@@ -61,6 +62,33 @@ func NewStreamer() (*Streamer, error) {
 			}
 		}
 	}()
+
+	ordered := false
+	maxRetrans := uint16(0)
+	dataChannel, err := pc.CreateDataChannel("input", &pionwebrtc.DataChannelInit{
+		Ordered:        &ordered,
+		MaxRetransmits: &maxRetrans,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("create data channel: %w", err)
+	}
+
+	dataChannel.OnOpen(func() {
+		log.Printf("Data channel opened")
+	})
+
+	dataChannel.OnMessage(func(msg pionwebrtc.DataChannelMessage) {
+		if msg.IsString {
+			log.Printf("Wrong message type. Expected binary.")
+			return
+		}
+
+		if cmd, ok := input.DecodeInputCommand(msg.Data); ok {
+			log.Printf("Received input command: %+v", cmd)
+			input.HandleCommand(cmd)
+		}
+	})
 
 	streamer := &Streamer{
 		pc:               pc,
