@@ -44,6 +44,10 @@ func (s *HostService) GetHostProgramsURL(hostID string) string {
 	return fmt.Sprintf("%s/%s/programs", s.GetHostServerBaseURL(), hostID)
 }
 
+func (s *HostService) UpdateHostServerBaseURL(hostServerBaseURL string) {
+	s.hostServerBaseURL = hostServerBaseURL
+}
+
 func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleHostDTO, error) {
 	url := s.GetUserHostsURL()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

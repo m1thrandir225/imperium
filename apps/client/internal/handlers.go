@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -188,7 +189,19 @@ func (h *HTTPHandler) SetupConfig(ctx *gin.Context) {
 		return
 	}
 
+	h.updateServicesWithNewURL(req.AuthServerBaseURL)
+
 	ctx.JSON(http.StatusOK, messageResponse("Config setup successfully"))
+}
+
+// updateServicesWithNewURL updates all services with the new auth server base URL
+func (h *HTTPHandler) updateServicesWithNewURL(authServerBaseURL string) {
+	apiURL := fmt.Sprintf("%s/api/v1", authServerBaseURL)
+
+	h.authService.UpdateAuthServerBaseURL(fmt.Sprintf("%s/auth", apiURL))
+	h.hostService.UpdateHostServerBaseURL(fmt.Sprintf("%s/hosts", apiURL))
+	h.clientService.UpdateBaseURL(fmt.Sprintf("%s/clients", apiURL))
+	h.sessionService.UpdateBaseURL(fmt.Sprintf("%s/sessions", apiURL))
 }
 
 func (h *HTTPHandler) GetHostPrograms(ctx *gin.Context) {

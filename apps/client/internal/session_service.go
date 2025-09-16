@@ -185,3 +185,8 @@ func (s *SessionService) CancelSession(ctx context.Context, sessionID string, re
 	}
 	return &result, nil
 }
+
+// UpdateBaseURL updates the base URL
+func (s *SessionService) UpdateBaseURL(baseURL string) {
+	s.baseURL = baseURL
+}

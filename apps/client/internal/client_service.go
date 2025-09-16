@@ -77,3 +77,8 @@ func (s *ClientService) RegisterOrUpdateClient(ctx context.Context, req Register
 	}
 	return &result, nil
 }
+
+// UpdateBaseURL updates the base URL
+func (s *ClientService) UpdateBaseURL(baseURL string) {
+	s.baseURL = baseURL
+}
