@@ -59,7 +59,7 @@ build-prod: build-web build-go-prod ## Production build with optimizations
 build-go-prod: build-web ## Build Go binary with production optimizations
 	@echo "Building Go application for production..."
 	@mkdir -p $(BIN_DIR)
-	@CGO_ENABLED=0 $(GO) build -ldflags="-w -s" -o $(BIN_DIR)/client ./cmd
+	@CGO_ENABLED=0 GIN_MODE=release $(GO) build -ldflags="-w -s" -o $(BIN_DIR)/client ./cmd
 
 # Check if webui build exists
 check-webui:

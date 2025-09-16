@@ -18,12 +18,12 @@ var (
 )
 
 func GetConfigPath() string {
-	homeDir, err := os.UserHomeDir()
+	configDir, err := os.UserConfigDir()
 	if err != nil {
 		log.Printf("Warning: Could not get user home directory: %v", err)
 		return ""
 	}
-	return filepath.Join(homeDir, "Documents", "imperium")
+	return filepath.Join(configDir, "imperium")
 }
 
 func ConfigExists() bool {
