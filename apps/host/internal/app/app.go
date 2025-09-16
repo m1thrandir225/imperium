@@ -138,6 +138,7 @@ func (a *App) startStatusManagerIfReady() {
 }
 
 func (a *App) stopTokenRefresher() {
+	log.Println("Stopping token refresher")
 	if a.tokenRefresher != nil {
 		a.tokenRefresher.Stop()
 		a.tokenRefresher = nil
@@ -197,5 +198,27 @@ func (a *App) checkAndRefreshTokensAtStartup() {
 		} else {
 			log.Println("Token refreshed successfully.")
 		}
+	}
+}
+
+func (a *App) Stop() {
+	a.stopTokenRefresher()
+
+	if a.StatusManager != nil {
+		log.Println("Stopping status manager")
+		a.StatusManager.Stop()
+		a.StatusManager = nil
+	}
+
+	if a.SessionService != nil {
+		log.Println("Stopping session service")
+		a.SessionService.EndSession()
+		a.SessionService = nil
+	}
+
+	if a.HTTPServer != nil {
+		log.Println("Stopping HTTP server")
+		a.HTTPServer.Stop()
+		a.HTTPServer = nil
 	}
 }

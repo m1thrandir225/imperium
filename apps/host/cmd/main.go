@@ -33,6 +33,11 @@ func main() {
 	uiManager := ui.NewUIManager(application.State, application.Bus)
 	uiManager.RunUI()
 
+	log.Println("UI closed")
+	application.Stop()
+
+	os.Exit(0)
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan

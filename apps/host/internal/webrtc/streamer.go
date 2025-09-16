@@ -74,19 +74,33 @@ func NewStreamer() (*Streamer, error) {
 		return nil, fmt.Errorf("create data channel: %w", err)
 	}
 
+	var msgCount uint64
+
 	dataChannel.OnOpen(func() {
-		log.Printf("Data channel opened")
+		log.Printf("input dc: open label=%q id=%d negotiated=%v readyState=%s",
+			dataChannel.Label(), dataChannel.ID(), dataChannel.Negotiated(), dataChannel.ReadyState())
+	})
+
+	dataChannel.OnClose(func() {
+		log.Printf("input dc: close label=%q", dataChannel.Label())
+	})
+
+	dataChannel.OnBufferedAmountLow(func() {
+		log.Printf("input dc: bufferedAmountLow=%d", dataChannel.BufferedAmount())
 	})
 
 	dataChannel.OnMessage(func(msg pionwebrtc.DataChannelMessage) {
+		msgCount++
 		if msg.IsString {
-			log.Printf("Wrong message type. Expected binary.")
+			log.Printf("input dc: #%d wrong type=string len=%d (expect binary)", msgCount, len(msg.Data))
 			return
 		}
 
 		if cmd, ok := input.DecodeInputCommand(msg.Data); ok {
-			log.Printf("Received input command: %+v", cmd)
+			log.Printf("input dc: #%d decoded cmd=%+v", msgCount, cmd)
 			input.HandleCommand(cmd)
+		} else {
+			log.Printf("Wrong message type. Expected binary.")
 		}
 	})
 
@@ -104,13 +118,9 @@ func NewStreamer() (*Streamer, error) {
 		// Signal when ICE connection is established
 		if state == pionwebrtc.ICEConnectionStateConnected {
 			log.Printf("ICE connection established, ready to stream video")
-			streamer.readyOnce.Do(func() { close(streamer.iceReadyCh) })
+			close(streamer.iceReadyCh)
 		} else if state == pionwebrtc.ICEConnectionStateFailed {
 			log.Printf("ICE connection failed - may need TURN server")
-		}
-
-		if state == pionwebrtc.ICEConnectionStateConnected {
-			close(streamer.iceReadyCh)
 		}
 	}))
 

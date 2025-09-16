@@ -44,6 +44,10 @@ const (
 	EventHostInitRequested = "host.init.requested"
 	EventHostInitialized   = "host.initialized"
 	EventHostStatusChanged = "host.status.changed"
+
+	//Session
+	EventSessionStarted = "session.started"
+	EventSessionEnded   = "session.ended"
 )
 
 // Payloads
@@ -101,4 +105,14 @@ type HostInitializedPayload struct {
 
 type HostStatusChangedPayload struct {
 	Status string
+}
+
+type SessionStartedPayload struct {
+	SessionID   string
+	ProgramName string
+	ClientName  string
+}
+
+type SessionEndedPayload struct {
+	SessionID string
 }

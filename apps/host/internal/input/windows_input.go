@@ -38,7 +38,7 @@ func handleMouseCommand(cmd InputCommand) {
 	switch cmd.Action {
 	case "move":
 		px, py := normalizeCoordsToScreen(cmd.X, cmd.Y)
-		log.Printf("Moving mouse: X=%d, Y=%d", cmd.X, cmd.Y)
+		log.Printf("Moving mouse: X=%d, Y=%d", px, py)
 		if err := moveMouse(px, py); err != nil {
 			log.Printf("Failed to move mouse: %v", err)
 		} else {

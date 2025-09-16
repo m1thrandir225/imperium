@@ -3,6 +3,7 @@ package video
 import (
 	"fmt"
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -42,8 +43,17 @@ var (
 	procMonitorFromPoint    = user32.NewProc("MonitorFromPoint")
 )
 
+var (
+	cachedPrimaryMonitor *MonitorInfo
+	lastPrimaryFetch     time.Time
+)
+
 // GetPrimaryMonitorInfo returns information about the primary monitor
 func GetPrimaryMonitorInfo() (*MonitorInfo, error) {
+	if cachedPrimaryMonitor != nil && time.Since(lastPrimaryFetch) < 10*time.Minute {
+		return cachedPrimaryMonitor, nil
+	}
+
 	var primaryMonitor *MonitorInfo
 
 	// Callback function for EnumDisplayMonitors
@@ -89,6 +99,8 @@ func GetPrimaryMonitorInfo() (*MonitorInfo, error) {
 	if primaryMonitor == nil {
 		return nil, fmt.Errorf("primary monitor not found")
 	}
+	cachedPrimaryMonitor = primaryMonitor
+	lastPrimaryFetch = time.Now()
 
 	return primaryMonitor, nil
 }

@@ -91,7 +91,24 @@ func (w *FFMPEGWrapper) ExecuteWithStdout(args ...string) (io.ReadCloser, error)
 		return nil, fmt.Errorf("failed to start command: %v", err)
 	}
 
-	return stdout, nil
+	return &ffmpegStream{
+		rc:   stdout,
+		stop: w.Stop,
+	}, nil
 }
 
-// ... existing code ...
+type ffmpegStream struct {
+	rc   io.ReadCloser
+	stop func() error
+}
+
+func (s *ffmpegStream) Read(p []byte) (int, error) {
+	return s.rc.Read(p)
+}
+
+func (s *ffmpegStream) Close() error {
+	if s.stop != nil {
+		_ = s.stop()
+	}
+	return s.rc.Close()
+}

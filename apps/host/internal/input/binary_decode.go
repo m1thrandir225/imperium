@@ -30,8 +30,8 @@ func DecodeInputCommand(b []byte) (InputCommand, bool) {
 	btn := b[2]
 
 	key := binary.LittleEndian.Uint16(b[4:6])
-	ux := int16(binary.LittleEndian.Uint16(b[6:8]))
-	uy := int16(binary.LittleEndian.Uint16(b[8:10]))
+	ux := binary.LittleEndian.Uint16(b[6:8])
+	uy := binary.LittleEndian.Uint16(b[8:10])
 
 	var cmd InputCommand
 

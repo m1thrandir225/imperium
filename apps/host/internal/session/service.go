@@ -86,7 +86,7 @@ func (s *Service) StartSession(ctx context.Context, cmd StartSessionCommand) (*S
 	}
 
 	// Start video recording
-	videoStream, err := s.videoRecorder.RecordGameScreen(nil)
+	videoStream, err := s.videoRecorder.RecordScreen(nil)
 	if err != nil {
 		programCmd.Process.Kill()
 		streamer.Close()

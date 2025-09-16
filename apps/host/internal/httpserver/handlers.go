@@ -55,6 +55,15 @@ func (s *Server) handleStartSessionRequest(w http.ResponseWriter, r *http.Reques
 		_ = json.NewEncoder(w).Encode(response)
 		return
 	}
+
+	if s.eventBus != nil {
+		s.eventBus.Publish("session.started", map[string]string{
+			"SessionID":   session.ID,
+			"ProgramName": session.WindowTitle,
+			"ClientName":  session.ClientName,
+		})
+	}
+
 	log.Printf("WS Server: %v", s.wsServer)
 	if s.wsServer != nil {
 		log.Printf("Registering session: %s", session.ID)
@@ -101,6 +110,12 @@ func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if s.eventBus != nil {
+		s.eventBus.Publish("session.ended", map[string]string{
+			"SessionID": "ended",
+		})
 	}
 
 	w.WriteHeader(http.StatusNoContent)

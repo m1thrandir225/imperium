@@ -86,7 +86,7 @@ func (a *App) WireHostHandlers() {
 			a.startStatusManagerIfReady()
 
 			if a.HTTPServer == nil {
-				a.HTTPServer = httpserver.NewServer(a.SessionService)
+				a.HTTPServer = httpserver.NewServer(a.SessionService, a.Bus)
 				go func() {
 					_ = a.HTTPServer.Serve(":8080")
 				}()

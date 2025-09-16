@@ -3,6 +3,7 @@ package video
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -20,6 +21,8 @@ func NewRecorder(config *Config) *Recorder {
 	if config != nil && config.FFMPEGPath != "" {
 		path = config.FFMPEGPath
 	}
+
+	log.Println("config: ", config)
 	return &Recorder{
 		config: config,
 		ffmpeg: NewFFMPEGWrapper(path),
@@ -62,7 +65,7 @@ func (r *Recorder) buildCommonLowLatencyArgs() []string {
 	return []string{
 		"-an",
 		"-c:v", r.config.Encoder,
-		"-pix_fmt", "yuv420p",
+		"-pix_fmt", "yuv420p", // This will be overridden for hardware encoders
 		"-bf", "0",
 		"-b_strategy", "0",
 		"-sc_threshold", "0",
@@ -70,6 +73,8 @@ func (r *Recorder) buildCommonLowLatencyArgs() []string {
 		"-flags", "low_delay",
 		"-g", fmt.Sprintf("%d", r.config.FPS), // ~1s GOP
 		"-force_key_frames", "expr:gte(t,n_forced*1)",
+		"-fps_mode", "cfr", // Use CFR instead of passthrough
+		"-r", fmt.Sprintf("%d", r.config.FPS), // Set target framerate
 	}
 }
 
@@ -78,23 +83,34 @@ func (r *Recorder) buildEncoderArgs(encoder string) []string {
 		return []string{
 			"-preset", "veryfast",
 			"-tune", "zerolatency",
-			"-crf", "20",
+			"-crf", "18", // Higher quality for games
 			"-profile:v", "baseline",
 			"-level:v", "3.1",
-			"-x264-params", fmt.Sprintf("repeat-headers=1:scenecut=0:keyint=%d:min-keyint=%d", r.config.FPS, r.config.FPS),
+			"-x264-params", fmt.Sprintf("repeat-headers=1:scenecut=0:keyint=%d:min-keyint=%d:no-mbtree:no-cabac:no-deblock", r.config.FPS, r.config.FPS),
 		}
 	} else if strings.Contains(encoder, "nvenc") {
 		return []string{
-			"-preset", "p1", // Modern NVENC preset (fastest)
-			"-tune", "ll", // Low latency tuning
+			"-preset", "p1",
+			"-tune", "ll",
 			"-bf", "0",
+			"-rc", "cbr",
 			"-b:v", "8M",
-			"-maxrate", "10M",
-			"-bufsize", "10M",
-			"-spatial_aq", "1",
+			"-maxrate", "8M",
+			"-bufsize", "2M",
+			"-surfaces", "1",
+			"-spatial_aq", "0",
 			"-rc-lookahead", "0",
-			// Only use one BSF to avoid conflicts
+			"-forced-idr", "1",
+			"-no-scenecut", "1",
+			"-delay", "0",
 			"-bsf:v", "h264_metadata=aud=insert",
+		}
+	} else if strings.Contains(encoder, "libx265") {
+		return []string{
+			"-preset", "ultrafast",
+			"-tune", "zerolatency",
+			"-crf", "20",
+			"-x265-params", "no-scenecut:keyint=60:min-keyint=60:no-mbtree:no-cabac:no-deblock",
 		}
 	} else {
 		return []string{
@@ -134,102 +150,68 @@ func (r *Recorder) RecordWindow(windowTitle string, outputPath *string) (io.Read
 	return r.ffmpeg.ExecuteWithStdout(args...)
 }
 
-// RecordScreen TODO: add linux/macos support for screen recording
+// RecordScreen unified method - auto-selects capture based on encoder
 func (r *Recorder) RecordScreen(outputPath *string) (io.ReadCloser, error) {
 	args := r.buildBaseArgs()
+
 	switch runtime.GOOS {
 	case "windows":
-		// Get primary monitor info for multi-monitor setups
-		monitorInfo, err := GetPrimaryMonitorInfo()
-		if err != nil {
-			fmt.Printf("Warning: Could not detect primary monitor, using full desktop: %v\n", err)
-			// Fallback to full desktop capture
-			args = append(args, "-f", "gdigrab")
-			args = append(args, "-i", "desktop")
+		// Auto-select capture method based on encoder
+		if strings.Contains(r.config.Encoder, "nvenc") || strings.Contains(r.config.Encoder, "qsv") || strings.Contains(r.config.Encoder, "amf") {
+
+			w, h := 1920, 1080
+			if mi, err := GetPrimaryMonitorInfo(); err == nil && mi.Width > 0 && mi.Height > 0 {
+				w, h = mi.Width, mi.Height
+				fmt.Printf("Using gfxcapture with primary monitor: %dx%d\n", w, h)
+			}
+
+			filter := fmt.Sprintf(
+				"gfxcapture=monitor_idx=0:width=%d:height=%d:resize_mode=scale_aspect:output_fmt=8bit,hwdownload,format=bgra,format=nv12",
+				w, h,
+			)
+			args = append(args, "-filter_complex", filter)
+			args = append(args, "-filter_threads", "2")
+			args = append(args, "-filter_complex_threads", "2")
+
 		} else {
-			// Use primary monitor with cropping
-			args = append(args, "-f", "gdigrab")
-			args = append(args, "-i", "desktop")
-			// Crop to primary monitor
-			cropFilter := fmt.Sprintf("crop=%d:%d:%d:%d",
-				monitorInfo.Width,
-				monitorInfo.Height,
-				monitorInfo.OffsetX,
-				monitorInfo.OffsetY)
-			args = append(args, "-vf", cropFilter)
-			fmt.Printf("Using primary monitor: %dx%d at offset (%d,%d)\n",
-				monitorInfo.Width, monitorInfo.Height, monitorInfo.OffsetX, monitorInfo.OffsetY)
+
+			monitorInfo, err := GetPrimaryMonitorInfo()
+			if err != nil {
+				fmt.Printf("Warning: Could not detect primary monitor, using full desktop: %v\n", err)
+				args = append(args, "-f", "gdigrab")
+				args = append(args, "-i", "desktop")
+			} else {
+				args = append(args, "-f", "gdigrab")
+				args = append(args, "-i", "desktop")
+				cropFilter := fmt.Sprintf("crop=%d:%d:%d:%d",
+					monitorInfo.Width,
+					monitorInfo.Height,
+					monitorInfo.OffsetX,
+					monitorInfo.OffsetY)
+				args = append(args, "-vf", cropFilter)
+				fmt.Printf("Using gdigrab with primary monitor: %dx%d at offset (%d,%d)\n",
+					monitorInfo.Width, monitorInfo.Height, monitorInfo.OffsetX, monitorInfo.OffsetY)
+			}
 		}
 
-		// Game-specific optimizations
-		args = append(args, "-draw_mouse", "0")
-		args = append(args, "-show_region", "1")
-		args = append(args, "-fflags", "nobuffer+fastseek+flush_packets")
-		args = append(args, "-flags", "low_delay+global_header")
+		args = append(args, "-fflags", "fastseek+flush_packets")
+		args = append(args, "-flags", "global_header")
 
 	default:
 		return nil, fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 	}
 
-	// Skip color conversion for games to reduce latency
-	// args = append(args, r.convertRGBToBT709()...)
-
 	args = append(args, r.buildCommonLowLatencyArgs()...)
 	args = append(args, r.buildEncoderArgs(r.config.Encoder)...)
-	args = append(args, r.buildStdOutputArgs()...)
-	return r.ffmpeg.ExecuteWithStdout(args...)
-}
 
-// RecordGameScreen records the screen optimized specifically for games
-// Uses primary monitor detection and game-optimized settings
-func (r *Recorder) RecordGameScreen(outputPath *string) (io.ReadCloser, error) {
-	args := r.buildBaseArgs()
-	switch runtime.GOOS {
-	case "windows":
-		// Get primary monitor info for multi-monitor setups
-		monitorInfo, err := GetPrimaryMonitorInfo()
-		if err != nil {
-			fmt.Printf("Warning: Could not detect primary monitor, using full desktop: %v\n", err)
-			// Fallback to full desktop capture
-			args = append(args, "-f", "gdigrab")
-			args = append(args, "-i", "desktop")
-		} else {
-			// Use primary monitor with cropping
-			args = append(args, "-f", "gdigrab")
-			args = append(args, "-i", "desktop")
-			// Crop to primary monitor
-			cropFilter := fmt.Sprintf("crop=%d:%d:%d:%d",
-				monitorInfo.Width,
-				monitorInfo.Height,
-				monitorInfo.OffsetX,
-				monitorInfo.OffsetY)
-			args = append(args, "-vf", cropFilter)
-			fmt.Printf("Game capture using primary monitor: %dx%d at offset (%d,%d)\n",
-				monitorInfo.Width, monitorInfo.Height, monitorInfo.OffsetX, monitorInfo.OffsetY)
-		}
-
-		// Enhanced game-specific optimizations
-		args = append(args, "-draw_mouse", "0")
-		args = append(args, "-show_region", "1")
-		args = append(args, "-fflags", "nobuffer+fastseek+flush_packets")
-		args = append(args, "-flags", "low_delay+global_header")
-
-		// Additional game optimizations
-		args = append(args, "-avoid_negative_ts", "make_zero")
-		args = append(args, "-fflags", "+genpts")
-
-	default:
-		return nil, fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+	if strings.Contains(r.config.Encoder, "nvenc") || strings.Contains(r.config.Encoder, "qsv") || strings.Contains(r.config.Encoder, "amf") {
+		args = append(args, "-pix_fmt", "nv12")
 	}
 
-	// Skip color conversion for games to reduce latency
-	args = append(args, r.buildCommonLowLatencyArgs()...)
-	args = append(args, r.buildEncoderArgs(r.config.Encoder)...)
 	args = append(args, r.buildStdOutputArgs()...)
 	return r.ffmpeg.ExecuteWithStdout(args...)
 }
 
-// StopRecording stops the recording process
 func (r *Recorder) StopRecording() error {
 	if r.ffmpeg != nil {
 		return r.ffmpeg.Stop()

@@ -8,15 +8,17 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
 
 type Manager struct {
-	app     fyne.App
-	window  fyne.Window
-	screens map[string]Screen
-	bus     *uapp.EventBus
-	state   *state.StateManager
+	app            fyne.App
+	window         fyne.Window
+	screens        map[string]Screen
+	bus            *uapp.EventBus
+	state          *state.StateManager
+	currentSession *session.Session // Add this
 }
 
 func NewUIManager(stateManager *state.StateManager, bus *uapp.EventBus) *Manager {
@@ -58,6 +60,28 @@ func (m *Manager) subscribeNavigation() {
 			fyne.Do(func() {
 				m.OnSetupSuccess()
 			})
+		}
+	}()
+
+	sessionStartCh := m.bus.Subscribe(uapp.EventSessionStarted)
+	go func() {
+		for evt := range sessionStartCh {
+			payload, ok := evt.(uapp.SessionStartedPayload)
+			if !ok {
+				continue
+			}
+			m.currentSession = &session.Session{
+				ID:          payload.SessionID,
+				WindowTitle: payload.ProgramName,
+				ClientName:  payload.ClientName,
+			}
+		}
+	}()
+
+	sessionEndCh := m.bus.Subscribe(uapp.EventSessionEnded)
+	go func() {
+		for range sessionEndCh {
+			m.currentSession = nil
 		}
 	}()
 }
@@ -188,4 +212,8 @@ func (m *Manager) shouldShowSetup() bool {
 	}
 
 	return false
+}
+
+func (m *Manager) GetCurrentSession() *session.Session {
+	return m.currentSession
 }
