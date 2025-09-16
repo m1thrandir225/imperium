@@ -7,6 +7,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/dialog"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
@@ -18,7 +19,7 @@ type Manager struct {
 	screens        map[string]Screen
 	bus            *uapp.EventBus
 	state          *state.StateManager
-	currentSession *session.Session // Add this
+	currentSession *session.Session
 }
 
 func NewUIManager(stateManager *state.StateManager, bus *uapp.EventBus) *Manager {
@@ -51,6 +52,26 @@ func (m *Manager) subscribeNavigation() {
 			fyne.Do(func() {
 				m.OnLogout()
 			})
+		}
+	}()
+
+	registerSuccessCh := m.bus.Subscribe(uapp.EventRegisterCompleted)
+	go func() {
+		for range registerSuccessCh {
+			fyne.Do(func() {
+				m.ShowScreen(LOGIN_SCREEN)
+			})
+		}
+	}()
+
+	registerFailedCh := m.bus.Subscribe(uapp.EventRegisterFailed)
+	go func() {
+		for evt := range registerFailedCh {
+			if err, ok := evt.(error); ok && err != nil {
+				fyne.Do(func() {
+					dialog.ShowError(err, m.window)
+				})
+			}
 		}
 	}()
 

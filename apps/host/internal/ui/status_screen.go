@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
-	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 )
 
 type StatusScreen struct {
@@ -19,7 +18,6 @@ type StatusScreen struct {
 	lastUpdateLabel *widget.Label
 	subscribed      bool
 	currentStatus   string
-	currentSession  *session.Session
 }
 
 func NewStatusScreen(manager *Manager) *StatusScreen {
@@ -46,20 +44,16 @@ func (s *StatusScreen) Render(w fyne.Window) fyne.CanvasObject {
 	s.hostInfoLabel = widget.NewLabel("Host: Not initialized")
 	s.lastUpdateLabel = widget.NewLabel("Last update: Never")
 
-	// Update with current data
 	s.updateDisplay()
 
-	// Create refresh button
 	refreshBtn := widget.NewButton("Refresh", func() {
 		s.updateDisplay()
 	})
 
-	// Create back button
 	backBtn := widget.NewButton("Back to Main Menu", func() {
 		s.manager.ShowScreen(MAIN_MENU_SCREEN)
 	})
 
-	// Create content layout
 	content := container.NewVBox(
 		widget.NewLabel("Host Status"),
 		widget.NewSeparator(),
@@ -119,7 +113,6 @@ func (s *StatusScreen) subscribeToEvents() {
 func (s *StatusScreen) updateDisplay() {
 	state := s.manager.GetState()
 
-	// Update host info
 	if state.HostInfo.ID != "" {
 		s.hostInfoLabel.SetText(fmt.Sprintf("Host: %s (%s:%d)",
 			state.HostInfo.Name,
@@ -129,10 +122,8 @@ func (s *StatusScreen) updateDisplay() {
 		s.hostInfoLabel.SetText("Host: Not initialized")
 	}
 
-	// Get current session from manager
 	currentSession := s.manager.GetCurrentSession()
 
-	// Update status based on session
 	statusText := "Unknown"
 	if currentSession != nil {
 		statusText = "In Use"
@@ -144,7 +135,6 @@ func (s *StatusScreen) updateDisplay() {
 
 	s.statusLabel.SetText(fmt.Sprintf("Status: %s", statusText))
 
-	// Update session info
 	if currentSession != nil {
 		sessionText := fmt.Sprintf("Session: %s (Client: %s)",
 			currentSession.WindowTitle,

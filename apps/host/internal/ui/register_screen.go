@@ -1,12 +1,13 @@
 package ui
 
 import (
-	"log"
+	"errors"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/m1thrandir225/imperium/apps/host/internal/app"
 )
 
 type RegisterScreen struct {
@@ -20,30 +21,45 @@ func NewRegisterScreen(manager *Manager) *RegisterScreen {
 }
 
 func (s *RegisterScreen) Name() string {
-	return "Register"
+	return REGISTER_SCREEN
 }
 
 func (s *RegisterScreen) Render(w fyne.Window) fyne.CanvasObject {
+	firstNameEntry := widget.NewEntry()
+	firstNameEntry.SetPlaceHolder("First name")
+
+	lastNameEntry := widget.NewEntry()
+	lastNameEntry.SetPlaceHolder("Last name")
+
 	emailEntry := widget.NewEntry()
 	emailEntry.SetPlaceHolder("Email")
+
 	passwordEntry := widget.NewPasswordEntry()
 	passwordEntry.SetPlaceHolder("Password")
 
+	backToLoginBtn := widget.NewButton("Already have an account? Login", func() {
+		s.manager.ShowScreen(LOGIN_SCREEN)
+	})
 	form := &widget.Form{
-		Items: []*widget.FormItem{
-			{Text: "Email", Widget: emailEntry},
-			{Text: "Password", Widget: passwordEntry},
-		},
 		OnSubmit: func() {
-			log.Printf("Login attempt with Email: %s, Password: %s", emailEntry.Text, passwordEntry.Text)
-			dialog.NewInformation("Login", "Login logic would run here.", s.manager.window).Show()
+			if firstNameEntry.Text == "" || lastNameEntry.Text == "" || emailEntry.Text == "" || passwordEntry.Text == "" {
+				dialog.ShowError(errors.New("validation: First name, last name, email and password are required"), w)
+				return
+			}
+			s.manager.Publish(app.EventRegisterRequested, app.RegisterRequestedPayload{
+				Email:     emailEntry.Text,
+				Password:  passwordEntry.Text,
+				FirstName: firstNameEntry.Text,
+				LastName:  lastNameEntry.Text,
+			})
 		},
+		SubmitText: "Register",
 	}
 
-	return container.NewBorder(
-		nil,
-		widget.NewButton("Back to Main Menu", func() { s.manager.ShowScreen("Main Menu") }),
-		nil, nil,
-		container.NewCenter(container.NewVBox(form)),
-	)
+	form.Append("First name", firstNameEntry)
+	form.Append("Last name", lastNameEntry)
+	form.Append("Email", emailEntry)
+	form.Append("Password", passwordEntry)
+
+	return container.NewVBox(form, backToLoginBtn)
 }

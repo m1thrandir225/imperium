@@ -19,11 +19,14 @@ const (
 	EventSetupCompleted = "setup.completed"
 
 	//Auth
-	EventLoginRequested  = "auth.login.requested"
-	EventLoginSucceeded  = "auth.login.succeeded"
-	EventLoginFailed     = "auth.login.failed"
-	EventLogoutRequested = "auth.logout.requested"
-	EventLogoutCompleted = "auth.logout.completed"
+	EventLoginRequested    = "auth.login.requested"
+	EventLoginSucceeded    = "auth.login.succeeded"
+	EventLoginFailed       = "auth.login.failed"
+	EventLogoutRequested   = "auth.logout.requested"
+	EventLogoutCompleted   = "auth.logout.completed"
+	EventRegisterRequested = "auth.register.requested"
+	EventRegisterCompleted = "auth.register.completed"
+	EventRegisterFailed    = "auth.register.failed"
 
 	//Setup
 	EventStatusCompleted = "setup.status.completed"
@@ -115,4 +118,11 @@ type SessionStartedPayload struct {
 
 type SessionEndedPayload struct {
 	SessionID string
+}
+
+type RegisterRequestedPayload struct {
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
 }

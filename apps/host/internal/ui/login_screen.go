@@ -26,34 +26,28 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 	emailEntry := widget.NewEntry()
 	emailEntry.SetPlaceHolder("Email")
 	passwordEntry := widget.NewPasswordEntry()
+
 	passwordEntry.SetPlaceHolder("Password")
 
-	loginBtn := widget.NewButton("Login", func() {
-		if emailEntry.Text == "" || passwordEntry.Text == "" {
-			dialog.ShowError(errors.New("validation: Email and password are required"), w)
-			return
-		}
-		s.manager.Publish(app.EventLoginRequested, app.LoginRequestedPayload{
-			Email:    emailEntry.Text,
-			Password: passwordEntry.Text,
-		})
-	})
-
-	registerBtn := widget.NewButton("Register", func() {
+	registerBtn := widget.NewButton("Don't have an account? Register", func() {
 		s.manager.ShowScreen(REGISTER_SCREEN)
 	})
 
-	backBtn := widget.NewButton("Back to Main Menu", func() {
-		s.manager.ShowScreen(MAIN_MENU_SCREEN)
-	})
+	form := &widget.Form{
+		OnSubmit: func() {
+			if emailEntry.Text == "" || passwordEntry.Text == "" {
+				dialog.ShowError(errors.New("validation: Email and password are required"), w)
+				return
+			}
+			s.manager.Publish(app.EventLoginRequested, app.LoginRequestedPayload{
+				Email:    emailEntry.Text,
+				Password: passwordEntry.Text,
+			})
+		},
+		SubmitText: "Login",
+	}
+	form.Append("Email", emailEntry)
+	form.Append("Password", passwordEntry)
 
-	form := container.NewVBox(
-		widget.NewLabel("Login"),
-		emailEntry,
-		passwordEntry,
-		loginBtn,
-		registerBtn,
-		backBtn,
-	)
-	return container.NewCenter(form)
+	return container.NewVBox(form, registerBtn)
 }

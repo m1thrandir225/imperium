@@ -191,6 +191,40 @@ func (a *App) WireAuthHandlers() {
 		}
 	}()
 
+	registerCh := a.Bus.Subscribe(EventRegisterRequested)
+	go func() {
+		for evt := range registerCh {
+			payload, ok := evt.(RegisterRequestedPayload)
+			if !ok {
+				continue
+			}
+			if a.AuthService == nil || a.HTTPClient == nil {
+				a.buildClients()
+			}
+
+			if a.AuthBaseURL == "" {
+				a.Bus.Publish(EventRegisterFailed, fmt.Errorf("auth base URL is empty"))
+				return
+			}
+
+			req := auth.RegisterRequest{
+				Email:     payload.Email,
+				Password:  payload.Password,
+				FirstName: payload.FirstName,
+				LastName:  payload.LastName,
+			}
+
+			_, err := a.AuthService.Register(context.Background(), req)
+			if err != nil {
+				log.Printf("failed to register: %v", err)
+				a.Bus.Publish(EventRegisterFailed, err)
+				continue
+			}
+
+			a.Bus.Publish(EventRegisterCompleted, nil)
+		}
+	}()
+
 	logoutCh := a.Bus.Subscribe(EventLogoutRequested)
 	go func() {
 		for range logoutCh {
