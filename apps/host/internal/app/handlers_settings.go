@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
+	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )
 
 func (a *App) WireSettingsHandlers() {
@@ -45,6 +46,14 @@ func (a *App) WireSettingsHandlers() {
 			a.AuthBaseURL = a.State.Get().Settings.ServerAddress
 
 			a.buildClients()
+			if a.SessionService != nil {
+				st := a.State.Get()
+				a.SessionService.UpdateVideoConfig(&video.Config{
+					Encoder:    st.Settings.Encoder,
+					FPS:        st.Settings.Framerate,
+					FFMPEGPath: st.Settings.FFmpegPath,
+				})
+			}
 			a.Bus.Publish(EventStateSaved, a.State.Get())
 		}
 	}()

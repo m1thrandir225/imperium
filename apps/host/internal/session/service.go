@@ -187,3 +187,10 @@ func (s *Service) GenerateWebRTCAnswer(offer string) (string, error) {
 
 	return answer, nil
 }
+
+func (s *Service) UpdateVideoConfig(cfg *video.Config) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.videoRecorder = video.NewRecorder(cfg)
+}
