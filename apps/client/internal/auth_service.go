@@ -160,3 +160,8 @@ func (s *AuthService) RefreshToken(ctx context.Context, cmd RefreshTokenRequest)
 
 	return &result, nil
 }
+
+// UpdateAuthServerBaseURL updates the auth server base URL
+func (s *AuthService) UpdateAuthServerBaseURL(authServerBaseURL string) {
+	s.authServerBaseURL = authServerBaseURL
+}
