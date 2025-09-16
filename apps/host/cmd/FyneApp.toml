@@ -1,0 +1,8 @@
+Website = "https://imperium.sebastijanzindl.me"
+
+[Details]
+  Icon = "../../../assets/imperium_icon_logo.png"
+  Name = "Imperium Host"
+  ID = "com.imperium_host.app"
+  Version = "1.0.0"
+  Build = 2
