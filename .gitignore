@@ -6,3 +6,5 @@
 
 *.bin
 *.cov
+# Added by goreleaser init:
+dist/

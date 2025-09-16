@@ -1,0 +1,207 @@
+# GoReleaser configuration for Imperium
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+before:
+  hooks:
+    - go mod download
+    - go mod verify
+    # Build the client webui before creating the release
+    - cd apps/client/webui && pnpm install && pnpm build
+    # Generate Windows icon from SVG
+    - chmod +x scripts/generate-icons.sh
+    - ./scripts/generate-icons.sh
+
+builds:
+  # Imperium Server (Host App) - Windows only with Fyne UI
+  - id: imperium-server
+    main: ./apps/host/cmd/main.go
+    binary: imperium-server
+    goos:
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    tags:
+      - netgo
+
+  # Imperium Client App - Cross-platform
+  - id: imperium-client
+    main: ./apps/client/cmd/main.go
+    binary: imperium-client
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: imperium-server
+    builds:
+      - imperium-server
+    name_template: "{{ .ProjectName }}-server-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - apps/host/README.md
+      - apps/host/configs/config.yaml
+
+  - id: imperium-client
+    builds:
+      - imperium-client
+    name_template: "{{ .ProjectName }}-client-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+      - goos: darwin
+        format: tar.gz
+      - goos: linux
+        format: tar.gz
+    files:
+      - README.md
+      - apps/client/README.md
+
+# Windows installers using NSIS
+nfpms:
+  # Windows installer for Imperium Server
+  - id: imperium-server-windows
+    builds:
+      - imperium-server
+    package_name: imperium-server
+    vendor: Imperium Team
+    homepage: https://github.com/m1thrandir225/imperium
+    maintainer: Imperium Team <team@imperium.com>
+    description: Imperium Server - Game streaming host application
+    license: MIT
+    formats:
+      - nsis
+    dependencies:
+      - vcredist2019
+    contents:
+      - src: imperium-server.exe
+        dst: /bin/imperium-server.exe
+      - src: apps/host/configs/config.yaml
+        dst: /config/config.yaml
+      - src: README.md
+        dst: /README.txt
+      - src: assets/icon.ico
+        dst: /icon.ico
+    scripts:
+      preinstall: scripts/preinstall.bat
+      postinstall: scripts/postinstall.bat
+    nfpm:
+      nsis:
+        install_mode: both
+        languages:
+          - English
+        license: LICENSE
+        icon: assets/icon.ico
+        registry:
+          - key: HKCU\Software\Imperium\Server
+            name: InstallPath
+            value: $INSTDIR
+        associations:
+          - ext: .imperium
+            type: "Imperium.Config"
+            icon: assets/icon.ico
+
+  # Windows installer for Imperium Client
+  - id: imperium-client-windows
+    builds:
+      - imperium-client
+    package_name: imperium-client
+    vendor: Imperium Team
+    homepage: https://github.com/m1thrandir225/imperium
+    maintainer: Imperium Team <team@imperium.com>
+    description: Imperium Client - Game streaming client application
+    license: MIT
+    formats:
+      - nsis
+    contents:
+      - src: imperium-client.exe
+        dst: /bin/imperium-client.exe
+      - src: README.md
+        dst: /README.txt
+      - src: assets/icon.ico
+        dst: /icon.ico
+    scripts:
+      preinstall: scripts/preinstall.bat
+      postinstall: scripts/postinstall.bat
+    nfpm:
+      nsis:
+        install_mode: both
+        languages:
+          - English
+        license: LICENSE
+        icon: assets/icon.ico
+        registry:
+          - key: HKCU\Software\Imperium\Client
+            name: InstallPath
+            value: $INSTDIR
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^build:"
+
+release:
+  draft: false
+  prerelease: auto
+  mode: replace
+  name_template: "Imperium {{ .Tag }}"
+  header: |
+    ## 🎮 Imperium {{ .Tag }}
+
+    Game streaming made simple! This release includes both the server (Windows only) and client applications.
+
+  footer: |
+    ## 📦 Installation
+
+    ### Windows (Recommended)
+    - **Server**: Download `imperium-server-{{ .Tag }}-windows-amd64-installer.exe`
+    - **Client**: Download `imperium-client-{{ .Tag }}-windows-amd64-installer.exe`
+    - Run installers as administrator
+
+    ### Other Platforms (Client Only)
+    - **macOS**: Download and extract `imperium-client-{{ .Tag }}-darwin-amd64.tar.gz`
+    - **Linux**: Download and extract `imperium-client-{{ .Tag }}-linux-amd64.tar.gz`
+
+    ## 🚀 Quick Start
+    1. Install Imperium Server on your gaming PC (Windows)
+    2. Install Imperium Client on your streaming device
+    3. Launch both applications and follow the setup wizard
+
+    ## 📋 System Requirements
+    - **Server**: Windows 10/11, DirectX 11+ compatible GPU
+    - **Client**: Any modern OS with web browser support
+
+    ---
+    **Full Changelog**: {{ .PreviousTag }}...{{ .Tag }}
