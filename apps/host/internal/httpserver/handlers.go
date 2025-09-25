@@ -64,12 +64,6 @@ func (s *Server) handleStartSessionRequest(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
-	log.Printf("WS Server: %v", s.wsServer)
-	if s.wsServer != nil {
-		log.Printf("Registering session: %s", session.ID)
-		s.wsServer.RegisterSession(session.ID, s.sessionService)
-		log.Printf("Registered session: %s", s.wsServer.GetSessionIDs())
-	}
 	webrtcAnswer, err := s.sessionService.GenerateWebRTCAnswer(req.WebrtcOffer)
 	if err != nil {
 		log.Printf("Failed to generate WebRTC offer: %v", err)

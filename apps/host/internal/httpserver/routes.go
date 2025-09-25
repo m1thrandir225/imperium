@@ -10,7 +10,6 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/session/programs", s.handleGetPrograms)
 
 	// client endpoints
-	s.mux.HandleFunc("/ws", s.wsServer.HandleWebSocket)
 
 	webrtc.RegisterSignalingHandlers(s.mux, s.sessionService.WebRTCStreamer)
 }
