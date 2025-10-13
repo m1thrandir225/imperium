@@ -10,7 +10,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public abstract class PostgresTC {
 
     protected static final PostgreSQLContainer<?> POSTGRES =
