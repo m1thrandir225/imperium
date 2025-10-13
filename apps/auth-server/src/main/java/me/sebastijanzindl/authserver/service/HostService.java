@@ -43,7 +43,7 @@ public class HostService {
     }
 
     public Host getHostByName(String name) {
-        return this.hostRepository.findByName(name);
+        return this.hostRepository.findByName(name).orElseThrow(() ->  new EntityNotFoundException("Host with name " + name + " not found"));
     }
 
     public Host getOrCreateHost(CreateHostDTO dto, User owner) {

@@ -5,6 +5,8 @@ import me.sebastijanzindl.authserver.model.User;
 import me.sebastijanzindl.authserver.model.enums.HOST_STATUS;
 import me.sebastijanzindl.authserver.responses.HostResponse;
 import me.sebastijanzindl.authserver.testsupport.PostgresTC;
+import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -43,14 +45,23 @@ class HostRepositoryIT extends PostgresTC {
         host.setOwner(user);
         hostRepository.save(host);
 
-        Host result = hostRepository.findByName(host.getName());
+        Optional<Host> result = hostRepository.findByName(host.getName());
+        Assertions.assertTrue(result.isPresent());
+        Assertions.assertNotNull(result.get());
+        Assertions.assertEquals(host.getName(), result.get().getName());
+        Assertions.assertEquals(host.getPort(), result.get().getPort());
+        Assertions.assertEquals(host.getIpAddress(), result.get().getIpAddress());
+        Assertions.assertNotNull(result.get().getId());
 
-        assert
+        Assertions.assertEquals(host.getStatus(), result.get().getStatus());
+
+        Assertions.assertEquals(host.getOwner().getName(), result.get().getOwner().getName());
+        Assertions.assertEquals(host.getOwner().getEmail(), result.get().getOwner().getEmail());
     }
 
     @Test
     void findByName_returnsEmptyForNotFound() {
-
+        Assertions.assertFalse(hostRepository.findByName("Alice").isPresent());
     }
 
     @Test
@@ -64,8 +75,24 @@ class HostRepositoryIT extends PostgresTC {
         host.setIpAddress("127.0.0.1");
         host.setOwner(user);
         hostRepository.save(host);
+
+        Optional<Host> result = hostRepository.findByNameAndIpAddressAndPort(host.getName(), host.getIpAddress(), host.getPort());
+
+        Assertions.assertTrue(result.isPresent());
+        Assertions.assertNotNull(result.get());
+        Assertions.assertEquals(host.getStatus(), result.get().getStatus());
+
+        Assertions.assertEquals(host.getOwner().getName(), result.get().getOwner().getName());
+        Assertions.assertEquals(host.getOwner().getEmail(), result.get().getOwner().getEmail());
+
+        Assertions.assertEquals(host.getName(), result.get().getName());
+        Assertions.assertEquals(host.getPort(), result.get().getPort());
+        Assertions.assertEquals(host.getIpAddress(), result.get().getIpAddress());
+        Assertions.assertNotNull(result.get().getId());
     }
 
     @Test
-    void findByNameAndIpAddressAndPort_returnsEmptyForNotFound() {}
+    void findByNameAndIpAddressAndPort_returnsEmptyForNotFound() {
+        Assertions.assertFalse(hostRepository.findByNameAndIpAddressAndPort("example", "127.0.0.1", 8000).isPresent());
+    }
 }
