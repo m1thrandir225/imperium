@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/input"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
@@ -23,7 +22,6 @@ type Service struct {
 	programService    *programs.ProgramService
 	videoRecorder     *video.Recorder
 	webrtcStreamer    *webrtc.Streamer
-	wsConn            *websocket.Conn
 	currentSession    *Session
 	mu                sync.Mutex
 }
@@ -141,11 +139,6 @@ func (s *Service) EndSession() error {
 		s.webrtcStreamer.Close()
 	}
 
-	// Close WebSocket connection
-	if s.wsConn != nil {
-		s.wsConn.Close()
-	}
-
 	s.currentSession = nil
 	return nil
 }
@@ -154,13 +147,6 @@ func (s *Service) GetCurrentSession() *Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.currentSession
-}
-
-func (s *Service) SetWebSocketConnection(conn *websocket.Conn) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.wsConn = conn
 }
 
 func (s *Service) ProcessInputCommand(cmd input.InputCommand) {
