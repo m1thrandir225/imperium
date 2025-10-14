@@ -2,6 +2,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -88,6 +89,11 @@ func (m *StateManager) Get() AppState {
 
 // Update applies a function to modify the state and persist the changes
 func (m *StateManager) Update(fn func(*AppState)) error {
+
+	if m.state == nil {
+		return errors.New("no state initialized")
+	}
+
 	fn(m.state)
 
 	if err := m.Save(); err != nil {
