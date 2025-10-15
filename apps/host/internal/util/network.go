@@ -5,6 +5,9 @@ import (
 	"net"
 )
 
+// GetIPAddress returns the first valid IPv4 address found on the system.
+//
+// Is this maybe a problem if the system has multiple network interfaces?
 func GetIPAddress() (string, error) {
 	interfaces, err := net.Interfaces()
 	if err != nil {

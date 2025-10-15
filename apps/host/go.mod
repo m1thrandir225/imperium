@@ -4,7 +4,6 @@ go 1.24.1
 
 require (
 	fyne.io/fyne/v2 v2.6.2
-	github.com/gorilla/websocket v1.5.3
 	github.com/pion/rtp v1.8.21
 	github.com/pion/webrtc/v3 v3.3.6
 	github.com/spf13/viper v1.20.1
@@ -61,7 +60,7 @@ require (
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stephen-fox/user32util v0.3.1
-	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/stretchr/testify v1.10.0
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/wlynxg/anet v0.0.3 // indirect
 	github.com/yuin/goldmark v1.7.8 // indirect
