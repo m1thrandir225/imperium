@@ -38,6 +38,10 @@ func TestNewStateManager(t *testing.T) {
 				return ""
 			},
 			teardown: func(appName string) {
+				if appName == "" {
+					t.Log("skipping teardown: empty appname")
+					return
+				}
 				configDir, _ := os.UserConfigDir()
 				testDir := filepath.Join(configDir, appName)
 				os.RemoveAll(testDir)
