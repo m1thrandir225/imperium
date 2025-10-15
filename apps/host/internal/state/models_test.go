@@ -9,6 +9,7 @@ import (
 
 func TestAppState_Serialization(t *testing.T) {
 	now := time.Now()
+
 	state := AppState{
 		UserSession: UserSession{
 			AccessToken:           "access-token",
@@ -51,6 +52,7 @@ func TestUserSession_Expiration(t *testing.T) {
 		AccessTokenExpiresAt: now.Add(1 * time.Hour),
 	}
 
+	assert.Equal(t, "token", session.AccessToken)
 	assert.True(t, session.AccessTokenExpiresAt.After(now))
 }
 
@@ -66,4 +68,6 @@ func TestSettings_DefaultValues(t *testing.T) {
 	assert.Equal(t, "h264", settings.Encoder)
 	assert.Equal(t, 30, settings.Framerate)
 	assert.Equal(t, "1000k", settings.Bitrate)
+	assert.Equal(t, "https://api.example.com", settings.ServerAddress)
+	assert.Equal(t, "/usr/bin/ffmpeg", settings.FFmpegPath)
 }
