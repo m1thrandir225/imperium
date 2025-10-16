@@ -45,8 +45,11 @@ func GetAvailableEncodersForCodecs() (h264Encoders, h265Encoders []string, err e
 	if err != nil {
 		log.Printf("warning: 'ffmpeg -encoders' command finished with error: %v. Output may still be parsable.", err)
 	}
+	return parseEncodersOutput(out.String())
+}
 
-	scanner := bufio.NewScanner(&out)
+func parseEncodersOutput(output string) (h264Encoders, h265Encoders []string, err error) {
+	scanner := bufio.NewScanner(strings.NewReader(output))
 	inEncodersSection := false
 
 	for scanner.Scan() {

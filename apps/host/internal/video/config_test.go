@@ -44,8 +44,8 @@ func TestSet_Encoder(t *testing.T) {
 
 	config.SetEncoder("libx265")
 
-	require.NotEqual(t, config, "libx264")
-	require.Equal(t, config, "libx265")
+	require.NotEqual(t, config.Encoder, "libx264")
+	require.Equal(t, config.Encoder, "libx265")
 }
 
 func TestSet_FPS(t *testing.T) {
@@ -55,8 +55,8 @@ func TestSet_FPS(t *testing.T) {
 
 	config.SetFPS(60)
 
-	require.NotEqual(t, config, 30)
-	require.Equal(t, config, 60)
+	require.NotEqual(t, config.FPS, 30)
+	require.Equal(t, config.FPS, 60)
 }
 
 func TestSet_FFMPEGPath(t *testing.T) {
@@ -66,6 +66,6 @@ func TestSet_FFMPEGPath(t *testing.T) {
 
 	config.SetFFMPEGPath("/usr/bin/ffmpeg")
 
-	require.NotEqual(t, config, "")
-	require.Equal(t, config, "/usr/bin/ffmpeg")
+	require.NotEqual(t, config.FFMPEGPath, "")
+	require.Equal(t, config.FFMPEGPath, "/usr/bin/ffmpeg")
 }
