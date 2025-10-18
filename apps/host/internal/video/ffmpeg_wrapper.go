@@ -97,6 +97,7 @@ func (w *FFMPEGWrapper) ExecuteWithStdout(args ...string) (io.ReadCloser, error)
 	}, nil
 }
 
+// ffmpegStream Implements io.ReadCloser
 type ffmpegStream struct {
 	rc   io.ReadCloser
 	stop func() error
