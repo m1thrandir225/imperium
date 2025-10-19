@@ -80,7 +80,12 @@ func (a *App) buildClients() {
 		baseURLFn: func() string { return a.AuthBaseURL },
 	}
 
-	httpClient := httpclient.NewClient(a.AuthBaseURL, tok, tok)
+	httpClient, err := httpclient.NewClient(a.AuthBaseURL, tok, tok)
+
+	if err != nil {
+		log.Printf("failed to create a new http client")
+		panic(err) // should panic
+	}
 
 	a.HTTPClient = httpClient
 

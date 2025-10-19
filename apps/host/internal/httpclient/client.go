@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type Client struct {
@@ -20,7 +22,20 @@ type Client struct {
 	tokenRefresher TokenRefresher
 }
 
-func NewClient(baseURL string, tokenGetter TokenGetter, tokenRefresher TokenRefresher) *Client {
+func NewClient(baseURL string, tokenGetter TokenGetter, tokenRefresher TokenRefresher) (*Client, error) {
+
+	if !util.ValidURL(baseURL) {
+		return nil, InvalidBaseUrl
+	}
+
+	if tokenGetter == nil {
+		return nil, InvalidTokenGetter
+	}
+
+	if tokenRefresher == nil {
+		return nil, InvalidTokenRefresher
+	}
+
 	return &Client{
 		baseURL: baseURL,
 		httpClient: &http.Client{
@@ -28,7 +43,7 @@ func NewClient(baseURL string, tokenGetter TokenGetter, tokenRefresher TokenRefr
 		},
 		tokenGetter:    tokenGetter,
 		tokenRefresher: tokenRefresher,
-	}
+	}, nil
 }
 
 func (c *Client) GetBaseURL() string {
