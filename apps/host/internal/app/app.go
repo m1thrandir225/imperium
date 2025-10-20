@@ -20,19 +20,19 @@ import (
 type App struct {
 	Name           string
 	Bus            *EventBus
-	State          *state.StateManager
+	State          state.StateManager
 	AuthBaseURL    string
-	ProgramService *programs.ProgramService
+	ProgramService programs.Service
 	AuthService    *auth.AuthService
-	StatusManager  *host.StatusManager
+	StatusManager  host.StatusManager
 	HTTPClient     *httpclient.Client
 	tokenRefresher *AuthTokenRefresher
-	SessionService *session.Service
+	SessionService session.Service
 	HTTPServer     *httpserver.Server
 }
 
 func New(name string) (*App, error) {
-	sm, err := state.NewStateManager(name)
+	sm, err := state.NewPersistedStateManager(name)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +100,11 @@ func (a *App) buildClients() {
 	}
 
 	dbPath := filepath.Join(configDir, "programs.db")
-	a.ProgramService = programs.NewService(
+	programService, err := programs.NewService(
 		dbPath,
 		a.State.Get().Settings.RawgAPIKey,
 	)
+	a.ProgramService = programService
 
 	a.stopTokenRefresher()
 	a.tokenRefresher = NewAuthTokenRefresher(tok, tok)
@@ -133,12 +134,16 @@ func (a *App) startStatusManagerIfReady() {
 		return
 	}
 
-	a.StatusManager = host.NewStatusManager(
+	statusManager, err := host.NewInMemoryStatusManager(
 		st.HostInfo.ID,
 		a.AuthBaseURL,
 		a.HTTPClient,
 		a.SessionService,
 	)
+	if err != nil {
+		panic(err) //should panic, invalid status manager
+	}
+	a.StatusManager = statusManager
 	a.StatusManager.Start(context.Background())
 }
 
@@ -159,7 +164,7 @@ func (a *App) buildSessionService() {
 		},
 	)
 
-	a.SessionService = session.NewService(
+	sessionService, err := session.NewService(
 		a.AuthBaseURL,
 		a.State.Get().UserSession.AccessToken,
 		a.AuthService,
@@ -167,6 +172,11 @@ func (a *App) buildSessionService() {
 		recorder,
 		nil,
 	)
+	if err != nil {
+		panic(err) // should panic invalid SessionService
+	}
+
+	a.SessionService = sessionService
 }
 
 func (a *App) checkAndRefreshTokensAtStartup() {

@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,29 @@ func TestNewServer(t *testing.T) {
 		name        string
 		expectError bool
 		buildServer func() (*Server, error)
-	}{}
+	}{
+		{
+			name:        "valid setup",
+			expectError: false,
+			buildServer: func() (*Server, error) {
+				return nil, nil
+			},
+		},
+		{
+			name:        "invalid-session-service",
+			expectError: true,
+			buildServer: func() (*Server, error) {
+				return nil, nil
+			},
+		},
+		{
+			name:        "invalid-event-bus",
+			expectError: true,
+			buildServer: func() (*Server, error) {
+				return nil, nil
+			},
+		},
+	}
 
 	for _, tc := range testCases {
 		server, err := tc.buildServer()
@@ -25,6 +48,12 @@ func TestNewServer(t *testing.T) {
 	}
 }
 
-func TestServer_Serve(t *testing.T) {}
+// TODO
+func TestServer_Serve(t *testing.T) {
+	context.TODO()
+}
 
-func TestServer_Stop(t *testing.T) {}
+// TODO
+func TestServer_Stop(t *testing.T) {
+	context.TODO()
+}

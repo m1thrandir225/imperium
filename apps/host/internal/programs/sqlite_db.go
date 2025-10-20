@@ -12,35 +12,39 @@ import (
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver
 )
 
-type ProgramDB struct {
+type sqliteDB struct {
 	db *sql.DB
 }
 
-func NewProgramDB(dbPath string) (*ProgramDB, error) {
+func NewSQLiteDB(dbPath string) (Database, error) {
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create directory: %w", err)
+		log.Printf("failed to create directory: %w", err)
+		return nil, ErrDatabaseDirectoryCreationFailed
 	}
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		log.Printf("failed to open database: %w", err)
+		return nil, ErrDatabaseOpenFailed
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		log.Printf("failed to ping database: %w", err)
+		return nil, ErrDatabasePingFailed
 	}
 
-	programDB := &ProgramDB{
+	programDB := &sqliteDB{
 		db: db,
 	}
 	if err := programDB.initTables(); err != nil {
-		return nil, fmt.Errorf("failed to initialize tables: %w", err)
+		log.Printf("failed to initialize tables: %w", err)
+		return nil, ErrDatabaseInitializeTablesFailed
 	}
 	return programDB, nil
 }
 
-func (pdb *ProgramDB) initTables() error {
+func (pdb *sqliteDB) initTables() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS programs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,11 +64,11 @@ func (pdb *ProgramDB) initTables() error {
 	return err
 }
 
-func (pdb *ProgramDB) Close() error {
+func (pdb *sqliteDB) Close() error {
 	return pdb.db.Close()
 }
 
-func (pdb *ProgramDB) SaveProgram(program *Program) error {
+func (pdb *sqliteDB) SaveProgram(program *Program) error {
 	query := `
 	INSERT OR REPLACE INTO programs (name, path, description, last_modified, updated_at)
 	VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -90,7 +94,7 @@ func (pdb *ProgramDB) SaveProgram(program *Program) error {
 	return err
 }
 
-func (pdb *ProgramDB) GetPrograms() ([]*Program, error) {
+func (pdb *sqliteDB) GetPrograms() ([]*Program, error) {
 	query := `SELECT id, name, path, description FROM programs ORDER BY name`
 
 	rows, err := pdb.db.Query(query)
@@ -111,7 +115,7 @@ func (pdb *ProgramDB) GetPrograms() ([]*Program, error) {
 	return programs, nil
 }
 
-func (pdb *ProgramDB) GetProgramByID(id string) (*Program, error) {
+func (pdb *sqliteDB) GetProgramByID(id string) (*Program, error) {
 	query := `SELECT id, name, path, description FROM programs WHERE id = ?`
 	program := &Program{}
 	err := pdb.db.QueryRow(query, id).Scan(&program.ID, &program.Name, &program.Path, &program.Description)
@@ -121,7 +125,7 @@ func (pdb *ProgramDB) GetProgramByID(id string) (*Program, error) {
 	return program, nil
 }
 
-func (pdb *ProgramDB) GetProgramByPath(path string) (*Program, error) {
+func (pdb *sqliteDB) GetProgramByPath(path string) (*Program, error) {
 	query := `SELECT id, name, path, description FROM programs WHERE path = ?`
 
 	program := &Program{}
@@ -133,7 +137,7 @@ func (pdb *ProgramDB) GetProgramByPath(path string) (*Program, error) {
 	return program, nil
 }
 
-func (pdb *ProgramDB) CleanupNonExistentPrograms() error {
+func (pdb *sqliteDB) CleanupNonExistentPrograms() error {
 	query := `SELECT path FROM programs`
 	rows, err := pdb.db.Query(query)
 	if err != nil {

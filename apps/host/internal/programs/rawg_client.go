@@ -9,7 +9,11 @@ import (
 
 const rawgBaseURL = "https://api.rawg.io/api"
 
-type RAWGClient struct {
+type RAWGIntegration interface {
+	SearchGame(query string) ([]RAWGGame, error)
+}
+
+type rawgClient struct {
 	APIKey string
 }
 
@@ -24,13 +28,13 @@ type RAWGSearchResponse struct {
 	Results []RAWGGame `json:"results"`
 }
 
-func NewRAWGClient(apiKey string) *RAWGClient {
-	return &RAWGClient{
+func NewRAWGClient(apiKey string) RAWGIntegration {
+	return &rawgClient{
 		APIKey: apiKey,
 	}
 }
 
-func (c *RAWGClient) SearchGame(query string) ([]RAWGGame, error) {
+func (c *rawgClient) SearchGame(query string) ([]RAWGGame, error) {
 	endpoint := fmt.Sprintf("%s/games?key=%s&search=%s",
 		rawgBaseURL,
 		url.QueryEscape(c.APIKey),

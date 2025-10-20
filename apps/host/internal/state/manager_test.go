@@ -54,7 +54,7 @@ func TestNewStateManager(t *testing.T) {
 
 		defer tt.teardown(appName)
 
-		manager, err := NewStateManager(appName)
+		manager, err := NewPersistedStateManager(appName)
 
 		if tt.wantErr {
 			assert.Error(t, err)
@@ -68,7 +68,7 @@ func TestNewStateManager(t *testing.T) {
 }
 
 func TestStateManager_Load(t *testing.T) {
-	manager, err := NewStateManager("test-load")
+	manager, err := NewPersistedStateManager("test-load")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -82,7 +82,7 @@ func TestStateManager_Load(t *testing.T) {
 }
 
 func TestStateManager_Save(t *testing.T) {
-	manager, err := NewStateManager("test-save")
+	manager, err := NewPersistedStateManager("test-save")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -139,7 +139,7 @@ func TestStateManager_Save(t *testing.T) {
 }
 
 func TestStateManager_Get(t *testing.T) {
-	manager, err := NewStateManager("test-get")
+	manager, err := NewPersistedStateManager("test-get")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -163,7 +163,7 @@ func TestStateManager_Get(t *testing.T) {
 }
 
 func TestStateManager_Update(t *testing.T) {
-	manager, err := NewStateManager("test-update")
+	manager, err := NewPersistedStateManager("test-update")
 	require.NoError(t, err)
 
 	defer func() {

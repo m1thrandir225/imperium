@@ -12,13 +12,13 @@ import (
 // events and the sessionService
 type Server struct {
 	mux            *http.ServeMux
-	sessionService *session.Service
+	sessionService session.Service
 	eventBus       interface{ Publish(topic string, data any) }
 }
 
 // NewServer returns a new instance of the Server struct
 func NewServer(
-	sessionService *session.Service,
+	sessionService session.Service,
 	eventBus interface{ Publish(topic string, data any) },
 ) (*Server, error) {
 	if sessionService == nil {

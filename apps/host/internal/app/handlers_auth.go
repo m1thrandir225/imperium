@@ -15,7 +15,7 @@ import (
 )
 
 type stateTokens struct {
-	sm        *state.StateManager
+	sm        state.StateManager
 	baseURLFn func() string
 }
 

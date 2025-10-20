@@ -7,6 +7,7 @@ require (
 	github.com/pion/rtp v1.8.21
 	github.com/pion/webrtc/v3 v3.3.6
 	github.com/spf13/viper v1.20.1
+	go.uber.org/mock v0.6.0
 )
 
 require (
