@@ -86,7 +86,13 @@ func (a *App) WireHostHandlers() {
 			a.startStatusManagerIfReady()
 
 			if a.HTTPServer == nil {
-				a.HTTPServer = httpserver.NewServer(a.SessionService, a.Bus)
+				httpServer, err := httpserver.NewServer(a.SessionService, a.Bus)
+				if err != nil {
+					panic(err) // should panic as an invalid instance of a httpserver is created
+				}
+
+				a.HTTPServer = httpServer
+
 				go func() {
 					_ = a.HTTPServer.Serve(":8080")
 				}()

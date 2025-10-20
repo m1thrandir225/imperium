@@ -8,6 +8,7 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 )
 
+// handleStartSessionRequest represents the http handler for starting a session
 func (s *Server) handleStartSessionRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -85,6 +86,7 @@ func (s *Server) handleStartSessionRequest(w http.ResponseWriter, r *http.Reques
 	return
 }
 
+// handleStatus represents the http handler for returning the current status
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	status := "IDLE"
@@ -94,6 +96,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(StatusResponse{Status: status})
 }
 
+// handleStop represents the http handler for stopping the current session
 func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -115,6 +118,8 @@ func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// handleGetPrograms represents the http handler for returning the current host
+// programs
 func (s *Server) handleGetPrograms(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
