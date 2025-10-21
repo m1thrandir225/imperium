@@ -7,26 +7,28 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
+	"github.com/m1thrandir225/imperium/apps/host/internal/event_broker"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpserver"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
+	tokenrefresher "github.com/m1thrandir225/imperium/apps/host/internal/token_refresher"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )
 
 type App struct {
 	Name           string
-	Bus            *EventBus
+	Bus            event_broker.EventBroker
 	State          state.StateManager
 	AuthBaseURL    string
 	ProgramService programs.Service
-	AuthService    *auth.AuthService
+	AuthService    auth.Service
 	StatusManager  host.StatusManager
 	HTTPClient     *httpclient.Client
-	tokenRefresher *AuthTokenRefresher
+	tokenRefresher tokenrefresher.Refresher
 	SessionService session.Service
 	HTTPServer     *httpserver.Server
 }
@@ -41,7 +43,7 @@ func New(name string) (*App, error) {
 
 	a := &App{
 		Name:        name,
-		Bus:         NewEventBus(),
+		Bus:         event_broker.NewInMemoryBroker(),
 		State:       sm,
 		AuthBaseURL: st.Settings.ServerAddress,
 	}
@@ -89,10 +91,16 @@ func (a *App) buildClients() {
 
 	a.HTTPClient = httpClient
 
-	a.AuthService = auth.NewService(
+	authService, err := auth.NewService(
 		a.AuthBaseURL,
 		httpClient,
 	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	a.AuthService = authService
 
 	configDir, err := util.GetConfigDir(a.Name)
 	if err != nil {
@@ -107,7 +115,13 @@ func (a *App) buildClients() {
 	a.ProgramService = programService
 
 	a.stopTokenRefresher()
-	a.tokenRefresher = NewAuthTokenRefresher(tok, tok)
+
+	tokenRefresher, err := tokenrefresher.NewTokenRefresher(tok, tok)
+	if err != nil {
+		panic(err) //FIXME: should panic here??
+	}
+
+	a.tokenRefresher = tokenRefresher
 	a.tokenRefresher.Start(context.Background())
 
 	a.startStatusManagerIfReady()

@@ -2,6 +2,7 @@ package auth
 
 import "time"
 
+// User represents the user from the auth-server provider
 type User struct {
 	ID        string `json:"id" mapstructure:"id"`
 	Email     string `json:"email" mapstructure:"email"`
@@ -10,6 +11,7 @@ type User struct {
 	UpdatedAt string `json:"updated_at" mapstructure:"updated_at"`
 }
 
+// GetCreatedAt returns the createdAt field on the user struct as a time.Time object
 func (u *User) GetCreatedAt() time.Time {
 	if u.CreatedAt == "" {
 		return time.Time{}
@@ -21,6 +23,7 @@ func (u *User) GetCreatedAt() time.Time {
 	return parsedTime
 }
 
+// GetUpdatedAt returns the updatedAt field on the user struct as a time.Time object
 func (u *User) GetUpdatedAt() time.Time {
 	if u.UpdatedAt == "" {
 		return time.Time{}

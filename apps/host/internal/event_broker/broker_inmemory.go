@@ -1,22 +1,22 @@
-package app
+package event_broker
 
 import "sync"
 
-// EventBus is a simple pub-sub event bus
-type EventBus struct {
+// InMemoryBroker is a simple pub-sub event broker
+type InMemoryBroker struct {
 	mu          sync.RWMutex
 	subscribers map[string][]chan any
 }
 
-// NewEventBus creates a new event bus
-func NewEventBus() *EventBus {
-	return &EventBus{
+// NewInMemoryBroker creates a new event bus
+func NewInMemoryBroker() EventBroker {
+	return &InMemoryBroker{
 		subscribers: make(map[string][]chan any),
 	}
 }
 
 // Subscribe subscribes to an event and returns a channel to receive events
-func (b *EventBus) Subscribe(topic string) <-chan any {
+func (b *InMemoryBroker) Subscribe(topic string) <-chan any {
 	ch := make(chan any, 1)
 	b.mu.Lock()
 
@@ -28,7 +28,7 @@ func (b *EventBus) Subscribe(topic string) <-chan any {
 }
 
 // Publish publishes an event to the bus
-func (b *EventBus) Publish(topic string, data any) {
+func (b *InMemoryBroker) Publish(topic string, data any) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 

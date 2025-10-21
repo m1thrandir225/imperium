@@ -1,4 +1,4 @@
-package app
+package tokenrefresher
 
 import (
 	"context"
@@ -14,12 +14,18 @@ type AuthTokenRefresher struct {
 	stop      chan struct{}
 }
 
-func NewAuthTokenRefresher(getter httpclient.TokenGetter, refresher httpclient.TokenRefresher) *AuthTokenRefresher {
+func NewTokenRefresher(getter httpclient.TokenGetter, refresher httpclient.TokenRefresher) (Refresher, error) {
+	if getter == nil {
+		return nil, ErrInvalidTokenGetter
+	}
+	if refresher == nil {
+		return nil, ErrInvalidTokenRefrehser
+	}
 	return &AuthTokenRefresher{
 		getter:    getter,
 		refresher: refresher,
 		stop:      make(chan struct{}),
-	}
+	}, nil
 }
 
 func (r *AuthTokenRefresher) Start(ctx context.Context) {
