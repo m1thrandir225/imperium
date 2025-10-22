@@ -40,9 +40,9 @@ func NewInMemoryStatusManager(
 	if httpClient == nil {
 		return nil, ErrInvalidHttpClient
 	}
-	if sessionService == nil {
-		return nil, ErrInvalidSessionService
-	}
+	// if sessionService == nil {
+	// 	return nil, ErrInvalidSessionService
+	// }
 
 	return &InMemoryStatusManager{
 		hostID:            hostID,

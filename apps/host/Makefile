@@ -1,5 +1,8 @@
 .PHONY: mock
 
+build:
+	CGO_ENABLED=1 go build -o dist/host-app ./cmd/main.go
+
 mock:
 	mockgen -package mocksession -destination internal/session/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/session Service
 	mockgen -package mockhttpclient -destination internal/httpclient/mocks/token_getter.go github.com/m1thrandir225/imperium/apps/host/internal/httpclient TokenGetter

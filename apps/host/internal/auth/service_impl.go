@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type authService struct {
@@ -26,9 +25,9 @@ func (s *authService) GetAuthenticatedClient() *httpclient.Client {
 }
 
 func NewService(authServiceBaseURL string, httpClient *httpclient.Client) (Service, error) {
-	if !util.ValidURL(authServiceBaseURL) {
-		return nil, ErrInvalidAuthServiceBaseURL
-	}
+	// if !util.ValidURL(authServiceBaseURL) {
+	// 	return nil, ErrInvalidAuthServiceBaseURL
+	// }
 
 	if httpClient == nil {
 		return nil, ErrInvalidHttpClient

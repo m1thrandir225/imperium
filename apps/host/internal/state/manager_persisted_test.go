@@ -5,10 +5,29 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func createPersistedStateManager(appName string) (*PersistedStateManager, error) {
+	configDir, err := util.GetConfigDir(appName)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return nil, err
+	}
+
+	manager := &PersistedStateManager{}
+
+	if err := manager.Load(); err != nil {
+		return nil, err
+	}
+
+	return manager, nil
+}
 func TestNewStateManager(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -54,7 +73,7 @@ func TestNewStateManager(t *testing.T) {
 
 		defer tt.teardown(appName)
 
-		manager, err := NewPersistedStateManager(appName)
+		manager, err := createPersistedStateManager(appName)
 
 		if tt.wantErr {
 			assert.Error(t, err)
@@ -68,7 +87,7 @@ func TestNewStateManager(t *testing.T) {
 }
 
 func TestStateManager_Load(t *testing.T) {
-	manager, err := NewPersistedStateManager("test-load")
+	manager, err := createPersistedStateManager("test-load")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -82,7 +101,7 @@ func TestStateManager_Load(t *testing.T) {
 }
 
 func TestStateManager_Save(t *testing.T) {
-	manager, err := NewPersistedStateManager("test-save")
+	manager, err := createPersistedStateManager("test-save")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -139,7 +158,7 @@ func TestStateManager_Save(t *testing.T) {
 }
 
 func TestStateManager_Get(t *testing.T) {
-	manager, err := NewPersistedStateManager("test-get")
+	manager, err := createPersistedStateManager("test-get")
 	require.NoError(t, err)
 	defer func() {
 		configDir, _ := os.UserConfigDir()
@@ -163,7 +182,7 @@ func TestStateManager_Get(t *testing.T) {
 }
 
 func TestStateManager_Update(t *testing.T) {
-	manager, err := NewPersistedStateManager("test-update")
+	manager, err := createPersistedStateManager("test-update")
 	require.NoError(t, err)
 
 	defer func() {
@@ -191,7 +210,7 @@ func TestStateManager_Update(t *testing.T) {
 }
 
 func TestStateManager_Update_NoState(t *testing.T) {
-	manager := &StateManager{state: nil}
+	manager := &PersistedStateManager{state: nil}
 
 	err := manager.Update(func(state *AppState) {
 		state.UserInfo.Name = "Test"

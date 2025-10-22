@@ -46,9 +46,9 @@ func NewService(
 		return nil, InvalidVideoRecorder
 	}
 
-	if webrtcStreamer == nil {
-		return nil, InvalidWebrtcStreamer
-	}
+	// if webrtcStreamer == nil {
+	// 	return nil, InvalidWebrtcStreamer
+	// }
 
 	if authService == nil {
 		return nil, InvalidAuthService
