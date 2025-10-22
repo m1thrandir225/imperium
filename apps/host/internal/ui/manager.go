@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/dialog"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
+	"github.com/m1thrandir225/imperium/apps/host/internal/event_broker"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
@@ -17,12 +18,12 @@ type Manager struct {
 	app            fyne.App
 	window         fyne.Window
 	screens        map[string]Screen
-	bus            *uapp.EventBus
-	state          *state.StateManager
+	bus            event_broker.EventBroker
+	state          state.StateManager
 	currentSession *session.Session
 }
 
-func NewUIManager(stateManager *state.StateManager, bus *uapp.EventBus) *Manager {
+func NewUIManager(stateManager state.StateManager, bus event_broker.EventBroker) *Manager {
 	manager := &Manager{
 		app:     app.NewWithID("imperium"),
 		screens: make(map[string]Screen),
