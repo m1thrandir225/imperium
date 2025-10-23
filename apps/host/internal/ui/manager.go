@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
 	"github.com/m1thrandir225/imperium/apps/host/internal/event_broker"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
@@ -163,6 +164,12 @@ func (m *Manager) RunUI() {
 	m.window.Resize(fyne.NewSize(800, 600))
 	m.window.SetFixedSize(true)
 
+	m.systemTraySetup()
+
+	m.window.SetCloseIntercept(func() {
+		m.window.Hide()
+	})
+
 	m.window.ShowAndRun()
 }
 
@@ -177,6 +184,17 @@ func (m *Manager) OnSetupSuccess() {
 		m.ShowScreen(LOGIN_SCREEN)
 	} else {
 		m.ShowScreen(MAIN_MENU_SCREEN)
+	}
+}
+
+func (m *Manager) systemTraySetup() {
+	if desk, ok := m.app.(desktop.App); ok {
+		menu := fyne.NewMenu(
+			"Imperium Host",
+			fyne.NewMenuItem("Show", func() {
+				m.window.Show()
+			}))
+		desk.SetSystemTrayMenu(menu)
 	}
 }
 

@@ -1,0 +1,24 @@
+# This file is an example of the internal config file used for persistent state management
+host_info:
+  id: ""
+  name: ""
+  ip: ""
+  port: 8080
+
+settings:
+  ffmpeg_path: ""
+  encoder: ""
+  framerate: 30
+  bitrate: ""
+  server_address: ""
+  custom_program_paths: []
+  rawg_api_key: ""
+user_info:
+  id: ""
+  name: ""
+  email: ""
+user_session:
+  access_token: ""
+  refresh_token: ""
+  access_token_expires_at: ""
+  refresh_token_expires_at: ""
