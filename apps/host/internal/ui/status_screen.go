@@ -11,7 +11,7 @@ import (
 )
 
 type StatusScreen struct {
-	manager         *Manager
+	manager         *uiManager
 	statusLabel     *widget.Label
 	sessionLabel    *widget.Label
 	hostInfoLabel   *widget.Label
@@ -20,7 +20,7 @@ type StatusScreen struct {
 	currentStatus   string
 }
 
-func NewStatusScreen(manager *Manager) *StatusScreen {
+func NewStatusScreen(manager *uiManager) *StatusScreen {
 	return &StatusScreen{
 		manager: manager,
 	}
@@ -122,7 +122,7 @@ func (s *StatusScreen) updateDisplay() {
 		s.hostInfoLabel.SetText("Host: Not initialized")
 	}
 
-	currentSession := s.manager.GetCurrentSession()
+	currentSession := s.manager.getCurrentSession()
 
 	statusText := "Unknown"
 	if currentSession != nil {

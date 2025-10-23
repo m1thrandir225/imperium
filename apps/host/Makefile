@@ -13,3 +13,4 @@ mock:
 	mockgen -package mocktoken_refresher -destination internal/token_refresher/mocks/refresher.go github.com/m1thrandir225/imperium/apps/host/internal/token_refresher Refresher
 	mockgen -package mockauth -destination internal/auth/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/auth Service
 	mockgen -package mockhost -destination internal/host/mocks/status_manager.go github.com/m1thrandir225/imperium/apps/host/internal/host StatusManager
+	mockgen -package mockui -destination internal/ui/mocks/screen.go github.com/m1thrandir225/imperium/apps/host/internal/ui Screen

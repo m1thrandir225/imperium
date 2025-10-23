@@ -19,10 +19,10 @@ import (
 )
 
 type SetupScreen struct {
-	manager *Manager
+	manager *uiManager
 }
 
-func NewSetupScreen(manager *Manager) *SetupScreen {
+func NewSetupScreen(manager *uiManager) *SetupScreen {
 	return &SetupScreen{
 		manager: manager,
 	}
@@ -99,7 +99,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 		}
 
 		//Publish To Save Data
-		s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+		s.manager.publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
 			Settings: state.Settings{
 				FFmpegPath:    ffmpegPathEntry.Text,
 				ServerAddress: serverAddressEntry.Text,
@@ -107,7 +107,7 @@ func (s *SetupScreen) Render(w fyne.Window) fyne.CanvasObject {
 		})
 
 		//OnComplete
-		s.manager.Publish(uapp.EventSetupCompleted, uapp.SetupCompletedPayload{
+		s.manager.publish(uapp.EventSetupCompleted, uapp.SetupCompletedPayload{
 			FFmpegPath:    ffmpegPathEntry.Text,
 			ServerAddress: serverAddressEntry.Text,
 		})

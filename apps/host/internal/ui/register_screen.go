@@ -11,10 +11,10 @@ import (
 )
 
 type RegisterScreen struct {
-	manager *Manager
+	manager *uiManager
 }
 
-func NewRegisterScreen(manager *Manager) *RegisterScreen {
+func NewRegisterScreen(manager *uiManager) *RegisterScreen {
 	return &RegisterScreen{
 		manager: manager,
 	}
@@ -46,7 +46,7 @@ func (s *RegisterScreen) Render(w fyne.Window) fyne.CanvasObject {
 				dialog.ShowError(errors.New("validation: First name, last name, email and password are required"), w)
 				return
 			}
-			s.manager.Publish(app.EventRegisterRequested, app.RegisterRequestedPayload{
+			s.manager.publish(app.EventRegisterRequested, app.RegisterRequestedPayload{
 				Email:     emailEntry.Text,
 				Password:  passwordEntry.Text,
 				FirstName: firstNameEntry.Text,
@@ -61,5 +61,10 @@ func (s *RegisterScreen) Render(w fyne.Window) fyne.CanvasObject {
 	form.Append("Email", emailEntry)
 	form.Append("Password", passwordEntry)
 
-	return container.NewVBox(form, backToLoginBtn)
+	return container.NewVBox(
+		container.NewCenter(Logo(true)),
+		form,
+		backToLoginBtn,
+		Copyright(),
+	)
 }

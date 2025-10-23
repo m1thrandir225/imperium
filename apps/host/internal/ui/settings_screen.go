@@ -16,10 +16,10 @@ import (
 )
 
 type SettingsScreen struct {
-	manager *Manager
+	manager *uiManager
 }
 
-func NewSettingsScreen(manager *Manager) *SettingsScreen {
+func NewSettingsScreen(manager *uiManager) *SettingsScreen {
 	return &SettingsScreen{
 		manager: manager,
 	}
@@ -31,6 +31,7 @@ func (s *SettingsScreen) Name() string {
 
 func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	current := s.manager.GetState().Settings
+
 	// Server Address Section
 	serverAddressEntry := widget.NewEntry()
 	serverAddressEntry.SetPlaceHolder("e.g., http://localhost:8080 or https://auth.example.com")
@@ -179,7 +180,7 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			return
 		}
 
-		s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+		s.manager.publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
 			Settings: state.Settings{
 				FFmpegPath:    ffmpegPathEntry.Text,
 				ServerAddress: serverAddressEntry.Text,

@@ -9,10 +9,10 @@ import (
 )
 
 type MainMenuScreen struct {
-	manager *Manager
+	manager *uiManager
 }
 
-func NewMainMenuScreen(manager *Manager) *MainMenuScreen {
+func NewMainMenuScreen(manager *uiManager) *MainMenuScreen {
 	return &MainMenuScreen{
 		manager: manager,
 	}
@@ -42,7 +42,7 @@ func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
 				s.manager.ShowScreen(SETTINGS_SCREEN)
 			}),
 			widget.NewButton("Logout", func() {
-				s.manager.Publish(app.EventLogoutRequested, nil)
+				s.manager.publish(app.EventLogoutRequested, nil)
 			}),
 		),
 	)

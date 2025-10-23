@@ -15,13 +15,13 @@ import (
 )
 
 type ProgramsScreen struct {
-	manager      *Manager
+	manager      *uiManager
 	programsList *widget.List
 	programs     []uapp.ProgramItem
 	subscribed   bool
 }
 
-func NewProgramsScreen(manager *Manager) *ProgramsScreen {
+func NewProgramsScreen(manager *uiManager) *ProgramsScreen {
 	return &ProgramsScreen{
 		manager: manager,
 	}
@@ -72,7 +72,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	)
 
 	refreshBtn := widget.NewButton("Refresh Programs", func() {
-		s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
+		s.manager.publish(uapp.EventProgramsDiscoverRequested, nil)
 	})
 
 	addProgramBtn := widget.NewButton("Add Program", func() {
@@ -93,7 +93,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			path := uri.URI().Path()
 			name := filepath.Base(path)
 
-			s.manager.Publish(uapp.EventProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
+			s.manager.publish(uapp.EventProgramRegisterRequested, uapp.ProgramRegisterRequestedPayload{
 				Program: uapp.ProgramItem{
 					Name:        name,
 					Path:        path,
@@ -131,13 +131,13 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 			if !found {
 				current = append(current, newPath)
-				s.manager.Publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
+				s.manager.publish(uapp.EventSettingsSaved, uapp.SettingsSavedPayload{
 					Settings: state.Settings{
 						CustomProgramPaths: current,
 					},
 				})
 
-				s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
+				s.manager.publish(uapp.EventProgramsDiscoverRequested, nil)
 				dialog.ShowInformation("Scan Path Added", newPath, w)
 			}
 		}, w)
@@ -160,7 +160,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	)
 
 	//Request initial discovery
-	s.manager.Publish(uapp.EventProgramsDiscoverRequested, nil)
+	s.manager.publish(uapp.EventProgramsDiscoverRequested, nil)
 
 	return content
 }
