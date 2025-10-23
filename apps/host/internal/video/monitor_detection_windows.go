@@ -123,3 +123,49 @@ func GetMonitorCount() (int, error) {
 
 	return count, nil
 }
+
+// GetAllMonitorsInfo returns information about all connected monitors on Windows
+func GetAllMonitorsInfo() ([]*MonitorInfo, error) {
+	var monitors []*MonitorInfo
+
+	// Callback function for EnumDisplayMonitors
+	enumProc := syscall.NewCallback(func(hMonitor syscall.Handle, hdc syscall.Handle, lprcClip *RECT, dwData uintptr) uintptr {
+		var mi MONITORINFO
+		mi.CbSize = uint32(unsafe.Sizeof(mi))
+
+		ret, _, _ := procGetMonitorInfoW.Call(
+			uintptr(hMonitor),
+			uintptr(unsafe.Pointer(&mi)),
+		)
+
+		if ret != 0 {
+			// Check if this is the primary monitor
+			isPrimary := (mi.DwFlags & 1) != 0 // MONITORINFOF_PRIMARY = 1
+
+			monitor := &MonitorInfo{
+				Width:     int(mi.RcMonitor.Right - mi.RcMonitor.Left),
+				Height:    int(mi.RcMonitor.Bottom - mi.RcMonitor.Top),
+				OffsetX:   int(mi.RcMonitor.Left),
+				OffsetY:   int(mi.RcMonitor.Top),
+				IsPrimary: isPrimary,
+			}
+
+			monitors = append(monitors, monitor)
+		}
+
+		return 1 // Continue enumeration
+	})
+
+	ret, _, _ := procEnumDisplayMonitors.Call(
+		0, // hdc
+		0, // lprcClip
+		enumProc,
+		0, // dwData
+	)
+
+	if ret == 0 {
+		return nil, fmt.Errorf("failed to enumerate monitors")
+	}
+
+	return monitors, nil
+}
