@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/client/config"
-	"github.com/m1thrandir225/imperium/apps/client/internal"
+	"github.com/m1thrandir225/imperium/apps/client/internal/server"
 )
 
 func openBrowser(url string) {
@@ -42,7 +42,7 @@ func main() {
 	port := ":8081"
 	appURL := fmt.Sprintf("http://localhost%s", port)
 
-	router := internal.SetupRouter(cfg)
+	router := server.SetupRouter(cfg)
 
 	go func() {
 		if err := router.Run(port); err != nil {

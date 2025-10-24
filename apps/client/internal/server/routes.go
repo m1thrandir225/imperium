@@ -1,10 +1,8 @@
-package internal
+package server
 
-import "github.com/gin-gonic/gin"
+func (s *Server) SetupRoutes() {
 
-func SetupRoutes(router *gin.Engine, handler *HTTPHandler) {
-
-	apiV1 := router.Group("/api/v1")
+	apiV1 := s.router.Group("/api/v1")
 	{
 		apiV1.GET("/status", handler.GetStatus)
 

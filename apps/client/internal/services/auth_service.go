@@ -1,4 +1,4 @@
-package internal
+package services
 
 import (
 	"bytes"
@@ -7,45 +7,49 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+
+	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 )
 
-type AuthService struct {
+type AuthService interface {
+	Login(ctx context.Context, cmd models.LoginRequest) (*models.LoginResponse, error)
+	RegisterUser(ctx context.Context, cmd models.RegisterUserRequest) (*models.RegisterUserResponse, error)
+	RefreshToken(ctx context.Context, cmd models.RefreshTokenRequest) (*models.RefreshTokenResponse, error)
+}
+
+type authService struct {
 	authServerBaseURL string
 	httpClient        *http.Client
 }
 
-func NewAuthService(authServerBaseURL string) *AuthService {
-
-	return &AuthService{
+func NewAuthService(authServerBaseURL string, httpClient *http.Client) AuthService {
+	return &authService{
 		authServerBaseURL: authServerBaseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		httpClient:        httpClient,
 	}
 }
 
-func (s *AuthService) GetAuthServerBaseURL() string {
+func (s *authService) GetAuthServerBaseURL() string {
 	return s.authServerBaseURL
 }
 
-func (s *AuthService) GetHTTPClient() *http.Client {
+func (s *authService) GetHTTPClient() *http.Client {
 	return s.httpClient
 }
 
-func (s *AuthService) GetLoginURL() string {
+func (s *authService) GetLoginURL() string {
 	return fmt.Sprintf("%s/login", s.authServerBaseURL)
 }
 
-func (s *AuthService) GetRegisterURL() string {
+func (s *authService) GetRegisterURL() string {
 	return fmt.Sprintf("%s/register", s.authServerBaseURL)
 }
 
-func (s *AuthService) GetRefreshTokenURL() string {
+func (s *authService) GetRefreshTokenURL() string {
 	return fmt.Sprintf("%s/refresh", s.authServerBaseURL)
 }
 
-func (s *AuthService) Login(ctx context.Context, cmd LoginRequest) (*LoginResponse, error) {
+func (s *authService) Login(ctx context.Context, cmd models.LoginRequest) (*models.LoginResponse, error) {
 	body, err := json.Marshal(cmd)
 	if err != nil {
 		return nil, err
@@ -74,7 +78,7 @@ func (s *AuthService) Login(ctx context.Context, cmd LoginRequest) (*LoginRespon
 		return nil, fmt.Errorf("login failed: %s", resp.Status)
 	}
 
-	var result LoginResponse
+	var result models.LoginResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -83,7 +87,7 @@ func (s *AuthService) Login(ctx context.Context, cmd LoginRequest) (*LoginRespon
 	return &result, nil
 }
 
-func (s *AuthService) RegisterUser(ctx context.Context, cmd RegisterUserRequest) (*RegisterUserResponse, error) {
+func (s *authService) RegisterUser(ctx context.Context, cmd models.RegisterUserRequest) (*models.RegisterUserResponse, error) {
 	body, err := json.Marshal(cmd)
 	if err != nil {
 		return nil, err
@@ -114,7 +118,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, cmd RegisterUserRequest)
 		return nil, fmt.Errorf("register user failed: %s", resp.Status)
 	}
 
-	var result RegisterUserResponse
+	var result models.RegisterUserResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -123,7 +127,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, cmd RegisterUserRequest)
 	return &result, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, cmd RefreshTokenRequest) (*RefreshTokenResponse, error) {
+func (s *authService) RefreshToken(ctx context.Context, cmd models.RefreshTokenRequest) (*models.RefreshTokenResponse, error) {
 	body, err := json.Marshal(cmd)
 	if err != nil {
 		return nil, err
@@ -152,7 +156,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, cmd RefreshTokenRequest)
 		return nil, fmt.Errorf("refresh token failed: %s", resp.Status)
 	}
 
-	var result RefreshTokenResponse
+	var result models.RefreshTokenResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -162,6 +166,6 @@ func (s *AuthService) RefreshToken(ctx context.Context, cmd RefreshTokenRequest)
 }
 
 // UpdateAuthServerBaseURL updates the auth server base URL
-func (s *AuthService) UpdateAuthServerBaseURL(authServerBaseURL string) {
+func (s *authService) UpdateAuthServerBaseURL(authServerBaseURL string) {
 	s.authServerBaseURL = authServerBaseURL
 }

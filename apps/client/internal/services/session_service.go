@@ -1,4 +1,4 @@
-package internal
+package services
 
 import (
 	"bytes"
@@ -6,33 +6,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+
+	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 )
 
-type SessionService struct {
+type SessionService interface {
+	CreateSession(ctx context.Context, req models.CreateSessionRequest, token string) (*models.Session, error)
+	GetSession(ctx context.Context, sessionID string, token string) (*models.Session, error)
+	StartSession(ctx context.Context, sessionID string, req models.StartSessionRequest, token string) (*models.Session, error)
+	EndSession(ctx context.Context, sessionID string, req models.EndSessionRequest, token string) (*models.Session, error)
+	CancelSession(ctx context.Context, sessionID string, reason string, token string) (*models.Session, error)
+}
+
+type sessionService struct {
 	baseURL    string
 	httpClient *http.Client
 }
 
-func NewSessionService(baseURL string) *SessionService {
-	return &SessionService{
-		baseURL: baseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+func NewSessionService(baseURL string, httpClient *http.Client) SessionService {
+	return &sessionService{
+		baseURL:    baseURL,
+		httpClient: httpClient,
 	}
 }
 
-func (s *SessionService) GetBaseURL() string {
+func (s *sessionService) GetBaseURL() string {
 	return s.baseURL
 }
 
-func (s *SessionService) GetHTTPClient() *http.Client {
+func (s *sessionService) GetHTTPClient() *http.Client {
 	return s.httpClient
 }
 
-func (s *SessionService) CreateSession(ctx context.Context, req CreateSessionRequest, token string) (*SessionDTO, error) {
-
+func (s *sessionService) CreateSession(ctx context.Context, req models.CreateSessionRequest, token string) (*models.Session, error) {
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -58,14 +64,14 @@ func (s *SessionService) CreateSession(ctx context.Context, req CreateSessionReq
 		return nil, fmt.Errorf("create session failed: %s", resp.Status)
 	}
 
-	var result SessionDTO
+	var result models.Session
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (s *SessionService) GetSession(ctx context.Context, sessionID string, token string) (*SessionDTO, error) {
+func (s *sessionService) GetSession(ctx context.Context, sessionID string, token string) (*models.Session, error) {
 	url := fmt.Sprintf("%s/%s", s.GetBaseURL(), sessionID)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -85,14 +91,14 @@ func (s *SessionService) GetSession(ctx context.Context, sessionID string, token
 		return nil, fmt.Errorf("get session failed: %s", resp.Status)
 	}
 
-	var result SessionDTO
+	var result models.Session
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (s *SessionService) StartSession(ctx context.Context, sessionID string, req StartSessionRequest, token string) (*SessionDTO, error) {
+func (s *sessionService) StartSession(ctx context.Context, sessionID string, req models.StartSessionRequest, token string) (*models.Session, error) {
 	url := fmt.Sprintf("%s/%s/start", s.GetBaseURL(), sessionID)
 
 	body, err := json.Marshal(req)
@@ -118,14 +124,14 @@ func (s *SessionService) StartSession(ctx context.Context, sessionID string, req
 		return nil, fmt.Errorf("start session failed: %s", resp.Status)
 	}
 
-	var result SessionDTO
+	var result models.Session
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (s *SessionService) EndSession(ctx context.Context, sessionID string, req EndSessionRequest, token string) (*SessionDTO, error) {
+func (s *sessionService) EndSession(ctx context.Context, sessionID string, req models.EndSessionRequest, token string) (*models.Session, error) {
 	url := fmt.Sprintf("%s/%s/end", s.GetBaseURL(), sessionID)
 
 	body, err := json.Marshal(req)
@@ -151,14 +157,14 @@ func (s *SessionService) EndSession(ctx context.Context, sessionID string, req E
 		return nil, fmt.Errorf("end session failed: %s", resp.Status)
 	}
 
-	var result SessionDTO
+	var result models.Session
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (s *SessionService) CancelSession(ctx context.Context, sessionID string, reason string, token string) (*SessionDTO, error) {
+func (s *sessionService) CancelSession(ctx context.Context, sessionID string, reason string, token string) (*models.Session, error) {
 	url := fmt.Sprintf("%s/%s/cancel?reason=%s", s.GetBaseURL(), sessionID, reason)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
@@ -179,7 +185,7 @@ func (s *SessionService) CancelSession(ctx context.Context, sessionID string, re
 		return nil, fmt.Errorf("cancel session failed: %s", resp.Status)
 	}
 
-	var result SessionDTO
+	var result models.Session
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
@@ -187,6 +193,6 @@ func (s *SessionService) CancelSession(ctx context.Context, sessionID string, re
 }
 
 // UpdateBaseURL updates the base URL
-func (s *SessionService) UpdateBaseURL(baseURL string) {
+func (s *sessionService) UpdateBaseURL(baseURL string) {
 	s.baseURL = baseURL
 }

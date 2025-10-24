@@ -1,54 +1,60 @@
-package internal
+package services
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"time"
+
+	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 )
 
-type HostService struct {
+type HostService interface {
+	GetUserHosts(ctx context.Context, token string) ([]models.SimpleHost, error)
+	GetHost(ctx context.Context, hostID, token string) (*models.Host, error)
+	GetHostPrograms(ctx context.Context, hostID, token string) ([]models.Program, error)
+}
+
+type hostService struct {
 	hostServerBaseURL string
 	httpClient        *http.Client
 }
 
-func NewHostService(hostServerBaseURL string) *HostService {
-	return &HostService{
+func NewHostService(hostServerBaseURL string, httpClient *http.Client) HostService {
+	return &hostService{
 		hostServerBaseURL: hostServerBaseURL,
-		httpClient: &http.Client{
-			Timeout: 60 * time.Second,
-		},
+		httpClient:        httpClient,
 	}
 }
 
-func (s *HostService) GetHostServerBaseURL() string {
+func (s *hostService) GetHostServerBaseURL() string {
 	return s.hostServerBaseURL
 }
 
-func (s *HostService) GetHTTPClient() *http.Client {
+func (s *hostService) GetHTTPClient() *http.Client {
 	return s.httpClient
 }
 
-func (s *HostService) GetUserHostsURL() string {
+func (s *hostService) GetUserHostsURL() string {
 	return s.GetHostServerBaseURL()
 }
 
-func (s *HostService) GetHostURL(hostID string) string {
+func (s *hostService) GetHostURL(hostID string) string {
 	return fmt.Sprintf("%s/%s", s.GetHostServerBaseURL(), hostID)
 }
 
-func (s *HostService) GetHostProgramsURL(hostID string) string {
+func (s *hostService) GetHostProgramsURL(hostID string) string {
 	return fmt.Sprintf("%s/%s/programs", s.GetHostServerBaseURL(), hostID)
 }
 
-func (s *HostService) UpdateHostServerBaseURL(hostServerBaseURL string) {
+func (s *hostService) UpdateHostServerBaseURL(hostServerBaseURL string) {
 	s.hostServerBaseURL = hostServerBaseURL
 }
 
-func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleHostDTO, error) {
+func (s *hostService) GetUserHosts(ctx context.Context, token string) ([]models.SimpleHost, error) {
 	url := s.GetUserHostsURL()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -66,7 +72,7 @@ func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleH
 	log.Println("resp.Status", resp.Status)
 	log.Println("resp.Body", resp.Body)
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, ErrUnauthorized
+		return nil, errors.New("unauthorized")
 	}
 
 	defer resp.Body.Close()
@@ -76,7 +82,7 @@ func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleH
 		return nil, err
 	}
 
-	var hosts []SimpleHostDTO
+	var hosts []models.SimpleHost
 	err = json.Unmarshal(body, &hosts)
 	if err != nil {
 		return nil, err
@@ -85,7 +91,7 @@ func (s *HostService) GetUserHosts(ctx context.Context, token string) ([]SimpleH
 	return hosts, nil
 }
 
-func (s *HostService) GetHost(ctx context.Context, hostID, token string) (*HostDTO, error) {
+func (s *hostService) GetHost(ctx context.Context, hostID, token string) (*models.Host, error) {
 	url := s.GetHostURL(hostID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -107,7 +113,7 @@ func (s *HostService) GetHost(ctx context.Context, hostID, token string) (*HostD
 		return nil, err
 	}
 
-	var host HostDTO
+	var host models.Host
 	err = json.Unmarshal(body, &host)
 	if err != nil {
 		return nil, err
@@ -116,7 +122,7 @@ func (s *HostService) GetHost(ctx context.Context, hostID, token string) (*HostD
 	return &host, nil
 }
 
-func (s *HostService) GetHostPrograms(ctx context.Context, hostID, token string) ([]ProgramDTO, error) {
+func (s *hostService) GetHostPrograms(ctx context.Context, hostID, token string) ([]models.Program, error) {
 	url := s.GetHostProgramsURL(hostID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -145,7 +151,7 @@ func (s *HostService) GetHostPrograms(ctx context.Context, hostID, token string)
 		return nil, err
 	}
 
-	var programs []ProgramDTO
+	var programs []models.Program
 	err = json.Unmarshal(body, &programs)
 	if err != nil {
 		return nil, err

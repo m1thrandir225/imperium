@@ -1,4 +1,4 @@
-package internal
+package ui
 
 import (
 	"embed"
@@ -7,8 +7,6 @@ import (
 	"net/http"
 )
 
-// The 'all:' prefix is crucial. It tells Go to embed the entire 'webui' directory,
-// including all of its subdirectories, recursively.
 //
 //go:embed all:webui
 var embeddedFS embed.FS

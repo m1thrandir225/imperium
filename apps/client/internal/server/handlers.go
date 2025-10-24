@@ -1,4 +1,4 @@
-package internal
+package server
 
 import (
 	"errors"
@@ -8,22 +8,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m1thrandir225/imperium/apps/client/config"
+	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 )
 
 type HTTPHandler struct {
 	config         *config.Config
-	authService    *AuthService
-	hostService    *HostService
-	clientService  *ClientService
-	sessionService *SessionService
+	authService    services.AuthService
+	hostService    services.HostService
+	clientService  services.ClientService
+	sessionService services.SessionService
 }
 
 func NewHTTPHandler(
 	config *config.Config,
-	authService *AuthService,
-	hostService *HostService,
-	clientService *ClientService,
-	sessionService *SessionService,
+	authService services.AuthService,
+	hostService services.HostService,
+	clientService services.ClientService,
+	sessionService services.SessionService,
 ) *HTTPHandler {
 	return &HTTPHandler{
 		config:         config,
