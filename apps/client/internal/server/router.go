@@ -12,11 +12,6 @@ import (
 )
 
 func SetupRouter(config *config.Config) *gin.Engine {
-	router := gin.Default()
-
-	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
-	router.Use(gin.ErrorLogger())
 
 	baseURL := config.AuthServerBaseURL
 
