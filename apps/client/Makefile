@@ -84,3 +84,18 @@ help: ## Show this help message
 run-prod: build-prod ## Build for production and run the application
 	@echo "Starting application (production build)..."
 	@$(BIN_DIR)/client
+
+mock:
+	#Services
+	mockgen -package mockservices -destination internal/services/mocks/auth_service.go github.com/m1thrandir225/imperium/apps/client/internal/services/ AuthService
+	mockgen -package mockservices -destination internal/services/mocks/client_service.go github.com/m1thrandir225/imperium/apps/client/internal/services/ ClientService
+	mockgen -package mockservices -destination internal/services/mocks/host_service.go github.com/m1thrandir225/imperium/apps/client/internal/services/ HostService
+	mockgen -package mockservices -destination internal/services/mocks/session_service.go github.com/m1thrandir225/imperium/apps/client/internal/services/ SessionService
+
+	# Server Handlers
+	mockgen -package mockserver -destination internal/server/mocks/auth_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ AuthHandler
+	mockgen -package mockserver -destination internal/server/mocks/client_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ ClientHandler
+	mockgen -package mockserver -destination internal/server/mocks/host_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ HostHandler
+	mockgen -package mockserver -destination internal/server/mocks/session_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ SessionHandler
+	mockgen -package mockserver -destination internal/server/mocks/status_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ StatusHandler
+	mockgen -package mockserver -destination internal/server/mocks/config_handler.go github.com/m1thrandir225/imperium/apps/client/internal/server/ ConfigHandler
