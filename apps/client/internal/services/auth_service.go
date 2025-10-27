@@ -12,6 +12,7 @@ import (
 )
 
 type AuthService interface {
+	Service
 	Login(ctx context.Context, cmd models.LoginRequest) (*models.LoginResponse, error)
 	RegisterUser(ctx context.Context, cmd models.RegisterUserRequest) (*models.RegisterUserResponse, error)
 	RefreshToken(ctx context.Context, cmd models.RefreshTokenRequest) (*models.RefreshTokenResponse, error)
@@ -165,7 +166,7 @@ func (s *authService) RefreshToken(ctx context.Context, cmd models.RefreshTokenR
 	return &result, nil
 }
 
-// UpdateAuthServerBaseURL updates the auth server base URL
-func (s *authService) UpdateAuthServerBaseURL(authServerBaseURL string) {
-	s.authServerBaseURL = authServerBaseURL
+// UpdateBaseURL updates the auth server base URL
+func (s *authService) UpdateBaseURL(url string) {
+	s.authServerBaseURL = url
 }

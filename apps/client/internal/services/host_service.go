@@ -13,6 +13,7 @@ import (
 )
 
 type HostService interface {
+	Service
 	GetUserHosts(ctx context.Context, token string) ([]models.SimpleHost, error)
 	GetHost(ctx context.Context, hostID, token string) (*models.Host, error)
 	GetHostPrograms(ctx context.Context, hostID, token string) ([]models.Program, error)
@@ -50,8 +51,8 @@ func (s *hostService) GetHostProgramsURL(hostID string) string {
 	return fmt.Sprintf("%s/%s/programs", s.GetHostServerBaseURL(), hostID)
 }
 
-func (s *hostService) UpdateHostServerBaseURL(hostServerBaseURL string) {
-	s.hostServerBaseURL = hostServerBaseURL
+func (s *hostService) UpdateBaseURL(url string) {
+	s.hostServerBaseURL = url
 }
 
 func (s *hostService) GetUserHosts(ctx context.Context, token string) ([]models.SimpleHost, error) {

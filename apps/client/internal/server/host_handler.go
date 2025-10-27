@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m1thrandir225/imperium/apps/client/config"
 	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 )
 
@@ -16,16 +15,13 @@ type HostHandler interface {
 }
 
 type hostHandler struct {
-	config  *config.Config
 	service services.HostService
 }
 
 func NewHostHandler(
-	cfg *config.Config,
 	service services.HostService,
 ) (HostHandler, error) {
 	return &hostHandler{
-		config:  cfg,
 		service: service,
 	}, nil
 }

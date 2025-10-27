@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m1thrandir225/imperium/apps/client/config"
 	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 )
@@ -15,16 +14,13 @@ type ClientHandler interface {
 }
 
 type clientHandler struct {
-	config  *config.Config
 	service services.ClientService
 }
 
 func NewClientHandler(
-	cfg *config.Config,
 	service services.ClientService,
 ) (ClientHandler, error) {
 	return &clientHandler{
-		config:  cfg,
 		service: service,
 	}, nil
 }

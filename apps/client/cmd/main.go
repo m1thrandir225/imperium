@@ -42,13 +42,13 @@ func main() {
 	port := ":8081"
 	appURL := fmt.Sprintf("http://localhost%s", port)
 
-	router := server.SetupRouter(cfg)
+	server := server.NewServer(cfg)
+	err := server.SetupRouter()
+	if err != nil {
+		log.Fatalf("Error setting up server routes: %v", err)
+	}
 
-	go func() {
-		if err := router.Run(port); err != nil {
-			log.Printf("Failed to start server: %v", err)
-		}
-	}()
+	server.StartAndServe()
 
 	time.Sleep(100 * time.Millisecond)
 	openBrowser(appURL)

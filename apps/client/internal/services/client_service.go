@@ -12,6 +12,7 @@ import (
 )
 
 type ClientService interface {
+	Service
 	GetClientInfo() (hostname, ip string, err error)
 	RegisterOrUpdateClient(ctx context.Context, req models.RegisterClientRequest, token string) (*models.RegisterClientResponse, error)
 }

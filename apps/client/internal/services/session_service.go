@@ -11,6 +11,7 @@ import (
 )
 
 type SessionService interface {
+	Service
 	CreateSession(ctx context.Context, req models.CreateSessionRequest, token string) (*models.Session, error)
 	GetSession(ctx context.Context, sessionID string, token string) (*models.Session, error)
 	StartSession(ctx context.Context, sessionID string, req models.StartSessionRequest, token string) (*models.Session, error)

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m1thrandir225/imperium/apps/client/config"
 	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 	"github.com/m1thrandir225/imperium/apps/client/internal/util"
@@ -18,17 +17,17 @@ type AuthHandler interface {
 }
 
 type authHandler struct {
-	config  *config.Config
-	service services.AuthService
+	service       services.AuthService
+	clientService services.ClientService
 }
 
 func NewAuthHandler(
-	cfg *config.Config,
 	service services.AuthService,
+	clientService services.ClientService,
 ) (AuthHandler, error) {
 	return &authHandler{
-		config:  cfg,
-		service: service,
+		service:       service,
+		clientService: clientService,
 	}, nil
 }
 

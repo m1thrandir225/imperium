@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m1thrandir225/imperium/apps/client/config"
 	"github.com/m1thrandir225/imperium/apps/client/internal/models"
 	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 )
@@ -19,16 +18,13 @@ type SessionHandler interface {
 }
 
 type sessionHandler struct {
-	config  *config.Config
 	service services.SessionService
 }
 
 func NewSessionHandler(
-	cfg *config.Config,
 	service services.SessionService,
 ) SessionHandler {
 	return &sessionHandler{
-		config:  cfg,
 		service: service,
 	}
 }

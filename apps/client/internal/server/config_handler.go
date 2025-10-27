@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m1thrandir225/imperium/apps/client/config"
+	"github.com/m1thrandir225/imperium/apps/client/internal/services"
 )
 
 type ConfigHandler interface {
@@ -16,6 +17,11 @@ type ConfigHandler interface {
 
 type configHandler struct {
 	config *config.Config
+
+	authService    services.AuthService
+	clientService  services.ClientService
+	hostService    services.HostService
+	sessionService services.SessionService
 }
 
 func NewConfigHandler(
@@ -61,8 +67,8 @@ func (h *configHandler) SetupConfig(ctx *gin.Context) {
 func (h *configHandler) updateServicesWithNewURL(authServerBaseURL string) {
 	apiURL := fmt.Sprintf("%s/api/v1", authServerBaseURL)
 
-	h.authService.UpdateAuthServerBaseURL(fmt.Sprintf("%s/auth", apiURL))
-	h.hostService.UpdateHostServerBaseURL(fmt.Sprintf("%s/hosts", apiURL))
+	h.authService.UpdateBaseURL(fmt.Sprintf("%s/auth", apiURL))
+	h.hostService.UpdateBaseURL(fmt.Sprintf("%s/hosts", apiURL))
 	h.clientService.UpdateBaseURL(fmt.Sprintf("%s/clients", apiURL))
 	h.sessionService.UpdateBaseURL(fmt.Sprintf("%s/sessions", apiURL))
 }
