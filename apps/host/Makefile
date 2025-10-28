@@ -1,8 +1,12 @@
-.PHONY: mock
+.PHONY: build-dev mock
 
-build:
+#TODO: build-production command that builds the app using the fyne-cli 
+
+#builds a dev version with go-build instead of fyne package
+build-dev:
 	CGO_ENABLED=1 go build -o dist/host-app ./cmd/main.go
 
+#generate mocks via go-mock and mockgen
 mock:
 	mockgen -package mocksession -destination internal/session/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/session Service
 	mockgen -package mockhttpclient -destination internal/httpclient/mocks/token_getter.go github.com/m1thrandir225/imperium/apps/host/internal/httpclient TokenGetter

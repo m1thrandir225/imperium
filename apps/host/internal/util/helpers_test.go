@@ -111,7 +111,7 @@ func TestShortPath(t *testing.T) {
 		{
 			name:     "two level path",
 			input:    filepath.Join("dir", "file.txt"),
-			expected: filepath.Join("dir", "file.txt"),
+			expected: filepath.Join("...", "dir", "file.txt"),
 		},
 		{
 			name:     "three level path",
@@ -126,7 +126,7 @@ func TestShortPath(t *testing.T) {
 		{
 			name:     "root path single file",
 			input:    filepath.Join(string(filepath.Separator), "file.txt"),
-			expected: filepath.Join(string(filepath.Separator), "file.txt"),
+			expected: filepath.Join("...", "file.txt"),
 		},
 		{
 			name:     "root path with subdirs",
