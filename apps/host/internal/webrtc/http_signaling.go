@@ -9,7 +9,7 @@ type sdpMsg struct {
 	SDP string `json:"sdp"`
 }
 
-func RegisterSignalingHandlers(mux *http.ServeMux, getStreamer func() *Streamer) {
+func RegisterSignalingHandlers(mux *http.ServeMux, getStreamer func() Streamer) {
 	mux.HandleFunc("/api/session/webrtc/offer", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")

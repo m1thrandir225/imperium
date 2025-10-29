@@ -3,9 +3,9 @@ package session
 import "errors"
 
 var (
-	InvalidProgramService = errors.New("invalid ProgramService")
-	InvalidVideoRecorder  = errors.New("invalid VideoRecorder")
-	InvalidWebrtcStreamer = errors.New("invalid WebrtcStreamer")
-	InvalidAuthService    = errors.New("invalid AuthService")
-	InvalidAuthBaseURL    = errors.New("invalid AuthBaseURL")
+	ErrInvalidProgramService = errors.New("invalid ProgramService")
+	ErrInvalidVideoRecorder  = errors.New("invalid VideoRecorder")
+	ErrInvalidWebrtcStreamer = errors.New("invalid WebrtcStreamer")
+	ErrInvalidAuthService    = errors.New("invalid AuthService")
+	ErrInvalidAuthBaseURL    = errors.New("invalid AuthBaseURL")
 )

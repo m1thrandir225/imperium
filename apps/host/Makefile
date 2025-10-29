@@ -1,6 +1,9 @@
-.PHONY: build-dev mock
+.PHONY: build-dev mock go-doc
 
 #TODO: build-production command that builds the app using the fyne-cli 
+
+go-doc:
+	go doc -http=:6000
 
 #builds a dev version with go-build instead of fyne package
 build-dev:
@@ -18,3 +21,4 @@ mock:
 	mockgen -package mockauth -destination internal/auth/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/auth Service
 	mockgen -package mockhost -destination internal/host/mocks/status_manager.go github.com/m1thrandir225/imperium/apps/host/internal/host StatusManager
 	mockgen -package mockui -destination internal/ui/mocks/screen.go github.com/m1thrandir225/imperium/apps/host/internal/ui Screen
+	mockgen -package mockwebrtc -destination internal/webrtc/mocks/streamer.go github.com/m1thrandir225/imperium/apps/host/internal/webrtc Streamer

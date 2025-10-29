@@ -1,4 +1,3 @@
-// Package session provides the session service for the host application.
 package session
 
 import (
@@ -21,7 +20,7 @@ type sessionService struct {
 	token             string
 	programService    programs.Service
 	videoRecorder     *video.Recorder
-	webrtcStreamer    *webrtc.Streamer
+	webrtcStreamer    webrtc.Streamer
 	currentSession    *Session
 	mu                sync.Mutex
 }
@@ -32,18 +31,18 @@ func NewService(
 	authService interface{ GetAuthenticatedClient() *httpclient.Client },
 	programService programs.Service,
 	videoRecorder *video.Recorder,
-	webrtcStreamer *webrtc.Streamer,
+	webrtcStreamer webrtc.Streamer,
 ) (Service, error) {
 	if !util.ValidURL(authServerBaseURL) {
-		return nil, InvalidAuthBaseURL
+		return nil, ErrInvalidAuthBaseURL
 	}
 
 	if programService == nil {
-		return nil, InvalidProgramService
+		return nil, ErrInvalidProgramService
 	}
 
 	if videoRecorder == nil {
-		return nil, InvalidVideoRecorder
+		return nil, ErrInvalidVideoRecorder
 	}
 
 	// if webrtcStreamer == nil {
@@ -51,7 +50,7 @@ func NewService(
 	// }
 
 	if authService == nil {
-		return nil, InvalidAuthService
+		return nil, ErrInvalidAuthService
 	}
 
 	return &sessionService{
@@ -65,7 +64,7 @@ func NewService(
 }
 
 // Deprecated: WebRTCStreamer
-func (s *sessionService) WebRTCStreamer() *webrtc.Streamer {
+func (s *sessionService) WebRTCStreamer() webrtc.Streamer {
 	return s.webrtcStreamer
 }
 

@@ -1,3 +1,4 @@
+// Package app
 package app
 
 import (
@@ -14,7 +15,7 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
-	tokenrefresher "github.com/m1thrandir225/imperium/apps/host/internal/token_refresher"
+	tokenrefresher "github.com/m1thrandir225/imperium/apps/host/internal/tokenrefresher"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 )

@@ -1,3 +1,4 @@
+// Package session provides the session service for the host application.
 package session
 
 import (

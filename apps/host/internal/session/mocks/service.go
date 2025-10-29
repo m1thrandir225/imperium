@@ -143,10 +143,10 @@ func (mr *MockServiceMockRecorder) UpdateVideoConfig(cfg any) *gomock.Call {
 }
 
 // WebRTCStreamer mocks base method.
-func (m *MockService) WebRTCStreamer() *webrtc.Streamer {
+func (m *MockService) WebRTCStreamer() webrtc.Streamer {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WebRTCStreamer")
-	ret0, _ := ret[0].(*webrtc.Streamer)
+	ret0, _ := ret[0].(webrtc.Streamer)
 	return ret0
 }
 

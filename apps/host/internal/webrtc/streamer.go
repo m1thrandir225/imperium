@@ -1,3 +1,5 @@
+// Package webrtc provides a WebRTC based streamer that pumps a video stream and
+// receives input data via the UDP based data-channel from WebRTC
 package webrtc
 
 import (
@@ -14,7 +16,13 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media/h264reader"
 )
 
-type Streamer struct {
+type Streamer interface {
+	StartStream(stream io.ReadCloser, fps int)
+	HandleOffer(offerSDP string) (string, error)
+	Close() error
+}
+
+type streamer struct {
 	pc               *pionwebrtc.PeerConnection
 	videoTrack       *pionwebrtc.TrackLocalStaticRTP
 	videoPayloadType uint8
@@ -24,7 +32,7 @@ type Streamer struct {
 	iceReadyCh chan struct{}
 }
 
-func NewStreamer() (*Streamer, error) {
+func NewStreamer() (Streamer, error) {
 	cfg := pionwebrtc.Configuration{
 		ICEServers: []pionwebrtc.ICEServer{
 			{URLs: []string{"stun:stun.l.google.com:19302"}},
@@ -69,7 +77,6 @@ func NewStreamer() (*Streamer, error) {
 		Ordered:        &ordered,
 		MaxRetransmits: &maxRetrans,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("create data channel: %w", err)
 	}
@@ -104,7 +111,7 @@ func NewStreamer() (*Streamer, error) {
 		}
 	})
 
-	streamer := &Streamer{
+	streamer := &streamer{
 		pc:               pc,
 		videoTrack:       videoTrack,
 		videoPayloadType: 96,
@@ -131,11 +138,11 @@ func NewStreamer() (*Streamer, error) {
 	return streamer, nil
 }
 
-func (s *Streamer) StartStream(stream io.ReadCloser, fps int) {
+func (s *streamer) StartStream(stream io.ReadCloser, fps int) {
 	go s.pumpStream(stream, fps)
 }
 
-func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
+func (s *streamer) pumpStream(stream io.ReadCloser, fps int) {
 	defer stream.Close()
 
 	log.Printf("Waiting for ice ready channel")
@@ -231,7 +238,7 @@ func (s *Streamer) pumpStream(stream io.ReadCloser, fps int) {
 // 	}
 // }
 
-func (s *Streamer) HandleOffer(offerSDP string) (string, error) {
+func (s *streamer) HandleOffer(offerSDP string) (string, error) {
 	offer := pionwebrtc.SessionDescription{Type: pionwebrtc.SDPTypeOffer, SDP: offerSDP}
 	if err := s.pc.SetRemoteDescription(offer); err != nil {
 		return "", fmt.Errorf("set remote: %w", err)
@@ -260,7 +267,7 @@ func (s *Streamer) HandleOffer(offerSDP string) (string, error) {
 	return s.pc.LocalDescription().SDP, nil
 }
 
-func (s *Streamer) Close() error {
+func (s *streamer) Close() error {
 	if s.pc != nil {
 		return s.pc.Close()
 	}

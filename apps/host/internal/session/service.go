@@ -16,6 +16,6 @@ type Service interface {
 	ProcessInputCommand(cmd input.InputCommand)
 	GetPrograms() ([]*programs.Program, error)
 	GenerateWebRTCAnswer(offer string) (string, error)
-	WebRTCStreamer() *webrtc.Streamer
+	WebRTCStreamer() webrtc.Streamer
 	UpdateVideoConfig(cfg *video.Config)
 }
