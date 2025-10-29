@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
-	"github.com/m1thrandir225/imperium/apps/host/internal/event_broker"
+	"github.com/m1thrandir225/imperium/apps/host/internal/events"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpserver"
@@ -21,7 +21,7 @@ import (
 
 type App struct {
 	Name           string
-	Bus            event_broker.EventBroker
+	Bus            events.EventBroker
 	State          state.StateManager
 	AuthBaseURL    string
 	ProgramService programs.Service
@@ -43,7 +43,7 @@ func New(name string) (*App, error) {
 
 	a := &App{
 		Name:        name,
-		Bus:         event_broker.NewInMemoryBroker(),
+		Bus:         events.NewInMemoryBroker(),
 		State:       sm,
 		AuthBaseURL: st.Settings.ServerAddress,
 	}
@@ -83,7 +83,6 @@ func (a *App) buildClients() {
 	}
 
 	httpClient, err := httpclient.NewClient(a.AuthBaseURL, tok, tok)
-
 	if err != nil {
 		log.Printf("failed to create a new http client")
 		panic(err) // should panic
@@ -95,7 +94,6 @@ func (a *App) buildClients() {
 		a.AuthBaseURL,
 		httpClient,
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -112,13 +110,17 @@ func (a *App) buildClients() {
 		dbPath,
 		a.State.Get().Settings.RawgAPIKey,
 	)
+	if err != nil {
+		panic(err)
+	}
+
 	a.ProgramService = programService
 
 	a.stopTokenRefresher()
 
 	tokenRefresher, err := tokenrefresher.NewTokenRefresher(tok, tok)
 	if err != nil {
-		panic(err) //FIXME: should panic here??
+		panic(err) // FIXME: should panic here??
 	}
 
 	a.tokenRefresher = tokenRefresher
@@ -155,7 +157,7 @@ func (a *App) startStatusManagerIfReady() {
 		a.SessionService,
 	)
 	if err != nil {
-		panic(err) //should panic, invalid status manager
+		panic(err) // should panic, invalid status manager
 	}
 	a.StatusManager = statusManager
 	a.StatusManager.Start(context.Background())

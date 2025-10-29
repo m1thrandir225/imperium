@@ -1,4 +1,4 @@
-package event_broker
+package events
 
 import "sync"
 

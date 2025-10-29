@@ -13,8 +13,8 @@ mock:
 	mockgen -package mockhttpclient -destination internal/httpclient/mocks/token_refresher.go github.com/m1thrandir225/imperium/apps/host/internal/httpclient TokenRefresher
 	mockgen -package mockprograms -destination internal/programs/mocks/db.go github.com/m1thrandir225/imperium/apps/host/internal/programs Database
 	mockgen -package mockprograms -destination internal/programs/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/programs Service
-	mockgen -package mockevent_broker -destination internal/event_broker/mocks/broker.go github.com/m1thrandir225/imperium/apps/host/internal/event_broker EventBroker
-	mockgen -package mocktoken_refresher -destination internal/token_refresher/mocks/refresher.go github.com/m1thrandir225/imperium/apps/host/internal/token_refresher Refresher
+	mockgen -package mockevent_broker -destination internal/events/mocks/broker.go github.com/m1thrandir225/imperium/apps/host/internal/events EventBroker
+	mockgen -package mocktoken_refresher -destination internal/tokenrefresher/mocks/refresher.go github.com/m1thrandir225/imperium/apps/host/internal/tokenrefresher Refresher
 	mockgen -package mockauth -destination internal/auth/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/auth Service
 	mockgen -package mockhost -destination internal/host/mocks/status_manager.go github.com/m1thrandir225/imperium/apps/host/internal/host StatusManager
 	mockgen -package mockui -destination internal/ui/mocks/screen.go github.com/m1thrandir225/imperium/apps/host/internal/ui Screen

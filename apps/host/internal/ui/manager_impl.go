@@ -10,7 +10,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
 	uapp "github.com/m1thrandir225/imperium/apps/host/internal/app"
-	"github.com/m1thrandir225/imperium/apps/host/internal/event_broker"
+	"github.com/m1thrandir225/imperium/apps/host/internal/events"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
 )
@@ -19,12 +19,12 @@ type uiManager struct {
 	app            fyne.App
 	window         fyne.Window
 	screens        map[string]Screen
-	bus            event_broker.EventBroker
+	bus            events.EventBroker
 	state          state.StateManager
 	currentSession *session.Session
 }
 
-func NewUIManager(stateManager state.StateManager, bus event_broker.EventBroker) Manager {
+func NewUIManager(stateManager state.StateManager, bus events.EventBroker) Manager {
 	manager := &uiManager{
 		app:     app.NewWithID("imperium"),
 		screens: make(map[string]Screen),
@@ -145,7 +145,6 @@ func (m *uiManager) ShowScreen(name string) {
 			m.window.SetContent(screen.Render(m.window))
 			m.publish(uapp.EventUIShowScreen, uapp.UIShowScreenPayload{Name: name})
 		})
-
 	}
 }
 
@@ -249,7 +248,6 @@ func (m *uiManager) shouldShowLogin() bool {
 	}
 
 	return time.Now().After(cfg.UserSession.AccessTokenExpiresAt)
-
 }
 
 func (m *uiManager) shouldShowSetup() bool {
