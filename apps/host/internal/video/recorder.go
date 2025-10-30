@@ -16,17 +16,23 @@ type Recorder struct {
 	config *Config
 }
 
-func NewRecorder(config *Config) *Recorder {
+func NewRecorder(config *Config) (*Recorder, error) {
 	path := "ffmpeg"
 	if config != nil && config.FFMPEGPath != "" {
 		path = config.FFMPEGPath
 	}
 
 	log.Println("config: ", config)
+
+	ffmpegWrapper, err := NewFFMPEGWrapper(path)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Recorder{
 		config: config,
-		ffmpeg: NewFFMPEGWrapper(path),
-	}
+		ffmpeg: ffmpegWrapper,
+	}, nil
 }
 
 func (r *Recorder) buildBaseArgs() []string {

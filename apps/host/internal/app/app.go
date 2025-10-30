@@ -173,13 +173,17 @@ func (a *App) stopTokenRefresher() {
 }
 
 func (a *App) buildSessionService() {
-	recorder := video.NewRecorder(
+	recorder, err := video.NewRecorder(
 		&video.Config{
 			Encoder:    a.State.Get().Settings.Encoder,
 			FPS:        a.State.Get().Settings.Framerate,
 			FFMPEGPath: a.State.Get().Settings.FFmpegPath,
 		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	sessionService, err := session.NewService(
 		a.AuthBaseURL,

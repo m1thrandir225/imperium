@@ -101,3 +101,18 @@ func ShortPath(p string) string {
 	}
 	return filepath.Join("...", tail)
 }
+
+func IsValidPath(path string) bool {
+	//Check if already exists
+	if _, err := os.Stat(path); err == nil {
+		return true
+	}
+
+	//Atempt to create and delete
+	var d []byte
+	if err := os.WriteFile(path, d, 0644); err == nil {
+		os.Remove(path)
+		return true
+	}
+	return false
+}

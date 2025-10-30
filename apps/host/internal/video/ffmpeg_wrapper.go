@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 type FFMPEGWrapper struct {
@@ -15,10 +17,15 @@ type FFMPEGWrapper struct {
 	stdin   io.WriteCloser
 }
 
-func NewFFMPEGWrapper(path string) *FFMPEGWrapper {
+func NewFFMPEGWrapper(path string) (*FFMPEGWrapper, error) {
+
+	if !util.IsValidPath(path) {
+		return nil, ErrInvalidPath
+	}
+
 	return &FFMPEGWrapper{
 		path: path,
-	}
+	}, nil
 }
 
 func (w *FFMPEGWrapper) Execute(args ...string) error {

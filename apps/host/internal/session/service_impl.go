@@ -185,5 +185,10 @@ func (s *sessionService) UpdateVideoConfig(cfg *video.Config) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.videoRecorder = video.NewRecorder(cfg)
+	recorder, err := video.NewRecorder(cfg)
+	if err != nil {
+		//TODO: fix error handling
+		log.Printf("invalid recorder might be a nil reference: %w", err)
+	}
+	s.videoRecorder = recorder
 }
