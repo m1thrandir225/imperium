@@ -47,7 +47,6 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	}
 
 	browseFFmpegBtn := widget.NewButton("Browse", func() {
-
 		dialog.ShowFileOpen(func(uri fyne.URIReadCloser, err error) {
 			defer func() {
 				if uri != nil {
@@ -63,7 +62,6 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			}
 			ffmpegPathEntry.SetText(uri.URI().Path())
 		}, w)
-
 	})
 
 	// Encoder Selection - Start with basic fallbacks
@@ -214,7 +212,11 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 		}
 
 		// Test FFmpeg installation
-		wrapper := video.NewFFMPEGWrapper(ffmpegPathEntry.Text)
+		wrapper, err := video.NewFFMPEGWrapper(ffmpegPathEntry.Text)
+		if err != nil {
+			dialog.ShowError(fmt.Errorf("something went wrong: %v", err), w)
+			return
+		}
 		version, err := wrapper.Version()
 		if err != nil {
 			dialog.ShowError(fmt.Errorf("FFmpeg test failed: %v", err), w)

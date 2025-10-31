@@ -3,7 +3,6 @@ package video
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,18 +10,18 @@ import (
 	"time"
 )
 
+// Recorder takes care of recording video via ffmpeg
 type Recorder struct {
 	ffmpeg *FFMPEGWrapper
 	config *Config
 }
 
+// NewRecorder returns a new Recorder instance based on the given config
 func NewRecorder(config *Config) (*Recorder, error) {
 	path := "ffmpeg"
 	if config != nil && config.FFMPEGPath != "" {
 		path = config.FFMPEGPath
 	}
-
-	log.Println("config: ", config)
 
 	ffmpegWrapper, err := NewFFMPEGWrapper(path)
 	if err != nil {
