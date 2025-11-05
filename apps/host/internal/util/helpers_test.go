@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -69,21 +68,25 @@ func TestNormalizeName(t *testing.T) {
 
 func TestSimilarity(t *testing.T) {
 	testCases := []struct {
+		name     string
 		inputA   string
 		inputB   string
 		expected float64
 	}{
 		{
+			name:     "Similarity 1",
 			inputA:   "Test",
 			inputB:   "Test",
 			expected: 1.0,
 		},
 		{
+			name:     "Similarity 2",
 			inputA:   "tast",
 			inputB:   "Test",
 			expected: 0.25,
 		},
 		{
+			name:     "Similarity 3",
 			inputA:   "random word",
 			inputB:   "hello world",
 			expected: 0.0,
@@ -91,9 +94,9 @@ func TestSimilarity(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
-		fmt.Println(Similarity(tc.inputA, tc.inputA))
-		require.Equal(t, tc.expected, Similarity(tc.inputA, tc.inputB))
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, Similarity(tc.inputA, tc.inputB))
+		})
 	}
 }
 

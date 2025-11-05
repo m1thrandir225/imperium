@@ -68,21 +68,24 @@ func TestNewStateManager(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		appName := tt.setup()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			appName := tc.setup()
 
-		defer tt.teardown(appName)
+			defer tc.teardown(appName)
 
-		manager, err := createPersistedStateManager(appName)
+			manager, err := createPersistedStateManager(appName)
 
-		if tt.wantErr {
-			assert.Error(t, err)
-			assert.Nil(t, manager)
-		} else {
-			assert.NoError(t, err)
-			assert.NotNil(t, manager)
-			assert.NotNil(t, manager.state)
-		}
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Nil(t, manager)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, manager)
+				require.NotNil(t, manager.state)
+			}
+		})
+
 	}
 }
 

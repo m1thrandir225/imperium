@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAppState_Serialization(t *testing.T) {
@@ -39,10 +39,10 @@ func TestAppState_Serialization(t *testing.T) {
 		},
 	}
 
-	assert.NotEmpty(t, state.UserSession.AccessToken)
-	assert.NotEmpty(t, state.UserInfo.ID)
-	assert.NotEmpty(t, state.HostInfo.ID)
-	assert.NotEmpty(t, state.Settings.FFmpegPath)
+	require.NotEmpty(t, state.UserSession.AccessToken)
+	require.NotEmpty(t, state.UserInfo.ID)
+	require.NotEmpty(t, state.HostInfo.ID)
+	require.NotEmpty(t, state.Settings.FFmpegPath)
 }
 
 func TestUserSession_Expiration(t *testing.T) {
@@ -52,8 +52,8 @@ func TestUserSession_Expiration(t *testing.T) {
 		AccessTokenExpiresAt: now.Add(1 * time.Hour),
 	}
 
-	assert.Equal(t, "token", session.AccessToken)
-	assert.True(t, session.AccessTokenExpiresAt.After(now))
+	require.Equal(t, "token", session.AccessToken)
+	require.True(t, session.AccessTokenExpiresAt.After(now))
 }
 
 func TestSettings_DefaultValues(t *testing.T) {
@@ -65,9 +65,9 @@ func TestSettings_DefaultValues(t *testing.T) {
 		ServerAddress: "https://api.example.com",
 	}
 
-	assert.Equal(t, "h264", settings.Encoder)
-	assert.Equal(t, 30, settings.Framerate)
-	assert.Equal(t, "1000k", settings.Bitrate)
-	assert.Equal(t, "https://api.example.com", settings.ServerAddress)
-	assert.Equal(t, "/usr/bin/ffmpeg", settings.FFmpegPath)
+	require.Equal(t, "h264", settings.Encoder)
+	require.Equal(t, 30, settings.Framerate)
+	require.Equal(t, "1000k", settings.Bitrate)
+	require.Equal(t, "https://api.example.com", settings.ServerAddress)
+	require.Equal(t, "/usr/bin/ffmpeg", settings.FFmpegPath)
 }

@@ -35,6 +35,8 @@ func TestValidURL(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		require.Equal(t, tc.expected, ValidURL(tc.value))
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, ValidURL(tc.value))
+		})
 	}
 }

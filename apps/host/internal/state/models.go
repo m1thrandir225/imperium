@@ -2,6 +2,7 @@ package state
 
 import "time"
 
+// AppState represents the overall persissted state of the application
 type AppState struct {
 	UserSession UserSession `mapstructure:"user_session" json:"user_session" yaml:"user_session"`
 	UserInfo    UserInfo    `mapstructure:"user_info" json:"user_info" yaml:"user_info"`
@@ -9,6 +10,7 @@ type AppState struct {
 	Settings    Settings    `mapstructure:"settings" json:"settings" yaml:"settings"`
 }
 
+// UserSession represents an authenticated UserSession and its access tokens
 type UserSession struct {
 	AccessToken           string    `mapstructure:"access_token" json:"access_token" yaml:"access_token"`
 	RefreshToken          string    `mapstructure:"refresh_token" json:"refresh_token" yaml:"refresh_token"`
@@ -16,12 +18,14 @@ type UserSession struct {
 	RefreshTokenExpiresAt time.Time `mapstructure:"refresh_token_expires_at" json:"refresh_token_expires_at" yaml:"refresh_token_expires_at"`
 }
 
+// UserInfo represents the basic information for the currently logged in user
 type UserInfo struct {
 	ID    string `mapstructure:"id" json:"id" yaml:"id"`
 	Name  string `mapstructure:"name" json:"name" yaml:"name"`
 	Email string `mapstructure:"email" json:"email" yaml:"email"`
 }
 
+// HostInfo represents the current information of the HostPC
 type HostInfo struct {
 	ID   string `mapstructure:"id" json:"id" yaml:"id"`       // unique host id from auth-server
 	Name string `mapstructure:"name" json:"name" yaml:"name"` // friendly name for this host
@@ -29,6 +33,7 @@ type HostInfo struct {
 	Port int    `mapstructure:"port" json:"port" yaml:"port"`
 }
 
+// Settings represents the current settings mostly used for the FFMPEG settings
 type Settings struct {
 	FFmpegPath         string   `mapstructure:"ffmpeg_path" json:"ffmpeg_path" yaml:"ffmpeg_path"`
 	Encoder            string   `mapstructure:"encoder" json:"encoder" yaml:"encoder"`
