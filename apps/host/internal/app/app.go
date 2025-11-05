@@ -119,7 +119,7 @@ func (a *App) buildClients() {
 
 	a.stopTokenRefresher()
 
-	tokenRefresher, err := tokenrefresher.NewTokenRefresher(tok, tok)
+	tokenRefresher, err := tokenrefresher.New(tok, tok)
 	if err != nil {
 		panic(err) // FIXME: should panic here??
 	}
@@ -180,7 +180,6 @@ func (a *App) buildSessionService() {
 			FFMPEGPath: a.State.Get().Settings.FFmpegPath,
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
