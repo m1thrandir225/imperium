@@ -325,8 +325,7 @@ func TestAuthTokenRefresher_StartStop_Integration(t *testing.T) {
 	refresher, err := newAuthTokenRefresher(mockTokenGetter, mockTokenRefresher)
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	refresher.Start(ctx)
 

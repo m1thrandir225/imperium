@@ -72,4 +72,4 @@ func TestSqliteDB_InitTables(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestSqliteDB_SaveProgram(t *test)
+func TestSqliteDB_SaveProgram(t *testing.T) {}

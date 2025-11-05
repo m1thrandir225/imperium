@@ -3,6 +3,7 @@ package ui
 import (
 	"os"
 	"path/filepath"
+	"slices"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -121,13 +122,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 			current := s.manager.GetState().Settings.CustomProgramPaths
 			newPath := uri.Path()
 
-			found := false
-			for _, p := range current {
-				if p == newPath {
-					found = true
-					break
-				}
-			}
+			found := slices.Contains(current, newPath)
 
 			if !found {
 				current = append(current, newPath)

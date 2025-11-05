@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -95,12 +96,9 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 				encoderSelect.Options = availableEncoders
 
 				found := false
-				for _, encoder := range availableEncoders {
-					if encoder == currentSelection {
-						encoderSelect.SetSelected(currentSelection)
-						found = true
-						break
-					}
+				if slices.Contains(availableEncoders, currentSelection) {
+					encoderSelect.SetSelected(currentSelection)
+					found = true
 				}
 
 				if !found && len(availableEncoders) > 0 {

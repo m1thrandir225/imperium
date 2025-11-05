@@ -138,7 +138,7 @@ func (c *Client) doRequest(ctx context.Context, req Request, protected bool) (*R
 }
 
 // DoJSON performs a request and unmarshals the response body into the provided struct
-func (c *Client) DoJSON(ctx context.Context, req Request, respBody interface{}) error {
+func (c *Client) DoJSON(ctx context.Context, req Request, respBody any) error {
 	resp, err := c.Do(ctx, req)
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func (c *Client) Get(ctx context.Context, url string, headers map[string]string,
 	})
 }
 
-func (c *Client) Post(ctx context.Context, url string, body interface{}, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
+func (c *Client) Post(ctx context.Context, url string, body any, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
 	return c.Do(ctx, Request{
 		Method:      http.MethodPost,
 		Headers:     headers,
@@ -178,7 +178,7 @@ func (c *Client) Post(ctx context.Context, url string, body interface{}, headers
 	})
 }
 
-func (c *Client) Put(ctx context.Context, url string, body interface{}, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
+func (c *Client) Put(ctx context.Context, url string, body any, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
 	return c.Do(ctx, Request{
 		Method:      http.MethodPut,
 		Headers:     headers,
@@ -189,7 +189,7 @@ func (c *Client) Put(ctx context.Context, url string, body interface{}, headers 
 	})
 }
 
-func (c *Client) Delete(ctx context.Context, url string, body interface{}, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
+func (c *Client) Delete(ctx context.Context, url string, body any, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
 	return c.Do(ctx, Request{
 		Method:      http.MethodDelete,
 		Headers:     headers,
@@ -200,7 +200,7 @@ func (c *Client) Delete(ctx context.Context, url string, body interface{}, heade
 	})
 }
 
-func (c *Client) Patch(ctx context.Context, url string, body interface{}, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
+func (c *Client) Patch(ctx context.Context, url string, body any, headers map[string]string, protected bool, queryParams map[string]string) (*Response, error) {
 	return c.Do(ctx, Request{
 		Method:      http.MethodPatch,
 		Headers:     headers,

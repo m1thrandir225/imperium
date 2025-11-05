@@ -145,7 +145,7 @@ func TestMonitorInfoConsistency(t *testing.T) {
 }
 
 func BenchmarkGetPrimaryMonitorInfo(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := GetPrimaryMonitorInfo()
 		if err != nil {
 			b.Fatalf("GetPrimaryMonitorInfo() failed: %v", err)
@@ -154,7 +154,7 @@ func BenchmarkGetPrimaryMonitorInfo(b *testing.B) {
 }
 
 func BenchmarkGetMonitorCount(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := GetMonitorCount()
 		if err != nil {
 			b.Fatalf("GetMonitorCount() failed: %v", err)
@@ -163,7 +163,7 @@ func BenchmarkGetMonitorCount(b *testing.B) {
 }
 
 func BenchmarkGetAllMonitorsInfo(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := GetAllMonitorsInfo()
 		if err != nil {
 			b.Fatalf("GetAllMonitorsInfo() failed: %v", err)
