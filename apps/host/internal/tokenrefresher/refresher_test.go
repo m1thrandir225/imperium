@@ -11,6 +11,58 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func TestNew(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTokenGetter := mockhttpclient.NewMockTokenGetter(ctrl)
+	mockTokenRefresher := mockhttpclient.NewMockTokenRefresher(ctrl)
+
+	testCases := []struct {
+		name        string
+		errExpected bool
+		build       func() (Refresher, error)
+	}{
+		{
+			name:        "New() - valid configuration",
+			errExpected: false,
+			build: func() (Refresher, error) {
+				return New(mockTokenGetter, mockTokenRefresher)
+			},
+		},
+		{
+			name:        "New() - invalid token getter",
+			errExpected: true,
+			build: func() (Refresher, error) {
+				return New(nil, mockTokenRefresher)
+			},
+		},
+		{
+			name:        "New() - invalid token refresher",
+			errExpected: true,
+			build: func() (Refresher, error) {
+				return New(mockTokenGetter, nil)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			refresher, err := tc.build()
+
+			if tc.errExpected {
+				require.Error(t, err)
+				require.Empty(t, refresher)
+				require.Nil(t, refresher)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, refresher)
+				require.NotEmpty(t, refresher)
+			}
+		})
+	}
+}
+
 func TestNewAuthTokenRefresher(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
