@@ -2,13 +2,16 @@ package programs
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver
 )
 
@@ -30,17 +33,25 @@ func NewDatabase(dbPath string) (Database, error) {
 }
 
 func newSqliteDB(dbPath string) (*sqliteDB, error) {
-	dir := filepath.Dir(dbPath)
+	// don't create a directory if the path is in-memory
+	var dbFile string
+	if strings.Contains(dbPath, ":memory:") {
+		if strings.HasPrefix(dbPath, "file:") {
+			dbFile = dbPath
+		} else {
+			dbFile = fmt.Sprintf("file:%s", dbPath)
+		}
 
-	// dont create a directory if the path is in-memory
-	if dbPath != ":memory" {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+	} else {
+		dir := filepath.Dir(dbPath)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			log.Printf("failed to create directory: %v", err)
 			return nil, ErrDatabaseDirectoryCreationFailed
 		}
+		dbFile = fmt.Sprintf("file:%s", dbPath)
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		log.Printf("failed to open database: %v", err)
 		return nil, ErrDatabaseOpenFailed
@@ -86,6 +97,14 @@ func (pdb *sqliteDB) Close() error {
 }
 
 func (pdb *sqliteDB) SaveProgram(program *Program) error {
+	if program == nil {
+		return ErrInvalidProgramReference
+	}
+
+	if util.IsEmptyString(program.Name) || util.IsEmptyString(program.Path) {
+		return ErrInvalidProgram
+	}
+
 	query := `
 	INSERT OR REPLACE INTO programs (name, path, description, last_modified, updated_at)
 	VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -116,6 +135,9 @@ func (pdb *sqliteDB) GetPrograms() ([]*Program, error) {
 
 	rows, err := pdb.db.Query(query)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return make([]*Program, 0), nil
+		}
 		return nil, fmt.Errorf("failed to get programs: %w", err)
 	}
 
@@ -160,20 +182,22 @@ func (pdb *sqliteDB) CleanupNonExistentPrograms() error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
+	var pathsToDelete []string
 	for rows.Next() {
 		var path string
 		if err := rows.Scan(&path); err != nil {
 			continue
 		}
-
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			// Program no longer exists, remove from database
-			deleteQuery := `DELETE FROM programs WHERE path = ?`
-			if _, err := pdb.db.Exec(deleteQuery, path); err != nil {
-				log.Printf("Failed to delete non-existent program %s: %v", path, err)
-			}
+		if _, err := os.Stat(path); err != nil {
+			pathsToDelete = append(pathsToDelete, path)
+		}
+	}
+	rows.Close()
+	deleteQuery := `DELETE FROM programs WHERE path = ?`
+	for _, path := range pathsToDelete {
+		if _, err := pdb.db.Exec(deleteQuery, path); err != nil {
+			log.Printf("Failed to delete non-existent program %s: %v", path, err)
 		}
 	}
 

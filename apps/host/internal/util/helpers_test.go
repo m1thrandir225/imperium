@@ -171,3 +171,43 @@ func TestShortPath(t *testing.T) {
 		})
 	}
 }
+
+func TestIsEmptyString(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: true,
+		},
+		{
+			name:     "string with spaces",
+			input:    " ",
+			expected: true,
+		},
+		{
+			name:     "valid string",
+			input:    "test",
+			expected: false,
+		},
+		{
+			name:     "valid string with spaces",
+			input:    "test ",
+			expected: false,
+		},
+		{
+			name:     "string with only spaces",
+			input:    "    ",
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, IsEmptyString(tc.input))
+		})
+	}
+}

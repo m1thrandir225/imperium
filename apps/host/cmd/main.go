@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	APP_NAME = "imperium-host"
+	AppName = "imperium-host"
 )
 
 func main() {
-	os.Setenv("LC_ALL", "C")
-	os.Setenv("FYNE_LANGUAGE", "en")
+	_ = os.Setenv("LC_ALL", "C")
+	_ = os.Setenv("FYNE_LANGUAGE", "en")
 
-	application, err := app.New(APP_NAME)
+	application, err := app.New(AppName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,8 +35,6 @@ func main() {
 
 	log.Println("UI closed")
 	application.Stop()
-
-	os.Exit(0)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

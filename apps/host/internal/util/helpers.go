@@ -116,3 +116,15 @@ func IsValidPath(path string) bool {
 	}
 	return false
 }
+
+func IsEmptyString(s string) bool {
+	if len(s) == 0 {
+		return true
+	}
+
+	if strings.TrimSpace(s) == "" {
+		return true
+	}
+
+	return false
+}

@@ -8,4 +8,6 @@ var (
 	ErrDatabasePingFailed              = errors.New("failed to ping database")
 	ErrDatabaseInitializeTablesFailed  = errors.New("failed to initialize tables")
 	ErrOSNotSupported                  = errors.New("this OS is currently not supported")
+	ErrInvalidProgram                  = errors.New("the passed program is invalid")
+	ErrInvalidProgramReference         = errors.New("invalid program reference")
 )
