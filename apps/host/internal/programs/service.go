@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
+	"github.com/m1thrandir225/imperium/apps/host/pkg/rawg"
 )
 
 // Service represents the main functionality of the programs part
@@ -30,7 +31,7 @@ type Service interface {
 
 type programService struct {
 	db         Database
-	rawgClient RAWGIntegration
+	rawgClient rawg.Client
 }
 
 // NewService creates a new program service
@@ -50,7 +51,7 @@ func newProgramService(
 		return nil, err
 	}
 
-	rawgClient, err := NewRAWGClient(rawgAPIKey)
+	rawgClient, err := rawg.New(rawgAPIKey)
 	if err != nil {
 		return nil, err
 	}

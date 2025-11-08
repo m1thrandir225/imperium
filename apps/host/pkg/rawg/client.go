@@ -1,53 +1,43 @@
-package programs
+// Package rawg provides a client for the RAWG API.
+package rawg
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/m1thrandir225/imperium/apps/host/internal/util"
+	"strings"
 )
 
-const rawgBaseURL = "https://api.rawg.io/api"
+const baseURL = "https://api.rawg.io/api"
 
-type RAWGIntegration interface {
+type Client interface {
 	SearchGame(query string) ([]RAWGGame, error)
 }
 
 type rawgClient struct {
-	APIKey string
+	apiKey string
 }
 
-type RAWGGame struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Slug     string `json:"slug"`
-	Released string `json:"released"`
-}
-
-type RAWGSearchResponse struct {
-	Results []RAWGGame `json:"results"`
-}
-
-func NewRAWGClient(apiKey string) (RAWGIntegration, error) {
+// New returns a new instance of a RAWG client.
+func New(apiKey string) (Client, error) {
 	return newRawgClient(apiKey)
 }
 
 func newRawgClient(apiKey string) (*rawgClient, error) {
-	if util.IsEmptyString(apiKey) {
+	if len(apiKey) == 0 || strings.TrimSpace(apiKey) == "" {
 		return nil, ErrInvalidRawgAPIKey
 	}
-
 	return &rawgClient{
-		APIKey: apiKey,
+		apiKey: apiKey,
 	}, nil
 }
 
+// SearchGame searches for a game by a query parameter which is usually the game title.
 func (c *rawgClient) SearchGame(query string) ([]RAWGGame, error) {
 	endpoint := fmt.Sprintf("%s/games?key=%s&search=%s",
-		rawgBaseURL,
-		url.QueryEscape(c.APIKey),
+		baseURL,
+		url.QueryEscape(c.apiKey),
 		url.QueryEscape(query),
 	)
 

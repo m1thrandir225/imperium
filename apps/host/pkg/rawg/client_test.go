@@ -1,4 +1,4 @@
-package programs
+package rawg
 
 import (
 	"testing"
@@ -6,23 +6,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewRAWGClient(t *testing.T) {
+func TestNew(t *testing.T) {
 	testCases := []struct {
 		name        string
-		build       func() (RAWGIntegration, error)
+		build       func() (Client, error)
 		errExpected bool
 	}{
 		{
 			name: "valid-api-key",
-			build: func() (RAWGIntegration, error) {
-				return NewRAWGClient("test")
+			build: func() (Client, error) {
+				return New("test")
 			},
 			errExpected: false,
 		},
 		{
 			name: "invalid-api-key",
-			build: func() (RAWGIntegration, error) {
-				return NewRAWGClient("")
+			build: func() (Client, error) {
+				return New("")
 			},
 			errExpected: true,
 		},
@@ -44,22 +44,22 @@ func TestRawgClient_SearchGame(t *testing.T) {
 	testCases := []struct {
 		name        string
 		validApiKey bool
-		build       func(client RAWGIntegration) ([]RAWGGame, error)
+		build       func(client Client) ([]RAWGGame, error)
 		searchQuery string
 		errExpected bool
 	}{
 		{
 			name:        "valid-game-search",
 			validApiKey: true,
-			build: func(client RAWGIntegration) ([]RAWGGame, error) {
+			build: func(client Client) ([]RAWGGame, error) {
 				return client.SearchGame("fortnite")
 			},
 			errExpected: false,
 		},
 		{
-			name:        "invalid-api-search",
+			name:        "invalid-api-search-with-invalid-api-key",
 			validApiKey: false,
-			build: func(client RAWGIntegration) ([]RAWGGame, error) {
+			build: func(client Client) ([]RAWGGame, error) {
 				return client.SearchGame("fortnite")
 			},
 			errExpected: true,
@@ -67,7 +67,7 @@ func TestRawgClient_SearchGame(t *testing.T) {
 		{
 			name:        "invalid-api-search",
 			validApiKey: true,
-			build: func(client RAWGIntegration) ([]RAWGGame, error) {
+			build: func(client Client) ([]RAWGGame, error) {
 				return client.SearchGame("****qqqqqq")
 			},
 			errExpected: true,
@@ -76,14 +76,14 @@ func TestRawgClient_SearchGame(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var client RAWGIntegration
+			var client Client
 			if tc.validApiKey {
-				rawgClient, err := NewRAWGClient(GetRAWGApiKey())
+				rawgClient, err := New(GetRAWGApiKey())
 				require.NoError(t, err)
 				require.NotNil(t, rawgClient)
 				client = rawgClient
 			} else {
-				rawgClient, err := NewRAWGClient("test")
+				rawgClient, err := New("test")
 				require.NoError(t, err)
 				require.NotNil(t, rawgClient)
 				client = rawgClient
