@@ -16,6 +16,7 @@ mock:
 	mockgen -package mockhttpclient -destination internal/httpclient/mocks/token_refresher.go github.com/m1thrandir225/imperium/apps/host/internal/httpclient TokenRefresher
 	mockgen -package mockprograms -destination internal/programs/mocks/db.go github.com/m1thrandir225/imperium/apps/host/internal/programs Database
 	mockgen -package mockprograms -destination internal/programs/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/programs Service
+	mockgen -package mockprograms -destination internal/programs/mocks/rawg_client.go github.com/m1thrandir225/imperium/apps/host/internal/programs RAWGIntegration
 	mockgen -package mockevent_broker -destination internal/events/mocks/broker.go github.com/m1thrandir225/imperium/apps/host/internal/events EventBroker
 	mockgen -package mocktoken_refresher -destination internal/tokenrefresher/mocks/refresher.go github.com/m1thrandir225/imperium/apps/host/internal/tokenrefresher Refresher
 	mockgen -package mockauth -destination internal/auth/mocks/service.go github.com/m1thrandir225/imperium/apps/host/internal/auth Service

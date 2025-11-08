@@ -49,9 +49,15 @@ func newProgramService(
 	if err != nil {
 		return nil, err
 	}
+
+	rawgClient, err := NewRAWGClient(rawgAPIKey)
+	if err != nil {
+		return nil, err
+	}
+
 	return &programService{
 		db:         db,
-		rawgClient: NewRAWGClient(rawgAPIKey),
+		rawgClient: rawgClient,
 	}, nil
 }
 

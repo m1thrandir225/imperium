@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 )
 
 const rawgBaseURL = "https://api.rawg.io/api"
@@ -28,10 +30,18 @@ type RAWGSearchResponse struct {
 	Results []RAWGGame `json:"results"`
 }
 
-func NewRAWGClient(apiKey string) RAWGIntegration {
+func NewRAWGClient(apiKey string) (RAWGIntegration, error) {
+	return newRawgClient(apiKey)
+}
+
+func newRawgClient(apiKey string) (*rawgClient, error) {
+	if util.IsEmptyString(apiKey) {
+		return nil, ErrInvalidRawgAPIKey
+	}
+
 	return &rawgClient{
 		APIKey: apiKey,
-	}
+	}, nil
 }
 
 func (c *rawgClient) SearchGame(query string) ([]RAWGGame, error) {

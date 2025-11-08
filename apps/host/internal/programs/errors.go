@@ -10,4 +10,5 @@ var (
 	ErrOSNotSupported                  = errors.New("this OS is currently not supported")
 	ErrInvalidProgram                  = errors.New("the passed program is invalid")
 	ErrInvalidProgramReference         = errors.New("invalid program reference")
+	ErrInvalidRawgAPIKey               = errors.New("invalid RAWG API key")
 )
