@@ -4,5 +4,5 @@ import "errors"
 
 var (
 	ErrInvalidTokenGetter    = errors.New("invalid TokenGetter")
-	ErrInvalidTokenRefrehser = errors.New("invalid TokenRefresher")
+	ErrInvalidTokenRefresher = errors.New("invalid TokenRefresher")
 )

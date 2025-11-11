@@ -6,6 +6,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func GetTokenGetter() TokenGetter {
+	return nil
+}
+
+func GetTokenRefresher() TokenRefresher {
+	return nil
+}
+
 func TestNewClient(t *testing.T) {
 	baseURL := "https://example.com"
 	tokenGetter := GetTokenGetter()

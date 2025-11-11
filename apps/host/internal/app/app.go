@@ -10,7 +10,6 @@ import (
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
 	"github.com/m1thrandir225/imperium/apps/host/internal/events"
 	"github.com/m1thrandir225/imperium/apps/host/internal/host"
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/httpserver"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/session"
@@ -18,6 +17,7 @@ import (
 	tokenrefresher "github.com/m1thrandir225/imperium/apps/host/internal/tokenrefresher"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
+	"github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 )
 
 type App struct {

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	"github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 )
 
 // AuthService is the authentication service for the host application.

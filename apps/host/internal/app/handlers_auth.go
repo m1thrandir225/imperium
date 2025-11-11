@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/m1thrandir225/imperium/apps/host/internal/auth"
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/state"
+	"github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 )
 
 type stateTokens struct {

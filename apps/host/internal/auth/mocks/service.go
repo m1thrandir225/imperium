@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	auth "github.com/m1thrandir225/imperium/apps/host/internal/auth"
-	httpclient "github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	httpclient "github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 	gomock "go.uber.org/mock/gomock"
 )
 

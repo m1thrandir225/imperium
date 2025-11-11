@@ -48,7 +48,7 @@ func (c *Client) GetBaseURL() string {
 	return c.baseURL
 }
 
-// Do performs a HTTP Request and automatically refreshes the access token if it is expired
+// Do perform an HTTP Request and automatically refreshes the access token if it is expired
 func (c *Client) Do(ctx context.Context, req Request) (*Response, error) {
 	fmt.Printf("=== Starting request to: %s %s ===\n", req.Method, req.URL)
 	if req.Protected {
@@ -137,7 +137,7 @@ func (c *Client) doRequest(ctx context.Context, req Request, protected bool) (*R
 	}, nil
 }
 
-// DoJSON performs a request and unmarshals the response body into the provided struct
+// DoJSON performs a request and unmarshal the response body into the provided struct
 func (c *Client) DoJSON(ctx context.Context, req Request, respBody any) error {
 	resp, err := c.Do(ctx, req)
 	if err != nil {

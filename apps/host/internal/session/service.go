@@ -5,12 +5,12 @@ import (
 	"log"
 	"sync"
 
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
 	"github.com/m1thrandir225/imperium/apps/host/internal/input"
 	"github.com/m1thrandir225/imperium/apps/host/internal/programs"
 	"github.com/m1thrandir225/imperium/apps/host/internal/util"
 	"github.com/m1thrandir225/imperium/apps/host/internal/video"
 	"github.com/m1thrandir225/imperium/apps/host/internal/webrtc"
+	"github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 )
 
 type Service interface {

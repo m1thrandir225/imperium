@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	mockhttpclient "github.com/m1thrandir225/imperium/apps/host/internal/httpclient/mocks"
+	mockhttpclient "github.com/m1thrandir225/imperium/apps/host/pkg/httpclient/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

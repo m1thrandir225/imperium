@@ -1,4 +1,4 @@
-// Package tokenrefresher provides a definition and implementation of the a
+// Package tokenrefresher provides a definition and implementation of a
 // time-based JWT/PASETO token refresher that automatically refreshes a given
 // access_token
 package tokenrefresher
@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/m1thrandir225/imperium/apps/host/internal/httpclient"
+	httpclient "github.com/m1thrandir225/imperium/apps/host/pkg/httpclient"
 )
 
 type Refresher interface {
@@ -32,7 +32,7 @@ func newAuthTokenRefresher(getter httpclient.TokenGetter, refresher httpclient.T
 		return nil, ErrInvalidTokenGetter
 	}
 	if refresher == nil {
-		return nil, ErrInvalidTokenRefrehser
+		return nil, ErrInvalidTokenRefresher
 	}
 
 	return &authTokenRefresher{
