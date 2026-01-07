@@ -30,7 +30,7 @@ func main() {
 
 	application.Start()
 
-	uiManager := ui.NewUIManager(application.State, application.Bus)
+	uiManager := ui.NewManager(application.State, application.Bus)
 	uiManager.RunUI()
 
 	log.Println("UI closed")

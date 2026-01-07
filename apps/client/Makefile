@@ -15,7 +15,7 @@ PNPM := pnpm
 
 .DEFAULT_GOAL := help
 
-.PHONY: help deps dev dev-go dev-web build build-go build-web clean run-prod
+.PHONY: help deps dev dev-go dev-web build build-go build-web clean run-prod mock
 
 deps:
 	@if ! command -v $(PNPM) >/dev/null 2>&1; then \

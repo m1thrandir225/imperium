@@ -119,7 +119,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 				return
 			}
 
-			current := s.manager.GetState().Settings.CustomProgramPaths
+			current := s.manager.getState().Settings.CustomProgramPaths
 			newPath := uri.Path()
 
 			found := slices.Contains(current, newPath)
@@ -145,7 +145,7 @@ func (s *ProgramsScreen) Render(w fyne.Window) fyne.CanvasObject {
 	})
 
 	backBtn := widget.NewButton("Back to Main Menu", func() {
-		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+		s.manager.showScreen(MAIN_MENU_SCREEN)
 	})
 
 	content := container.NewBorder(

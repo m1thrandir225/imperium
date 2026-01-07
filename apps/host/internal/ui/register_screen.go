@@ -38,7 +38,7 @@ func (s *RegisterScreen) Render(w fyne.Window) fyne.CanvasObject {
 	passwordEntry.SetPlaceHolder("Password")
 
 	backToLoginBtn := widget.NewButton("Already have an account? Login", func() {
-		s.manager.ShowScreen(LOGIN_SCREEN)
+		s.manager.showScreen(LOGIN_SCREEN)
 	})
 	form := &widget.Form{
 		OnSubmit: func() {

@@ -119,7 +119,7 @@ func NewStreamer() (Streamer, error) {
 		iceReadyCh:       make(chan struct{}),
 	}
 
-	pc.OnICEConnectionStateChange((func(state pionwebrtc.ICEConnectionState) {
+	pc.OnICEConnectionStateChange(func(state pionwebrtc.ICEConnectionState) {
 		log.Printf("ICE state: %s", state.String())
 
 		// Signal when ICE connection is established
@@ -129,7 +129,7 @@ func NewStreamer() (Streamer, error) {
 		} else if state == pionwebrtc.ICEConnectionStateFailed {
 			log.Printf("ICE connection failed - may need TURN server")
 		}
-	}))
+	})
 
 	pc.OnConnectionStateChange(func(state pionwebrtc.PeerConnectionState) {
 		log.Printf("PeerConnection state: %s", state.String())
@@ -157,7 +157,7 @@ func (s *streamer) pumpStream(stream io.ReadCloser, fps int) {
 
 	pay := &codecs.H264Payloader{}
 	seq := rtp.NewRandomSequencer()
-	// 1200 bytes keeps us under typical 1500 MTU with headers
+	// 1200 bytes keep us under typical 1500 MTU with headers
 	pktizer := rtp.NewPacketizer(1200, s.videoPayloadType, 0, pay, seq, 90000)
 
 	// If you know real FPS, set frameDuration accordingly
@@ -223,7 +223,7 @@ func (s *streamer) pumpStream(stream io.ReadCloser, fps int) {
 // 			continue
 // 		}
 
-// 		// Packetize the audio data
+// 		Packetize the audio data
 // 		pkts := pktizer.Packetize(buf[:n], uint32(frameDuration))
 // 		for _, p := range pkts {
 // 			p.Timestamp = ts

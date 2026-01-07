@@ -103,14 +103,14 @@ func ShortPath(p string) string {
 }
 
 func IsValidPath(path string) bool {
-	//Check if already exists
+	// Check if already exists
 	if _, err := os.Stat(path); err == nil {
 		return true
 	}
 
-	//Atempt to create and delete
+	// Atempt to create and delete
 	var d []byte
-	if err := os.WriteFile(path, d, 0644); err == nil {
+	if err := os.WriteFile(path, d, 0o644); err == nil {
 		os.Remove(path)
 		return true
 	}

@@ -3,7 +3,7 @@ package ui
 
 import "fyne.io/fyne/v2"
 
-type Screen interface {
+type screen interface {
 	Render(w fyne.Window) fyne.CanvasObject
 	Name() string
 }

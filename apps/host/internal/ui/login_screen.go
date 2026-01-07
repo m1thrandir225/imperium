@@ -32,7 +32,7 @@ func (s *LoginScreen) Render(w fyne.Window) fyne.CanvasObject {
 	passwordEntry.SetPlaceHolder("Password")
 
 	registerBtn := widget.NewButton("Don't have an account? Register", func() {
-		s.manager.ShowScreen(REGISTER_SCREEN)
+		s.manager.showScreen(REGISTER_SCREEN)
 	})
 
 	form := &widget.Form{

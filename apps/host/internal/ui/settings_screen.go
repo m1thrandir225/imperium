@@ -31,7 +31,7 @@ func (s *SettingsScreen) Name() string {
 }
 
 func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
-	current := s.manager.GetState().Settings
+	current := s.manager.getState().Settings
 
 	// Server Address Section
 	serverAddressEntry := widget.NewEntry()
@@ -233,7 +233,7 @@ func (s *SettingsScreen) Render(w fyne.Window) fyne.CanvasObject {
 
 	// Back button
 	backBtn := widget.NewButton("Back to Main Menu", func() {
-		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+		s.manager.showScreen(MAIN_MENU_SCREEN)
 	})
 
 	// Create form layout

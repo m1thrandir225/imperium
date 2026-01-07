@@ -33,13 +33,13 @@ func (s *MainMenuScreen) Render(w fyne.Window) fyne.CanvasObject {
 			logo,
 			widget.NewLabelWithStyle("Imperium Host", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 			widget.NewButton("Current Status", func() {
-				s.manager.ShowScreen(STATUS_SCREEN)
+				s.manager.showScreen(STATUS_SCREEN)
 			}),
 			widget.NewButton("Programs", func() {
-				s.manager.ShowScreen(PROGRAMS_SCREEN)
+				s.manager.showScreen(PROGRAMS_SCREEN)
 			}),
 			widget.NewButton("Settings", func() {
-				s.manager.ShowScreen(SETTINGS_SCREEN)
+				s.manager.showScreen(SETTINGS_SCREEN)
 			}),
 			widget.NewButton("Logout", func() {
 				s.manager.publish(app.EventLogoutRequested, nil)

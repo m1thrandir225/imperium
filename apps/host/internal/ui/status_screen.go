@@ -51,7 +51,7 @@ func (s *StatusScreen) Render(w fyne.Window) fyne.CanvasObject {
 	})
 
 	backBtn := widget.NewButton("Back to Main Menu", func() {
-		s.manager.ShowScreen(MAIN_MENU_SCREEN)
+		s.manager.showScreen(MAIN_MENU_SCREEN)
 	})
 
 	content := container.NewVBox(
@@ -111,7 +111,7 @@ func (s *StatusScreen) subscribeToEvents() {
 }
 
 func (s *StatusScreen) updateDisplay() {
-	state := s.manager.GetState()
+	state := s.manager.getState()
 
 	if state.HostInfo.ID != "" {
 		s.hostInfoLabel.SetText(fmt.Sprintf("Host: %s (%s:%d)",
