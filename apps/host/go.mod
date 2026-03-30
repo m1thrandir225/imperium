@@ -1,6 +1,6 @@
 module github.com/m1thrandir225/imperium/apps/host
 
-go 1.24.1
+go 1.25.0
 
 require (
 	fyne.io/fyne/v2 v2.7.2
@@ -11,7 +11,6 @@ require (
 )
 
 require (
-	github.com/pion/transport/v3 v3.1.1 // indirect
 	github.com/pion/transport/v4 v4.0.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 )
@@ -72,9 +71,9 @@ require (
 	github.com/yuin/goldmark v1.7.16 // indirect
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/image v0.36.0 // indirect
+	golang.org/x/image v0.38.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
